@@ -40,7 +40,7 @@ CREATE TABLE claims (
 -- Services
 CREATE TABLE services (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    claim_id INTEGER NOT NULL,
+    claim_id INTEGER,
     service_date TEXT NOT NULL,
     cpt_code TEXT NOT NULL,
     units INTEGER NOT NULL DEFAULT 1,
