@@ -102,9 +102,6 @@ def create_coverage(
     start_date: str | None,
     end_date: str | None,
 ) -> int:
-    """
-    Crea una cobertura asociada a un paciente y devuelve su ID.
-    """
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute(
@@ -137,9 +134,6 @@ def create_coverage(
 
 
 def list_coverages_by_patient(patient_id: int):
-    """
-    Devuelve todas las coberturas de un paciente.
-    """
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute(
@@ -178,9 +172,6 @@ def list_coverages_by_patient(patient_id: int):
 
 
 def get_coverage_by_id(coverage_id: int):
-    """
-    Devuelve una cobertura por ID o None si no existe.
-    """
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute(
@@ -214,3 +205,60 @@ def get_coverage_by_id(coverage_id: int):
             "start_date": row["start_date"],
             "end_date": row["end_date"],
         }
+
+
+def update_coverage(
+    coverage_id: int,
+    insurer_name: str,
+    plan_name: str | None,
+    policy_number: str | None,
+    group_number: str | None,
+    insured_id: str | None,
+    start_date: str | None,
+    end_date: str | None,
+) -> bool:
+    """
+    Actualiza una cobertura.
+    Devuelve True si se actualizó, False si no existe.
+    """
+    with get_connection() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            UPDATE coverages
+            SET
+                insurer_name = ?,
+                plan_name = ?,
+                policy_number = ?,
+                group_number = ?,
+                insured_id = ?,
+                start_date = ?,
+                end_date = ?,
+                updated_at = datetime('now')
+            WHERE id = ?
+            """,
+            (
+                insurer_name,
+                plan_name,
+                policy_number,
+                group_number,
+                insured_id,
+                start_date,
+                end_date,
+                coverage_id,
+            ),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+
+
+def delete_coverage(coverage_id: int) -> bool:
+    """
+    Elimina una cobertura por ID.
+    Devuelve True si se eliminó, False si no existe.
+    """
+    with get_connection() as conn:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM coverages WHERE id = ?", (coverage_id,))
+        conn.commit()
+        return cur.rowcount > 0
