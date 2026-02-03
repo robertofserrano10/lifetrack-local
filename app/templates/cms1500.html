@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>CMS-1500 — Snapshot</title>
+
+  <!-- CSS normal -->
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 18px; }
+    h1 { margin-bottom: 6px; }
+    h4 { margin: 6px 0; }
+    .note { color:#555; font-size:12px; margin-bottom:12px; }
+    .box { border:1px solid #333; padding:8px; margin-bottom:10px; }
+    .grid { display:grid; grid-template-columns: repeat(12, 1fr); gap:6px; }
+    .cell { border:1px solid #444; padding:6px; font-size:12px; }
+    .label { font-weight:bold; font-size:11px; display:block; margin-bottom:4px; }
+    table { border-collapse: collapse; width:100%; margin-top:6px; }
+    th, td { border:1px solid #333; padding:6px; font-size:12px; }
+    th { background:#eee; }
+    .right { text-align:right; }
+    .pending { background:#fafafa; color:#999; }
+  </style>
+
+  <!-- CSS de impresión -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cms1500_print.css') }}" media="print">
+</head>
+<body>
+
+<h1>CMS-1500 — Snapshot</h1>
+<div class="note">
+  Vista READ-ONLY. Los datos provienen de un snapshot inmutable.
+</div>
+
+<!-- ============================= -->
+<!-- ENCABEZADO -->
+<!-- ============================= -->
+<div class="box">
+  <div class="grid">
+    <div class="cell" style="grid-column: span 4;">
+      <span class="label">Claim ID</span>{{ snapshot.claim.id }}
+    </div>
+    <div class="cell" style="grid-column: span 4;">
+      <span class="label">Patient ID</span>{{ snapshot.claim.patient_id }}
+    </div>
+    <div class="cell" style="grid-column: span 4;">
+      <span class="label">Coverage ID</span>{{ snapshot.claim.coverage_id }}
+    </div>
+  </div>
+</div>
+
+<!-- ============================= -->
+<!-- CASILLA 21 — DIAGNOSIS -->
+<!-- ============================= -->
+<div class="box">
+  <h4>21. Diagnosis or Nature of Illness or Injury</h4>
+  <table>
+    <tr>
+      <td width="10%"><strong>A</strong></td>
+      <td width="40%">{{ snapshot.diagnoses.A or "" }}</td>
+      <td width="10%"><strong>B</strong></td>
+      <td width="40%">{{ snapshot.diagnoses.B or "" }}</td>
+    </tr>
+    <tr>
+      <td><strong>C</strong></td>
+      <td>{{ snapshot.diagnoses.C or "" }}</td>
+      <td><strong>D</strong></td>
+      <td>{{ snapshot.diagnoses.D or "" }}</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ============================= -->
+<!-- SERVICIOS 24A–24J -->
+<!-- ============================= -->
+<div class="box">
+  <div class="label">Servicios (24A–24J)</div>
+  <table>
+    <tr>
+      <th>24A</th>
+      <th>24B</th>
+      <th>24C</th>
+      <th>24D</th>
+      <th>24E</th>
+      <th class="right">24F</th>
+      <th class="right">24G</th>
+      <th>24H</th>
+      <th>24I</th>
+      <th>24J</th>
+    </tr>
+    {% for s in snapshot.services %}
+    <tr>
+      <td>{{ s.service_date }}</td>
+      <td>11</td>
+      <td>N</td>
+      <td>{{ s.cpt_code }}</td>
+      <td>{{ s.dx_pointer }}</td>
+      <td class="right pending">—</td>
+      <td class="right">{{ s.units }}</td>
+      <td></td>
+      <td></td>
+      <td>
+        {{ snapshot.provider.billing.name }}<br>
+        NPI {{ snapshot.provider.billing.npi }}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<!-- ============================= -->
+<!-- CASILLA 31 — PROVIDER SIGNATURE -->
+<!-- ============================= -->
+<div class="box">
+  <div class="grid">
+    <div class="cell" style="grid-column: span 8;">
+      <span class="label">31 — Signature of Physician or Supplier</span>
+      {{ snapshot.provider.signature }}
+    </div>
+    <div class="cell" style="grid-column: span 4;">
+      <span class="label">Date</span>
+      {{ snapshot.provider.signature_date }}
+    </div>
+  </div>
+</div>
+
+<!-- ============================= -->
+<!-- CASILLA 32 — SERVICE FACILITY -->
+<!-- ============================= -->
+<div class="box">
+  <div class="label">32 — Service Facility Location Information</div>
+  <div>
+    {{ snapshot.provider.facility.name }}<br>
+    {{ snapshot.provider.facility.address }}<br>
+    {{ snapshot.provider.facility.city }}, {{ snapshot.provider.facility.state }}
+    {{ snapshot.provider.facility.zip }}
+  </div>
+</div>
+
+<!-- ============================= -->
+<!-- CASILLA 33 — BILLING PROVIDER -->
+<!-- ============================= -->
+<div class="box">
+  <div class="label">33 — Billing Provider Info & Phone #</div>
+  <div>
+    {{ snapshot.provider.billing.name }}<br>
+    {{ snapshot.provider.billing.address }}<br>
+    {{ snapshot.provider.billing.city }}, {{ snapshot.provider.billing.state }}
+    {{ snapshot.provider.billing.zip }}<br>
+    NPI {{ snapshot.provider.billing.npi }}<br>
+    Tax ID {{ snapshot.provider.billing.tax_id }}
+  </div>
+</div>
+
+<!-- ============================= -->
+<!-- TOTALES 28–30 -->
+<!-- ============================= -->
+<div class="box">
+  <div class="grid">
+    <div class="cell pending" style="grid-column: span 4;">
+      <span class="label">28 — Total Charge</span>Pendiente
+    </div>
+    <div class="cell" style="grid-column: span 4;">
+      <span class="label">29 — Amount Paid</span>0.00
+    </div>
+    <div class="cell pending" style="grid-column: span 4;">
+      <span class="label">30 — Balance Due</span>Pendiente
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

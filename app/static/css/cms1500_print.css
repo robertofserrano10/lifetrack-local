@@ -1,0 +1,73 @@
+/* CMS-1500 Print Styles */
+
+@page {
+  size: letter;
+  margin: 0.5in;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #000;
+  background: #fff;
+}
+
+h1 {
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.note {
+  display: none; /* no imprimir avisos */
+}
+
+.box {
+  border: 1px solid #000;
+  padding: 6px;
+  margin-bottom: 8px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 4px;
+}
+
+.cell {
+  border: 1px solid #000;
+  padding: 4px;
+  font-size: 10px;
+}
+
+.label {
+  font-size: 9px;
+  font-weight: bold;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #000;
+  padding: 4px;
+  font-size: 10px;
+}
+
+th {
+  background: #eee;
+}
+
+.right {
+  text-align: right;
+}
+
+.pending {
+  color: #777;
+}
+
+@media print {
+  a, button {
+    display: none;
+  }
+}
