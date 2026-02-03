@@ -97,6 +97,7 @@ CREATE TABLE cms1500_snapshots (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     claim_id INTEGER NOT NULL,
     snapshot_json TEXT NOT NULL,
-    created_at TEXT DEFAULT (datetime('now')),
+    snapshot_hash TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (claim_id) REFERENCES claims(id)
 );
