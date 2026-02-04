@@ -24,3 +24,6 @@ from app.db.cms1500_snapshot import *
 
 # Balances
 from app.db.balances import *
+
+# Adjustments
+from app.db.adjustments import *
