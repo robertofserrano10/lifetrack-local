@@ -1,6 +1,26 @@
+# Patients
 from app.db.patients import *
+
+# Coverages
 from app.db.coverages import *
-from app.db.services import *
+
+# Claims
 from app.db.claims import *
-from app.db.pre_cms import *
+
+# Services
+from app.db.services import *
+
+# Charges
+from app.db.charges import *
+
+# Payments
+from app.db.payments import *
+
+# Applications (EOB)
+from app.db.applications import *
+
+# CMS-1500 Snapshot
 from app.db.cms1500_snapshot import *
+
+# Balances
+from app.db.balances import *

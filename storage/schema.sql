@@ -1,14 +1,17 @@
+-- =========================
 -- Patients
+-- =========================
 CREATE TABLE patients (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
-    date_of_birth TEXT,
-    created_at TEXT DEFAULT (datetime('now')),
-    updated_at TEXT DEFAULT (datetime('now'))
+    date_of_birth TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+-- =========================
 -- Coverages
+-- =========================
 CREATE TABLE coverages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     patient_id INTEGER NOT NULL,
@@ -19,85 +22,79 @@ CREATE TABLE coverages (
     insured_id TEXT,
     start_date TEXT,
     end_date TEXT,
-    created_at TEXT DEFAULT (datetime('now')),
-    updated_at TEXT DEFAULT (datetime('now')),
-    FOREIGN KEY (patient_id) REFERENCES patients(id)
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+-- =========================
 -- Claims
+-- =========================
 CREATE TABLE claims (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     patient_id INTEGER NOT NULL,
-    coverage_id INTEGER,
+    coverage_id INTEGER NOT NULL,
     claim_number TEXT,
-    status TEXT NOT NULL DEFAULT 'draft',
-    created_at TEXT DEFAULT (datetime('now')),
-    updated_at TEXT DEFAULT (datetime('now')),
-    FOREIGN KEY (patient_id) REFERENCES patients(id),
-    FOREIGN KEY (coverage_id) REFERENCES coverages(id)
+    status TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+-- =========================
 -- Services
+-- =========================
 CREATE TABLE services (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    claim_id INTEGER,
+    claim_id INTEGER NOT NULL,
     service_date TEXT NOT NULL,
     cpt_code TEXT NOT NULL,
-    units INTEGER NOT NULL DEFAULT 1,
+    units INTEGER NOT NULL,
     diagnosis_code TEXT,
     description TEXT,
-    created_at TEXT DEFAULT (datetime('now')),
-    updated_at TEXT DEFAULT (datetime('now')),
-    FOREIGN KEY (claim_id) REFERENCES claims(id)
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
 );
 
+-- =========================
 -- Charges
+-- =========================
 CREATE TABLE charges (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     service_id INTEGER NOT NULL,
-    amount NUMERIC NOT NULL,
-    created_at TEXT DEFAULT (datetime('now')),
-    updated_at TEXT DEFAULT (datetime('now')),
-    FOREIGN KEY (service_id) REFERENCES services(id)
+    amount REAL NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
 );
 
+-- =========================
 -- Payments
+-- =========================
 CREATE TABLE payments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    payer_type TEXT NOT NULL, -- 'patient' o 'insurer'
-    amount NUMERIC NOT NULL,
-    received_date TEXT NOT NULL,
-    created_at TEXT DEFAULT (datetime('now')),
-    updated_at TEXT DEFAULT (datetime('now'))
+    amount REAL NOT NULL,
+    method TEXT NOT NULL,
+    reference TEXT,
+    received_date TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
 );
 
--- Applications
+-- =========================
+-- Applications (EOB)
+-- =========================
 CREATE TABLE applications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     payment_id INTEGER NOT NULL,
     charge_id INTEGER NOT NULL,
-    applied_amount NUMERIC NOT NULL,
-    created_at TEXT DEFAULT (datetime('now')),
-    FOREIGN KEY (payment_id) REFERENCES payments(id),
-    FOREIGN KEY (charge_id) REFERENCES charges(id)
+    amount_applied REAL NOT NULL,
+    created_at TEXT NOT NULL
 );
 
--- Adjustments (opcional)
-CREATE TABLE adjustments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    charge_id INTEGER NOT NULL,
-    reason TEXT NOT NULL,
-    amount NUMERIC NOT NULL,
-    created_at TEXT DEFAULT (datetime('now')),
-    FOREIGN KEY (charge_id) REFERENCES charges(id)
-);
-
--- Cms1500 Snapshots
+-- =========================
+-- CMS-1500 Snapshots
+-- =========================
 CREATE TABLE cms1500_snapshots (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     claim_id INTEGER NOT NULL,
     snapshot_json TEXT NOT NULL,
     snapshot_hash TEXT NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (claim_id) REFERENCES claims(id)
+    created_at TEXT NOT NULL
 );

@@ -12,9 +12,7 @@ def generate_cms1500_snapshot(claim_id: int):
     with get_connection() as conn:
         cur = conn.cursor()
 
-        # =========================
-        # CLAIM
-        # =========================
+        # Claim
         cur.execute(
             """
             SELECT id, patient_id, coverage_id, status
@@ -29,142 +27,63 @@ def generate_cms1500_snapshot(claim_id: int):
 
         claim_data = dict(claim)
 
-        # =========================
-        # SERVICES DEL CLAIM
-        # =========================
+        # Services + Charges
         cur.execute(
             """
             SELECT
-                id,
-                claim_id,
-                service_date,
-                cpt_code,
-                units,
-                diagnosis_code,
-                description,
-                created_at,
-                updated_at
-            FROM services
-            WHERE claim_id = ?
-            ORDER BY service_date
+                s.id,
+                s.claim_id,
+                s.service_date,
+                s.cpt_code,
+                s.units,
+                s.diagnosis_code,
+                s.description,
+                s.created_at,
+                s.updated_at,
+                c.amount AS charge_amount
+            FROM services s
+            LEFT JOIN charges c ON c.service_id = s.id
+            WHERE s.claim_id = ?
+            ORDER BY s.service_date
             """,
             (claim_id,),
         )
-        services = [dict(row) for row in cur.fetchall()]
 
-        # =========================
-        # DX POINTER (CASILLA 21)
-        # =========================
+        services = []
+        total_charge = 0.0
 
-        # 1. Diagnósticos únicos (máx 4)
-        diagnosis_list = []
-        for s in services:
-            code = s["diagnosis_code"]
-            if code and code not in diagnosis_list:
-                diagnosis_list.append(code)
-            if len(diagnosis_list) == 4:
-                break
+        for row in cur.fetchall():
+            service = dict(row)
+            amount = service.get("charge_amount") or 0.0
+            total_charge += amount
+            services.append(service)
 
-        # 2. Mapear A/B/C/D
-        labels = ["A", "B", "C", "D"]
-        dx_map = {}
-        for i, code in enumerate(diagnosis_list):
-            dx_map[labels[i]] = code
-
-        diagnoses = {
-            "A": dx_map.get("A"),
-            "B": dx_map.get("B"),
-            "C": dx_map.get("C"),
-            "D": dx_map.get("D"),
-        }
-
-        # =========================
-        # SERVICES SNAPSHOT (24A–24J)
-        # =========================
-        snapshot_services = []
-
-        for s in services:
-            dx_pointer = None
-            for label, code in dx_map.items():
-                if s["diagnosis_code"] == code:
-                    dx_pointer = label
-                    break
-
-            snapshot_services.append({
-                "service_date": s["service_date"],   # 24A
-                "pos": "11",                          # 24B (Office)
-                "emg": "N",                           # 24C
-                "cpt_code": s["cpt_code"],            # 24D
-                "dx_pointer": dx_pointer,              # 24E ✅
-                "charges": None,                       # 24F (pendiente tarifas)
-                "units": s["units"],                   # 24G
-            })
-
-        # =========================
-        # TOTALES (28–30)
-        # =========================
         totals = {
-            "total_units": sum(s["units"] for s in services),
-            "total_charge": None,   # 28
-            "amount_paid": 0.00,    # 29
-            "balance_due": None     # 30
+            "total_charge": round(total_charge, 2),
+            "amount_paid": 0.0,
+            "balance_due": round(total_charge, 2),
         }
 
-        # =========================
-        # PROVIDER (24J)
-        # =========================
         provider = {
-    # Casilla 31
-    "signature": "Dra. Laurangélica Cruz Rodríguez",
-    "signature_date": datetime.utcnow().date().isoformat(),
+            "signature": "Dra. Laurangélica Cruz Rodríguez",
+            "signature_date": datetime.utcnow().date().isoformat(),
+            "billing": {
+                "name": "Dra. Laurangélica Cruz Rodríguez",
+                "npi": "1234567890",
+            },
+        }
 
-    # Casilla 32 – Facility / Lugar de servicio
-    "facility": {
-        "name": "Consulta Psicológica",
-        "address": "123 Calle Principal",
-        "city": "San Juan",
-        "state": "PR",
-        "zip": "00901"
-    },
-
-    # Casilla 33 – Billing Provider
-    "billing": {
-        "name": "Dra. Laurangélica Cruz Rodríguez",
-        "npi": "1234567890",
-        "tax_id": "XX-XXXXXXX",
-        "address": "123 Calle Principal",
-        "city": "San Juan",
-        "state": "PR",
-        "zip": "00901"
-    }
-}
-
-
-        # =========================
-        # SNAPSHOT FINAL
-        # =========================
         snapshot = {
             "claim": claim_data,
-            "diagnoses": diagnoses,
-            "services": snapshot_services,
+            "services": services,
             "totals": totals,
             "provider": provider,
-            "generated_at": datetime.utcnow().isoformat()
+            "generated_at": datetime.utcnow().isoformat(),
         }
 
-        snapshot_json = json.dumps(
-            snapshot,
-            ensure_ascii=False,
-            sort_keys=True
-        )
+        snapshot_json = json.dumps(snapshot, ensure_ascii=False, sort_keys=True)
+        snapshot_hash = hashlib.sha256(snapshot_json.encode("utf-8")).hexdigest()
 
-        snapshot_hash = hashlib.sha256(
-            snapshot_json.encode("utf-8")
-        ).hexdigest()
-
-        # =========================
-        # PERSISTENCIA INMUTABLE
-        # =========================
         cur.execute(
             """
             INSERT INTO cms1500_snapshots (
