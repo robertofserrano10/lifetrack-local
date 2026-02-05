@@ -27,3 +27,6 @@ from app.db.balances import *
 
 # Adjustments
 from app.db.adjustments import *
+
+# Provider Settings
+from app.db.provider_settings import *

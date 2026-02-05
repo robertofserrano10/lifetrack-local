@@ -99,15 +99,12 @@ def generate_cms1500_snapshot(claim_id: int):
             """,
             (claim_id,),
         )
+        raw_services = [dict(row) for row in cur.fetchall()]
 
         services = []
-        for row in cur.fetchall():
-            svc = dict(row)
-
-            # Dx Pointer (Casilla 24E) — FASE 3.3
-            svc["dx_pointer"] = "A" if svc.get("diagnosis_code") else None
-
-            services.append(svc)
+        for s in raw_services:
+            s["dx_pointer"] = "A"
+            services.append(s)
 
         # =========================
         # DIAGNOSES (Casilla 21)
@@ -171,36 +168,41 @@ def generate_cms1500_snapshot(claim_id: int):
             "balance_due": float(total_charge - amount_paid - total_adjustments),
         }
 
+                # =========================
+        # PROVIDER (31–33) desde provider_settings
         # =========================
-        # PROVIDER (31–33)
-        # =========================
+        from app.db.provider_settings import get_active_provider_settings
+
+        ps = get_active_provider_settings()
+
         provider = {
-            "signature": "Dra. Laurangélica Cruz Rodríguez",
-            "signature_date": datetime.utcnow().date().isoformat(),
+            "signature": ps["signature"] if ps else "Signature on File",
+            "signature_date": ps["signature_date"] if ps else None,
             "facility": {
-                "name": "Consulta Psicológica",
-                "address": "123 Calle Principal",
-                "city": "San Juan",
-                "state": "PR",
-                "zip": "00901",
+                "name": ps["facility_name"] if ps else None,
+                "address": ps["facility_address"] if ps else None,
+                "city": ps["facility_city"] if ps else None,
+                "state": ps["facility_state"] if ps else None,
+                "zip": ps["facility_zip"] if ps else None,
             },
             "billing": {
-                "name": "Dra. Laurangélica Cruz Rodríguez",
-                "npi": "1234567890",
-                "tax_id": "XX-XXXXXXX",
-                "address": "123 Calle Principal",
-                "city": "San Juan",
-                "state": "PR",
-                "zip": "00901",
+                "name": ps["billing_name"] if ps else None,
+                "npi": ps["billing_npi"] if ps else None,
+                "tax_id": ps["billing_tax_id"] if ps else None,
+                "address": ps["billing_address"] if ps else None,
+                "city": ps["billing_city"] if ps else None,
+                "state": ps["billing_state"] if ps else None,
+                "zip": ps["billing_zip"] if ps else None,
             },
         }
 
+
         # =========================
-        # META (Control interno)
+        # META
         # =========================
         meta = {
             "claim_status": claim_data["status"],
-            "snapshot_version": "3.3",
+            "snapshot_version": "4.4",
             "timezone": "PR",
             "generated_by": "system",
         }
