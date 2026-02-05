@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Provider Settings</title>
+</head>
+<body>
+
+<h1>Provider Settings</h1>
+
+<form method="POST">
+
+  <h2>Firma (Casillas 12/13/31)</h2>
+  <label>Signature:</label><br>
+  <input type="text" name="signature" value="{{ ps.signature or '' }}"><br><br>
+
+  <label>Signature Date:</label><br>
+  <input type="date" name="signature_date" value="{{ ps.signature_date or '' }}"><br><br>
+
+
+  <h2>Facility (Casilla 32)</h2>
+  <label>Facility Name:</label><br>
+  <input type="text" name="facility_name" value="{{ ps.facility_name or '' }}"><br><br>
+
+  <label>Facility Address:</label><br>
+  <input type="text" name="facility_address" value="{{ ps.facility_address or '' }}"><br><br>
+
+  <label>Facility City:</label><br>
+  <input type="text" name="facility_city" value="{{ ps.facility_city or '' }}"><br><br>
+
+  <label>Facility State:</label><br>
+  <input type="text" name="facility_state" value="{{ ps.facility_state or '' }}"><br><br>
+
+  <label>Facility ZIP:</label><br>
+  <input type="text" name="facility_zip" value="{{ ps.facility_zip or '' }}"><br><br>
+
+
+  <h2>Billing (Casilla 33)</h2>
+  <label>Billing Name:</label><br>
+  <input type="text" name="billing_name" value="{{ ps.billing_name or '' }}"><br><br>
+
+  <label>Billing NPI:</label><br>
+  <input type="text" name="billing_npi" value="{{ ps.billing_npi or '' }}"><br><br>
+
+  <label>Billing Tax ID:</label><br>
+  <input type="text" name="billing_tax_id" value="{{ ps.billing_tax_id or '' }}"><br><br>
+
+  <label>Billing Address:</label><br>
+  <input type="text" name="billing_address" value="{{ ps.billing_address or '' }}"><br><br>
+
+  <label>Billing City:</label><br>
+  <input type="text" name="billing_city" value="{{ ps.billing_city or '' }}"><br><br>
+
+  <label>Billing State:</label><br>
+  <input type="text" name="billing_state" value="{{ ps.billing_state or '' }}"><br><br>
+
+  <label>Billing ZIP:</label><br>
+  <input type="text" name="billing_zip" value="{{ ps.billing_zip or '' }}"><br><br>
+
+  <button type="submit">Guardar</button>
+</form>
+
+</body>
+</html>
