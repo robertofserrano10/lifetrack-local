@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Editar Cobertura</title>
+</head>
+<body>
+
+<h1>Editar Cobertura</h1>
+
+<p><strong>ID:</strong> {{ coverage.id }}</p>
+<p><strong>Patient ID:</strong> {{ coverage.patient_id }}</p>
+
+<form method="POST">
+
+  <label>Aseguradora:</label><br>
+  <input type="text" name="insurer_name" value="{{ coverage.insurer_name }}"><br><br>
+
+  <label>Plan:</label><br>
+  <input type="text" name="plan_name" value="{{ coverage.plan_name }}"><br><br>
+
+  <label>Número de póliza:</label><br>
+  <input type="text" name="policy_number" value="{{ coverage.policy_number }}"><br><br>
+
+  <label>Número de grupo:</label><br>
+  <input type="text" name="group_number" value="{{ coverage.group_number }}"><br><br>
+
+  <label>Insured ID:</label><br>
+  <input type="text" name="insured_id" value="{{ coverage.insured_id }}"><br><br>
+
+  <label>Fecha inicio:</label><br>
+  <input type="date" name="start_date" value="{{ coverage.start_date }}"><br><br>
+
+  <label>Fecha fin:</label><br>
+  <input type="date" name="end_date" value="{{ coverage.end_date }}"><br><br>
+
+  <button type="submit">Guardar</button>
+</form>
+
+</body>
+</html>
