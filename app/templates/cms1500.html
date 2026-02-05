@@ -8,16 +8,16 @@
   <style>
     body { font-family: Arial, Helvetica, sans-serif; margin: 18px; }
     h1 { margin-bottom: 6px; }
-    h4 { margin: 6px 0; }
     .note { color:#555; font-size:12px; margin-bottom:12px; }
     .box { border:1px solid #333; padding:8px; margin-bottom:10px; }
     .grid { display:grid; grid-template-columns: repeat(12, 1fr); gap:6px; }
     .cell { border:1px solid #444; padding:6px; font-size:12px; }
     .label { font-weight:bold; font-size:11px; display:block; margin-bottom:4px; }
-    table { border-collapse: collapse; width:100%; margin-top:6px; }
-    th, td { border:1px solid #333; padding:6px; font-size:12px; }
+    table { border-collapse: collapse; width:100%; margin-top:10px; }
+    th, td { border:1px solid #333; padding:6px; font-size:12px; vertical-align:top; }
     th { background:#eee; }
     .right { text-align:right; }
+    .muted { color:#777; }
     .pending { background:#fafafa; color:#999; }
   </style>
 
@@ -31,9 +31,109 @@
   Vista READ-ONLY. Los datos provienen de un snapshot inmutable.
 </div>
 
-<!-- ============================= -->
-<!-- ENCABEZADO -->
-<!-- ============================= -->
+<!-- BLOQUES 1–13 (PLACEHOLDERS SEGUROS) -->
+<div class="box">
+  <div class="grid">
+
+    <!-- 1 / 1a -->
+    <div class="cell" style="grid-column: span 6;">
+      <span class="label">1. Insurance Type</span>
+      {{ snapshot.insurance.plan_name or "[Por definir]" }}
+      <div class="muted" style="margin-top:4px;">
+        <strong>1a. Insured ID:</strong> {{ snapshot.insurance.insured_id or "—" }}
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="cell" style="grid-column: span 6;">
+      <span class="label">2. Patient Name</span>
+      {{ (snapshot.patient.first_name or "") }} {{ (snapshot.patient.last_name or "") }}
+    </div>
+
+    <!-- 3 -->
+    <div class="cell" style="grid-column: span 6;">
+      <span class="label">3. DOB / Sex</span>
+      <strong>DOB:</strong> {{ snapshot.patient.date_of_birth or "—" }}
+      &nbsp; | &nbsp;
+      <strong>Sex:</strong> {{ snapshot.patient.sex or "—" }}
+    </div>
+
+    <!-- 4 -->
+    <div class="cell" style="grid-column: span 6;">
+      <span class="label">4. Insured Name</span>
+      [Por definir]
+    </div>
+
+    <!-- 5 -->
+    <div class="cell" style="grid-column: span 6;">
+      <span class="label">5. Patient Address / Phone</span>
+      {% if snapshot.patient.address %}
+        {{ snapshot.patient.address.line1 or "—" }}<br>
+        {{ snapshot.patient.address.city or "—" }}, {{ snapshot.patient.address.state or "—" }} {{ snapshot.patient.address.zip or "—" }}<br>
+        <span class="muted">Phone:</span> {{ snapshot.patient.address.phone or "—" }}
+      {% else %}
+        [Por definir]
+      {% endif %}
+    </div>
+
+    <!-- 6 -->
+    <div class="cell" style="grid-column: span 6;">
+      <span class="label">6. Patient Relationship to Insured</span>
+      {{ snapshot.patient.relationship_to_insured or snapshot.patient.insured_relationship or "—" }}
+    </div>
+
+    <!-- 7 -->
+    <div class="cell" style="grid-column: span 6;">
+      <span class="label">7. Insured Address</span>
+      [Por definir]
+    </div>
+
+    <!-- 8 -->
+    <div class="cell" style="grid-column: span 6;">
+      <span class="label">8. Patient Status</span>
+      <span class="muted">Marital / Employment / Student:</span> —
+    </div>
+
+    <!-- 9 (9a–9d) -->
+    <div class="cell" style="grid-column: span 12;">
+      <span class="label">9. Other Insured (9a–9d)</span>
+      [Por definir]
+    </div>
+
+    <!-- 10 (10a–10d) -->
+    <div class="cell" style="grid-column: span 12;">
+      <span class="label">10. Is Patient’s Condition Related To (10a–10d)</span>
+      <span class="muted">Employment / Auto Accident / Other Accident / State:</span> —
+    </div>
+
+    <!-- 11 + 11a–11d -->
+    <div class="cell" style="grid-column: span 12;">
+      <span class="label">11. Insured’s Policy Group or FECA Number</span>
+      {{ snapshot.insurance.policy_number or "—" }}
+      <div class="muted" style="margin-top:6px;">
+        <strong>11a (Insured DOB/Sex):</strong> — &nbsp; | &nbsp;
+        <strong>11b (Employer/School):</strong> — &nbsp; | &nbsp;
+        <strong>11c (Insurance Plan Name/Program Name):</strong> {{ snapshot.insurance.insurer_name or "—" }} &nbsp; | &nbsp;
+        <strong>11d (Other Health Benefit Plan?):</strong> —
+      </div>
+    </div>
+
+    <!-- 12 -->
+    <div class="cell" style="grid-column: span 6;">
+      <span class="label">12. Patient’s Signature</span>
+      —
+    </div>
+
+    <!-- 13 -->
+    <div class="cell" style="grid-column: span 6;">
+      <span class="label">13. Insured’s Signature</span>
+      —
+    </div>
+
+  </div>
+</div>
+
+<!-- Encabezado técnico (debug útil por ahora) -->
 <div class="box">
   <div class="grid">
     <div class="cell" style="grid-column: span 4;">
@@ -48,44 +148,14 @@
   </div>
 </div>
 
-<!-- ============================= -->
-<!-- CASILLA 21 — DIAGNOSIS -->
-<!-- ============================= -->
-<div class="box">
-  <h4>21. Diagnosis or Nature of Illness or Injury</h4>
-  <table>
-    <tr>
-      <td width="10%"><strong>A</strong></td>
-      <td width="40%">{{ snapshot.diagnoses.A or "" }}</td>
-      <td width="10%"><strong>B</strong></td>
-      <td width="40%">{{ snapshot.diagnoses.B or "" }}</td>
-    </tr>
-    <tr>
-      <td><strong>C</strong></td>
-      <td>{{ snapshot.diagnoses.C or "" }}</td>
-      <td><strong>D</strong></td>
-      <td>{{ snapshot.diagnoses.D or "" }}</td>
-    </tr>
-  </table>
-</div>
-
-<!-- ============================= -->
-<!-- SERVICIOS 24A–24J -->
-<!-- ============================= -->
+<!-- Servicios 24A–24J -->
 <div class="box">
   <div class="label">Servicios (24A–24J)</div>
   <table>
     <tr>
-      <th>24A</th>
-      <th>24B</th>
-      <th>24C</th>
-      <th>24D</th>
-      <th>24E</th>
-      <th class="right">24F</th>
-      <th class="right">24G</th>
-      <th>24H</th>
-      <th>24I</th>
-      <th>24J</th>
+      <th>24A</th><th>24B</th><th>24C</th><th>24D</th><th>24E</th>
+      <th class="right">24F</th><th class="right">24G</th>
+      <th>24H</th><th>24I</th><th>24J</th>
     </tr>
     {% for s in snapshot.services %}
     <tr>
@@ -93,7 +163,7 @@
       <td>11</td>
       <td>N</td>
       <td>{{ s.cpt_code }}</td>
-      <td>{{ s.dx_pointer }}</td>
+      <td>{{ s.dx_pointer or 'A' }}</td>
       <td class="right pending">—</td>
       <td class="right">{{ s.units }}</td>
       <td></td>
@@ -107,65 +177,47 @@
   </table>
 </div>
 
-<!-- ============================= -->
-<!-- CASILLA 31 — PROVIDER SIGNATURE -->
-<!-- ============================= -->
+<!-- Totales 28–30 -->
 <div class="box">
   <div class="grid">
-    <div class="cell" style="grid-column: span 8;">
-      <span class="label">31 — Signature of Physician or Supplier</span>
-      {{ snapshot.provider.signature }}
+    <div class="cell" style="grid-column: span 4;">
+      <span class="label">28 — Total Charge</span>
+      {{ snapshot.totals.total_charge }}
     </div>
     <div class="cell" style="grid-column: span 4;">
-      <span class="label">Date</span>
-      {{ snapshot.provider.signature_date }}
-    </div>
-  </div>
-</div>
-
-<!-- ============================= -->
-<!-- CASILLA 32 — SERVICE FACILITY -->
-<!-- ============================= -->
-<div class="box">
-  <div class="label">32 — Service Facility Location Information</div>
-  <div>
-    {{ snapshot.provider.facility.name }}<br>
-    {{ snapshot.provider.facility.address }}<br>
-    {{ snapshot.provider.facility.city }}, {{ snapshot.provider.facility.state }}
-    {{ snapshot.provider.facility.zip }}
-  </div>
-</div>
-
-<!-- ============================= -->
-<!-- CASILLA 33 — BILLING PROVIDER -->
-<!-- ============================= -->
-<div class="box">
-  <div class="label">33 — Billing Provider Info & Phone #</div>
-  <div>
-    {{ snapshot.provider.billing.name }}<br>
-    {{ snapshot.provider.billing.address }}<br>
-    {{ snapshot.provider.billing.city }}, {{ snapshot.provider.billing.state }}
-    {{ snapshot.provider.billing.zip }}<br>
-    NPI {{ snapshot.provider.billing.npi }}<br>
-    Tax ID {{ snapshot.provider.billing.tax_id }}
-  </div>
-</div>
-
-<!-- ============================= -->
-<!-- TOTALES 28–30 -->
-<!-- ============================= -->
-<div class="box">
-  <div class="grid">
-    <div class="cell pending" style="grid-column: span 4;">
-      <span class="label">28 — Total Charge</span>Pendiente
+      <span class="label">29 — Amount Paid</span>
+      {{ snapshot.totals.amount_paid }}
     </div>
     <div class="cell" style="grid-column: span 4;">
-      <span class="label">29 — Amount Paid</span>0.00
-    </div>
-    <div class="cell pending" style="grid-column: span 4;">
-      <span class="label">30 — Balance Due</span>Pendiente
+      <span class="label">30 — Balance Due</span>
+      {{ snapshot.totals.balance_due }}
     </div>
   </div>
+</div>
+
+<!-- CASILLA 31 -->
+<div class="box">
+  <span class="label">31 — Signature of Physician or Supplier</span>
+  {{ snapshot.provider.signature }}<br>
+  <span class="muted">Date:</span> {{ snapshot.provider.signature_date }}
+</div>
+
+<!-- CASILLA 32 -->
+<div class="box">
+  <span class="label">32 — Service Facility Location Information</span>
+  {{ snapshot.provider.facility.name }}<br>
+  {{ snapshot.provider.facility.address }}<br>
+  {{ snapshot.provider.facility.city }}, {{ snapshot.provider.facility.state }} {{ snapshot.provider.facility.zip }}
+</div>
+
+<!-- CASILLA 33 -->
+<div class="box">
+  <span class="label">33 — Billing Provider Info & Phone</span>
+  {{ snapshot.provider.billing.name }}<br>
+  {{ snapshot.provider.billing.address }}<br>
+  {{ snapshot.provider.billing.city }}, {{ snapshot.provider.billing.state }} {{ snapshot.provider.billing.zip }}<br>
+  <strong>NPI:</strong> {{ snapshot.provider.billing.npi }}<br>
+  <strong>Tax ID:</strong> {{ snapshot.provider.billing.tax_id }}
 </div>
 
 </body>

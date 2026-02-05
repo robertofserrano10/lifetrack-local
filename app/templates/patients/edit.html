@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Editar Paciente</title>
+</head>
+<body>
+
+<h1>Editar Paciente</h1>
+
+<p><strong>ID:</strong> {{ patient.id }}</p>
+
+<form method="POST">
+  <label>Nombre:</label><br>
+  <input type="text" name="first_name" value="{{ patient.first_name }}"><br><br>
+
+  <label>Apellido:</label><br>
+  <input type="text" name="last_name" value="{{ patient.last_name }}"><br><br>
+
+  <label>Fecha de nacimiento:</label><br>
+  <input type="date" name="date_of_birth" value="{{ patient.date_of_birth }}"><br><br>
+
+  <button type="submit">Guardar</button>
+</form>
+
+</body>
+</html>

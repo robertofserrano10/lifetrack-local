@@ -105,8 +105,9 @@ CREATE TABLE IF NOT EXISTS applications (
 CREATE TABLE IF NOT EXISTS adjustments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     charge_id INTEGER NOT NULL,
+    adjustment_code TEXT,         -- opcional (CO, PR, OA, etc. si luego lo necesitas)
     amount REAL NOT NULL,
-    reason TEXT NOT NULL,
+    reason TEXT,                  -- opcional (texto libre)
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (charge_id) REFERENCES charges(id)
 );
@@ -131,16 +132,3 @@ CREATE INDEX IF NOT EXISTS idx_charges_service ON charges(service_id);
 CREATE INDEX IF NOT EXISTS idx_applications_charge ON applications(charge_id);
 CREATE INDEX IF NOT EXISTS idx_adjustments_charge ON adjustments(charge_id);
 CREATE INDEX IF NOT EXISTS idx_snapshots_claim ON cms1500_snapshots(claim_id);
-
--- Adjustments (EOB adjustments / write-offs)
-CREATE TABLE IF NOT EXISTS adjustments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    charge_id INTEGER NOT NULL,
-    adjustment_code TEXT,
-    amount REAL NOT NULL,
-    reason TEXT,
-    created_at TEXT NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_adjustments_charge
-ON adjustments(charge_id);
