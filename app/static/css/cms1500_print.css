@@ -1,31 +1,50 @@
-/* CMS-1500 Print Styles */
+/* =========================
+   CMS-1500 Print Styles (FASE 5.5)
+   Objetivo: impresión más compacta + checks ☐/☑ visuales
+   Sin lógica / sin DB / sin tocar snapshots
+   ========================= */
 
 @page {
   size: letter;
-  margin: 0.5in;
+  margin: 0.35in;
+}
+
+html, body {
+  background: #fff !important;
+  color: #000 !important;
 }
 
 body {
+  margin: 0 !important;
+  padding: 0 !important;
   font-family: Arial, Helvetica, sans-serif;
-  color: #000;
-  background: #fff;
+  font-size: 8pt;
+  line-height: 1.15;
 }
 
-h1 {
-  font-size: 16px;
-  margin-bottom: 6px;
-}
+/* En print, eliminamos “aire” extra */
+h1 { font-size: 10pt; margin: 0 0 6px 0; }
+.note { display: none !important; }
 
-.note {
-  display: none; /* no imprimir avisos */
-}
-
+/* Contenedores */
 .box {
-  border: 1px solid #000;
-  padding: 6px;
-  margin-bottom: 8px;
+  border: 1px solid #000 !important;
+  padding: 6px !important;
+  margin: 0 0 6px 0 !important;
+  page-break-inside: avoid;
 }
 
+.label {
+  font-weight: bold;
+  font-size: 8pt;
+  display: block;
+  margin: 0 0 4px 0;
+}
+
+.muted { color: #000 !important; opacity: 0.85; }
+.pending { color: #000 !important; background: transparent !important; }
+
+/* Grid */
 .grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -33,41 +52,106 @@ h1 {
 }
 
 .cell {
-  border: 1px solid #000;
-  padding: 4px;
-  font-size: 10px;
+  border: 1px solid #000 !important;
+  padding: 4px !important;
+  font-size: 8pt;
+  page-break-inside: avoid;
 }
 
-.label {
-  font-size: 9px;
-  font-weight: bold;
-}
-
+/* Tablas (24) */
 table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+  page-break-inside: avoid;
 }
 
 th, td {
-  border: 1px solid #000;
-  padding: 4px;
-  font-size: 10px;
+  border: 1px solid #000 !important;
+  padding: 3px 4px !important;
+  font-size: 7pt;
+  vertical-align: top;
+  word-wrap: break-word;
 }
 
 th {
-  background: #eee;
+  background: transparent !important;
+  font-weight: bold;
 }
 
-.right {
-  text-align: right;
+.right { text-align: right; }
+
+/* Ajuste de columnas para que no explote el layout */
+.cms24 th:nth-child(1), .cms24 td:nth-child(1) { width: 12%; } /* 24A */
+.cms24 th:nth-child(2), .cms24 td:nth-child(2) { width: 7%; }  /* 24B */
+.cms24 th:nth-child(3), .cms24 td:nth-child(3) { width: 6%; }  /* 24C */
+.cms24 th:nth-child(4), .cms24 td:nth-child(4) { width: 12%; } /* 24D */
+.cms24 th:nth-child(5), .cms24 td:nth-child(5) { width: 7%; }  /* 24E */
+.cms24 th:nth-child(6), .cms24 td:nth-child(6) { width: 10%; } /* 24F */
+.cms24 th:nth-child(7), .cms24 td:nth-child(7) { width: 7%; }  /* 24G */
+.cms24 th:nth-child(8), .cms24 td:nth-child(8) { width: 10%; } /* 20 */
+.cms24 th:nth-child(9), .cms24 td:nth-child(9) { width: 7%; }  /* 24I */
+.cms24 th:nth-child(10), .cms24 td:nth-child(10) { width: 22%; } /* 24J */
+
+/* =========================
+   CHECKBOXES VISUALES (☐/☑)
+   ========================= */
+
+.cb {
+  display: inline-block;
+  width: 0.14in;
+  height: 0.14in;
+  border: 1px solid #000;
+  vertical-align: middle;
+  margin-right: 0.06in;
+  position: relative;
+  box-sizing: border-box;
 }
 
-.pending {
-  color: #777;
+.cb.checked::after {
+  content: "";
+  position: absolute;
+  left: 0.04in;
+  top: 0.01in;
+  width: 0.05in;
+  height: 0.09in;
+  border-right: 2px solid #000;
+  border-bottom: 2px solid #000;
+  transform: rotate(45deg);
 }
 
+.opt {
+  display: inline-block;
+  white-space: nowrap;
+  margin-right: 0.14in;
+  margin-bottom: 0.06in;
+}
+
+.optblock {
+  display: block;
+}
+
+/* Firma “Signature on File” más tipo forma */
+.sof {
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+}
+
+/* =========================
+   31 / 32 / 33 — compactar
+   ========================= */
+.provider-block {
+  font-size: 8pt;
+  line-height: 1.15;
+}
+
+.provider-line {
+  display: block;
+  margin: 0;
+}
+
+/* Ocultar links/botones en print */
 @media print {
-  a, button {
-    display: none;
-  }
+  a, button { display: none !important; }
 }
