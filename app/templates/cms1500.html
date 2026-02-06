@@ -1,202 +1,403 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>CMS-1500 — Snapshot</title>
 
   <style>
+    /* ============ BASE ============ */
     body { font-family: Arial, Helvetica, sans-serif; margin: 18px; }
-    h1 { margin-bottom: 6px; }
-    .note { color:#555; font-size:12px; margin-bottom:12px; }
-    .box { border:1px solid #333; padding:8px; margin-bottom:10px; }
-    .grid { display:grid; grid-template-columns: repeat(12, 1fr); gap:6px; }
-    .cell { border:1px solid #444; padding:6px; font-size:12px; }
-    .label { font-weight:bold; font-size:11px; display:block; margin-bottom:4px; }
-    table { border-collapse: collapse; width:100%; margin-top:10px; }
-    th, td { border:1px solid #333; padding:6px; font-size:12px; vertical-align:top; }
-    th { background:#eee; }
-    .right { text-align:right; }
-    .muted { color:#777; }
-    .pending { background:#fafafa; color:#999; }
+    h1 { margin: 0 0 6px 0; }
+    .note { color:#555; font-size:12px; margin: 0 0 12px 0; }
+
+    /* “Bandas” tipo papel */
+    .band { border: 1px solid #333; margin-bottom: 10px; }
+    .row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 0; }
+    .cell {
+      border-right: 1px solid #333;
+      border-top: 1px solid #333;
+      padding: 6px;
+      font-size: 12px;
+      min-height: 48px;
+      box-sizing: border-box;
+      vertical-align: top;
+    }
+    .row .cell:first-child { border-left: none; }
+    .row:first-child .cell { border-top: none; }
+    .row { border-bottom: 1px solid #333; }
+    .row:last-child { border-bottom: none; }
+    .cell:last-child { border-right: none; }
+
+    .label { font-weight: bold; font-size: 11px; display: block; margin-bottom: 4px; }
+    .muted { color:#777; font-size: 11px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; }
+
+    /* Checkboxes visuales */
+    .cb { display:inline-block; width:14px; height:14px; border:1px solid #000; vertical-align:middle; margin-right:6px; position:relative; box-sizing:border-box; }
+    .cb.checked:after { content:""; position:absolute; left:4px; top:1px; width:5px; height:9px; border-right:2px solid #000; border-bottom:2px solid #000; transform:rotate(45deg); }
+    .opt { display:inline-block; white-space:nowrap; margin-right:12px; margin-bottom:4px; }
+    .optblock { display:block; }
+
+    /* Tablas (21 y 24) */
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #333; padding: 6px; font-size: 12px; vertical-align: top; }
+    th { background:#eee; font-weight: bold; }
+    .right { text-align: right; }
+
+    /* Banda compacta (para 25–33) */
+    .minh-36 { min-height: 36px; }
+
+    /* Print */
   </style>
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/cms1500_print.css') }}" media="print">
 </head>
+
 <body>
+  <h1>CMS-1500 — Snapshot</h1>
+  <div class="note">Vista READ-ONLY. Los datos provienen de un snapshot inmutable.</div>
 
-<h1>CMS-1500 — Snapshot</h1>
-<div class="note">
-  Vista READ-ONLY. Los datos provienen de un snapshot inmutable.
-</div>
+  <!-- =========================
+       BANDA 1: 1 / 1a / 2 / 3
+       ========================= -->
+  <div class="band">
+    <div class="row">
+      <!-- 1 + 1a -->
+      <div class="cell" style="grid-column: span 4;">
+        <span class="label">1. Insurance Type</span>
+        {{ snapshot.insurance.plan_name or "—" }}
+        <div class="muted" style="margin-top:6px;">
+          <strong>1a.</strong> Insured ID: {{ snapshot.insurance.insured_id or "—" }}
+        </div>
+      </div>
 
-<!-- ========================= -->
-<!-- CASILLAS 1–13 -->
-<!-- ========================= -->
-<div class="box">
-  <div class="grid">
+      <!-- 2 -->
+      <div class="cell" style="grid-column: span 4;">
+        <span class="label">2. Patient Name</span>
+        {{ (snapshot.patient.first_name or "") }} {{ (snapshot.patient.last_name or "") }}
+      </div>
 
-    <div class="cell" style="grid-column: span 6;">
-      <span class="label">1. Insurance Type</span>
-      {{ snapshot.insurance.plan_name or "[Por definir]" }}
-      <div class="muted"><strong>1a.</strong> {{ snapshot.insurance.insured_id or "—" }}</div>
+      <!-- 3 -->
+      <div class="cell" style="grid-column: span 4;">
+        <span class="label">3. DOB / Sex</span>
+        <div><strong>DOB:</strong> {{ snapshot.patient.date_of_birth or "—" }}</div>
+        <div><strong>Sex:</strong> {{ snapshot.patient.sex or "—" }}</div>
+      </div>
     </div>
-
-    <div class="cell" style="grid-column: span 6;">
-      <span class="label">2. Patient Name</span>
-      {{ snapshot.patient.first_name }} {{ snapshot.patient.last_name }}
-    </div>
-
-    <div class="cell" style="grid-column: span 6;">
-      <span class="label">3. DOB / Sex</span>
-      {{ snapshot.patient.date_of_birth or "—" }} | {{ snapshot.patient.sex or "—" }}
-    </div>
-
-    <div class="cell" style="grid-column: span 6;">
-      <span class="label">4. Insured Name</span>
-      —
-    </div>
-
-    <div class="cell" style="grid-column: span 6;">
-      <span class="label">5. Patient Address / Phone</span>
-      —
-    </div>
-
-    <div class="cell" style="grid-column: span 6;">
-      <span class="label">6. Relationship to Insured</span>
-      {{ snapshot.patient.insured_relationship or "—" }}
-    </div>
-
-    <div class="cell" style="grid-column: span 6;">
-      <span class="label">7. Insured Address</span>
-      —
-    </div>
-
-    <div class="cell" style="grid-column: span 6;">
-      <span class="label">8. Patient Status</span>
-      —
-    </div>
-
-    <div class="cell" style="grid-column: span 12;">
-      <span class="label">9. Other Insured (9a–9d)</span>
-      —
-    </div>
-
-    <div class="cell" style="grid-column: span 12;">
-      <span class="label">10. Condition Related To</span>
-      —
-    </div>
-
-    <div class="cell" style="grid-column: span 12;">
-      <span class="label">11. Policy / Group</span>
-      {{ snapshot.insurance.policy_number or "—" }}
-    </div>
-
-    <div class="cell" style="grid-column: span 6;">
-      <span class="label">12. Patient Signature</span>
-      Signature on File
-    </div>
-
-    <div class="cell" style="grid-column: span 6;">
-      <span class="label">13. Insured Signature</span>
-      Signature on File
-    </div>
-
   </div>
-</div>
 
-<!-- ========================= -->
-<!-- CASILLAS 14–23 -->
-<!-- ========================= -->
-<div class="box">
-  <div class="grid">
+  <!-- =========================
+       BANDA 2: 4 / 5 / 6 / 7
+       ========================= -->
+  <div class="band">
+    <div class="row">
+      <!-- 4 -->
+      <div class="cell" style="grid-column: span 3;">
+        <span class="label">4. Insured Name</span>
+        —
+      </div>
 
-    <div class="cell" style="grid-column: span 6;"><span class="label">14.</span> —</div>
-    <div class="cell" style="grid-column: span 6;"><span class="label">15.</span> —</div>
-    <div class="cell" style="grid-column: span 6;"><span class="label">16.</span> —</div>
-    <div class="cell" style="grid-column: span 6;"><span class="label">17.</span> —</div>
-    <div class="cell" style="grid-column: span 12;"><span class="label">18.</span> —</div>
-    <div class="cell" style="grid-column: span 6;"><span class="label">19.</span> —</div>
-    <div class="cell" style="grid-column: span 6;"><span class="label">20.</span> —</div>
-    <div class="cell" style="grid-column: span 12;"><span class="label">21.</span> {{ snapshot.diagnoses.A or "—" }}</div>
-    <div class="cell" style="grid-column: span 6;"><span class="label">22.</span> —</div>
-    <div class="cell" style="grid-column: span 6;"><span class="label">23.</span> —</div>
+      <!-- 5 -->
+      <div class="cell" style="grid-column: span 3;">
+        <span class="label">5. Patient Address / Phone</span>
+        —
+      </div>
 
+      <!-- 6 -->
+      <div class="cell" style="grid-column: span 3;">
+        <span class="label">6. Relationship to Insured</span>
+        {% set rel = snapshot.patient.relationship_to_insured or snapshot.patient.insured_relationship or "" %}
+        <span class="opt"><span class="cb {{ 'checked' if rel=='self' else '' }}"></span>Self</span>
+        <span class="opt"><span class="cb {{ 'checked' if rel=='spouse' else '' }}"></span>Spouse</span>
+        <span class="opt"><span class="cb {{ 'checked' if rel=='child' else '' }}"></span>Child</span>
+        <span class="opt"><span class="cb {{ 'checked' if rel=='other' else '' }}"></span>Other</span>
+      </div>
+
+      <!-- 7 -->
+      <div class="cell" style="grid-column: span 3;">
+        <span class="label">7. Insured Address</span>
+        —
+      </div>
+    </div>
   </div>
-</div>
 
-<!-- ========================= -->
-<!-- SERVICIOS 24A–24J (+20) -->
-<!-- ========================= -->
-<div class="box">
-  <table>
-    <tr>
-      <th>24A</th><th>24B</th><th>24C</th><th>24D</th><th>24E</th>
-      <th>24F</th><th>24G</th><th>20</th><th>24I</th><th>24J</th>
-    </tr>
-    {% for s in snapshot.services %}
-    <tr>
-      <td>{{ s.service_date }}</td>
-      <td>11</td>
-      <td>N</td>
-      <td>{{ s.cpt_code }}</td>
-      <td>{{ s.dx_pointer or "A" }}</td>
-      <td class="right">—</td>
-      <td class="right">{{ s.units }}</td>
-      <td>
-        {% if s.outside_lab_20 %}
-          Y<br>{{ s.lab_charges_20 or '' }}
-        {% else %}
-          N
-        {% endif %}
-      </td>
-      <td></td>
-      <td>
-        {{ snapshot.provider.billing.name }}<br>
-        NPI {{ snapshot.provider.billing.npi }}
-      </td>
-    </tr>
-    {% endfor %}
-  </table>
-</div>
+  <!-- =========================
+       BANDA 3: 8 / 9 / 10
+       ========================= -->
+  <div class="band">
+    <div class="row">
+      <!-- 8 -->
+      <div class="cell" style="grid-column: span 4;">
+        <span class="label">8. Patient Status</span>
+        <div class="optblock">
+          <span class="opt"><span class="cb"></span>Single</span>
+          <span class="opt"><span class="cb"></span>Married</span>
+          <span class="opt"><span class="cb"></span>Other</span>
+        </div>
+        <div class="optblock">
+          <span class="opt"><span class="cb"></span>Employed</span>
+          <span class="opt"><span class="cb"></span>Full-Time Student</span>
+          <span class="opt"><span class="cb"></span>Part-Time Student</span>
+        </div>
+        <div class="muted">(visual por ahora)</div>
+      </div>
 
-<!-- ========================= -->
-<!-- 28–30 -->
-<!-- ========================= -->
-<div class="box">
-  <strong>28:</strong> {{ snapshot.totals.total_charge }} |
-  <strong>29:</strong> {{ snapshot.totals.amount_paid }} |
-  <strong>30:</strong> {{ snapshot.totals.balance_due }}
-</div>
+      <!-- 9 -->
+      <div class="cell" style="grid-column: span 4;">
+        <span class="label">9. Other Insured (9a–9d)</span>
+        —
+      </div>
 
-<!-- ========================= -->
-<!-- 31 / 32 / 33 (OFICIAL) -->
-<!-- ========================= -->
+      <!-- 10 -->
+      <div class="cell" style="grid-column: span 4;">
+        <span class="label">10. Condition Related To (10a–10d)</span>
+        <div class="optblock">
+          <span class="opt"><span class="cb"></span>10a Employment</span>
+          <span class="opt"><span class="cb"></span>10b Auto Accident</span>
+        </div>
+        <div class="optblock">
+          <span class="opt"><span class="cb"></span>10c Other Accident</span>
+          <span class="opt"><span class="cb"></span>10d State: ____</span>
+        </div>
+        <div class="muted">(visual por ahora)</div>
+      </div>
+    </div>
+  </div>
 
-<div class="box">
-  <span class="label">31 — Rendering Provider</span>
-  {{ snapshot.provider.signature }}<br>
-  <span class="muted">Date:</span> {{ snapshot.provider.signature_date or '' }}
-</div>
+  <!-- =========================
+       BANDA 4: 11 / 11a–11d / 12 / 13
+       ========================= -->
+  <div class="band">
+    <div class="row">
+      <!-- 11 + 11a–11d -->
+      <div class="cell" style="grid-column: span 8;">
+        <span class="label">11. Insured’s Policy Group or FECA Number</span>
+        {{ snapshot.insurance.policy_number or "—" }}
 
-<div class="box">
-  <span class="label">32 — Service Facility Location</span>
-  {{ snapshot.provider.facility.name or '' }}<br>
-  {{ snapshot.provider.facility.address or '' }}<br>
-  {{ snapshot.provider.facility.city or '' }},
-  {{ snapshot.provider.facility.state or '' }}
-  {{ snapshot.provider.facility.zip or '' }}
-</div>
+        <div class="muted" style="margin-top:6px;">
+          <div><strong>11a:</strong> —</div>
+          <div><strong>11b:</strong> —</div>
+          <div><strong>11c:</strong> {{ snapshot.insurance.insurer_name or "—" }}</div>
+          <div>
+            <strong>11d Other Health Benefit Plan?</strong>
+            <span class="opt"><span class="cb"></span>Yes</span>
+            <span class="opt"><span class="cb"></span>No</span>
+          </div>
+        </div>
+      </div>
 
-<div class="box">
-  <span class="label">33 — Billing Provider</span>
-  {{ snapshot.provider.billing.name or '' }}<br>
-  {{ snapshot.provider.billing.address or '' }}<br>
-  {{ snapshot.provider.billing.city or '' }},
-  {{ snapshot.provider.billing.state or '' }}
-  {{ snapshot.provider.billing.zip or '' }}<br>
-  <strong>NPI:</strong> {{ snapshot.provider.billing.npi or '' }}<br>
-  <strong>Tax ID:</strong> {{ snapshot.provider.billing.tax_id or '' }}
-</div>
+      <!-- 12 -->
+      <div class="cell" style="grid-column: span 2;">
+        <span class="label">12. Patient’s Signature</span>
+        <span class="opt"><span class="cb checked"></span>Signature on File</span>
+      </div>
+
+      <!-- 13 -->
+      <div class="cell" style="grid-column: span 2;">
+        <span class="label">13. Insured’s Signature</span>
+        <span class="opt"><span class="cb checked"></span>Signature on File</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================
+       BANDA 5: 14 / 15 / 16 / 17 / 18 / 19 / 20 / 23
+       (20 solo referencia. 17/23 claim-level.)
+       ========================= -->
+  <div class="band">
+    <div class="row">
+      <div class="cell minh-36" style="grid-column: span 2;"><span class="label">14.</span>—</div>
+      <div class="cell minh-36" style="grid-column: span 2;"><span class="label">15.</span>—</div>
+      <div class="cell minh-36" style="grid-column: span 2;"><span class="label">16.</span>—</div>
+      <div class="cell minh-36" style="grid-column: span 2;"><span class="label">17. Referring Provider</span>—</div>
+      <div class="cell minh-36" style="grid-column: span 2;"><span class="label">18.</span>—</div>
+      <div class="cell minh-36" style="grid-column: span 2;"><span class="label">19. Reserved</span>—</div>
+    </div>
+
+    <div class="row">
+      <div class="cell minh-36" style="grid-column: span 4;">
+        <span class="label">20. Outside Lab?</span>
+        Outside Lab — see service section
+      </div>
+
+      <div class="cell minh-36" style="grid-column: span 4;">
+        <span class="label">23. Prior Authorization No.</span>
+        —
+      </div>
+
+      <div class="cell minh-36" style="grid-column: span 4;">
+        <span class="label">22. Resubmission (Code / Original Ref)</span>
+        —
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================
+       BANDA 6: 21 (A–L) DIAGNOSES — tabla tipo CMS
+       ========================= -->
+  <div class="band">
+    <div class="row">
+      <div class="cell" style="grid-column: span 12;">
+        <span class="label">21. Diagnosis or Nature of Illness or Injury (A–L)</span>
+
+        <table>
+          <tr>
+            <th style="width:6%;">A</th>
+            <th style="width:6%;">B</th>
+            <th style="width:6%;">C</th>
+            <th style="width:6%;">D</th>
+            <th style="width:6%;">E</th>
+            <th style="width:6%;">F</th>
+            <th style="width:6%;">G</th>
+            <th style="width:6%;">H</th>
+            <th style="width:6%;">I</th>
+            <th style="width:6%;">J</th>
+            <th style="width:6%;">K</th>
+            <th style="width:6%;">L</th>
+          </tr>
+          <tr>
+            <td>{{ snapshot.diagnoses.A or "—" }}</td>
+            <td>{{ snapshot.diagnoses.B or "—" }}</td>
+            <td>{{ snapshot.diagnoses.C or "—" }}</td>
+            <td>{{ snapshot.diagnoses.D or "—" }}</td>
+            <td>{{ snapshot.diagnoses.E or "—" }}</td>
+            <td>{{ snapshot.diagnoses.F or "—" }}</td>
+            <td>{{ snapshot.diagnoses.G or "—" }}</td>
+            <td>{{ snapshot.diagnoses.H or "—" }}</td>
+            <td>{{ snapshot.diagnoses.I or "—" }}</td>
+            <td>{{ snapshot.diagnoses.J or "—" }}</td>
+            <td>{{ snapshot.diagnoses.K or "—" }}</td>
+            <td>{{ snapshot.diagnoses.L or "—" }}</td>
+          </tr>
+        </table>
+
+        <div class="muted" style="margin-top:6px;">
+          (Visual: A–L siempre visibles. No inventa diagnósticos.)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================
+       BANDA 7: 24 (A–J) SERVICES — tabla
+       (SIN casilla 20 aquí por tu regla)
+       ========================= -->
+  <div class="band">
+    <div class="row">
+      <div class="cell" style="grid-column: span 12;">
+        <span class="label">24. Service Lines (24A–24J)</span>
+
+        <table>
+          <tr>
+            <th>24A</th><th>24B</th><th>24C</th><th>24D</th><th>24E</th>
+            <th class="right">24F</th><th class="right">24G</th>
+            <th>24I</th><th>24J</th>
+          </tr>
+
+          {% for s in snapshot.services %}
+          <tr>
+            <td>{{ s.service_date or "—" }}</td>
+            <td>11</td>
+            <td>N</td>
+            <td>{{ s.cpt_code or "—" }}</td>
+            <td>{{ s.dx_pointer or "A" }}</td>
+            <td class="right">—</td>
+            <td class="right">{{ s.units or "—" }}</td>
+            <td>—</td>
+            <td>
+              {{ snapshot.provider.billing.name or "—" }}<br>
+              <span class="muted">NPI:</span> {{ snapshot.provider.billing.npi or "—" }}
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================
+       BANDA 8: 25 / 26 / 27  (27 debe ir aquí)
+       ========================= -->
+  <div class="band">
+    <div class="row">
+      <!-- 25 -->
+      <div class="cell minh-36" style="grid-column: span 4;">
+        <span class="label">25. Federal Tax ID / SSN</span>
+        {{ snapshot.provider.billing.tax_id or "—" }}
+      </div>
+
+      <!-- 26 -->
+      <div class="cell minh-36" style="grid-column: span 4;">
+        <span class="label">26. Patient’s Account No.</span>
+        {{ snapshot.claim.id or "—" }}
+      </div>
+
+      <!-- 27 -->
+      <div class="cell minh-36" style="grid-column: span 4;">
+        <span class="label">27. Accept Assignment</span>
+        <span class="opt"><span class="cb"></span>Yes</span>
+        <span class="opt"><span class="cb"></span>No</span>
+        <div class="muted">(visual por ahora)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================
+       BANDA 9: 28 / 29 / 30
+       ========================= -->
+  <div class="band">
+    <div class="row">
+      <div class="cell minh-36" style="grid-column: span 4;">
+        <span class="label">28. Total Charge</span>
+        {{ snapshot.totals.total_charge }}
+      </div>
+      <div class="cell minh-36" style="grid-column: span 4;">
+        <span class="label">29. Amount Paid</span>
+        {{ snapshot.totals.amount_paid }}
+      </div>
+      <div class="cell minh-36" style="grid-column: span 4;">
+        <span class="label">30. Balance Due</span>
+        {{ snapshot.totals.balance_due }}
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================
+       BANDA 10: 31 / 32 / 33
+       ========================= -->
+  <div class="band">
+    <div class="row">
+      <!-- 31 -->
+      <div class="cell" style="grid-column: span 4;">
+        <span class="label">31. Signature of Physician or Supplier</span>
+        {{ snapshot.provider.signature or "Signature on File" }}<br>
+        <span class="muted">Date:</span> {{ snapshot.provider.signature_date or "" }}
+      </div>
+
+      <!-- 32 -->
+      <div class="cell" style="grid-column: span 4;">
+        <span class="label">32. Service Facility Location Information</span>
+        {{ snapshot.provider.facility.name or "" }}<br>
+        {{ snapshot.provider.facility.address or "" }}<br>
+        {{ snapshot.provider.facility.city or "" }}, {{ snapshot.provider.facility.state or "" }} {{ snapshot.provider.facility.zip or "" }}
+      </div>
+
+      <!-- 33 -->
+      <div class="cell" style="grid-column: span 4;">
+        <span class="label">33. Billing Provider Info</span>
+        {{ snapshot.provider.billing.name or "" }}<br>
+        {{ snapshot.provider.billing.address or "" }}<br>
+        {{ snapshot.provider.billing.city or "" }}, {{ snapshot.provider.billing.state or "" }} {{ snapshot.provider.billing.zip or "" }}<br>
+        <span class="muted">NPI:</span> {{ snapshot.provider.billing.npi or "" }}<br>
+        <span class="muted">Tax ID:</span> {{ snapshot.provider.billing.tax_id or "" }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Debug técnico opcional (no afecta lógica) -->
+  <div class="muted mono" style="margin-top:8px;">
+    Claim={{ snapshot.claim.id }} | Patient={{ snapshot.claim.patient_id }} | Coverage={{ snapshot.claim.coverage_id }}
+  </div>
 
 </body>
 </html>
