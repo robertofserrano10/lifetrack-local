@@ -1,6 +1,37 @@
 PRAGMA foreign_keys = ON;
 
 -- =========================
+-- Provider Settings (GLOBAL)
+-- =========================
+CREATE TABLE IF NOT EXISTS provider_settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    -- Signatures (31)
+    signature TEXT NOT NULL DEFAULT 'Signature on File',
+    signature_date TEXT,
+
+    -- Facility (32)
+    facility_name TEXT,
+    facility_address TEXT,
+    facility_city TEXT,
+    facility_state TEXT,
+    facility_zip TEXT,
+
+    -- Billing (33)
+    billing_name TEXT,
+    billing_npi TEXT,
+    billing_tax_id TEXT,
+    billing_address TEXT,
+    billing_city TEXT,
+    billing_state TEXT,
+    billing_zip TEXT,
+
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- =========================
 -- Patients
 -- =========================
 CREATE TABLE IF NOT EXISTS patients (
@@ -39,6 +70,22 @@ CREATE TABLE IF NOT EXISTS claims (
     coverage_id INTEGER NOT NULL,
     claim_number TEXT,
     status TEXT NOT NULL DEFAULT 'draft',
+
+    -- NEW (CMS-1500 fields)
+    -- Box 17 (Referring Provider)
+    referring_provider_name TEXT,
+    referring_provider_npi TEXT,
+
+    -- Box 19 (Reserved for Local Use)
+    reserved_local_use_19 TEXT,
+
+    -- Box 22 (Resubmission)
+    resubmission_code_22 TEXT,
+    original_ref_no_22 TEXT,
+
+    -- Box 23 (Prior Authorization)
+    prior_authorization_23 TEXT,
+
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (patient_id) REFERENCES patients(id),
@@ -56,6 +103,11 @@ CREATE TABLE IF NOT EXISTS services (
     units INTEGER NOT NULL,
     diagnosis_code TEXT NOT NULL,
     description TEXT,
+
+    -- NEW (CMS-1500 box 20 at service-level)
+    outside_lab_20 INTEGER NOT NULL DEFAULT 0,
+    lab_charges_20 REAL,
+
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (claim_id) REFERENCES claims(id)
@@ -105,9 +157,8 @@ CREATE TABLE IF NOT EXISTS applications (
 CREATE TABLE IF NOT EXISTS adjustments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     charge_id INTEGER NOT NULL,
-    adjustment_code TEXT,         -- opcional (CO, PR, OA, etc. si luego lo necesitas)
     amount REAL NOT NULL,
-    reason TEXT,                  -- opcional (texto libre)
+    reason TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (charge_id) REFERENCES charges(id)
 );

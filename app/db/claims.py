@@ -1,3 +1,4 @@
+from datetime import datetime
 from app.db.connection import get_connection
 
 
@@ -5,14 +6,18 @@ def create_claim(patient_id: int, coverage_id: int) -> int:
     """
     Crea un claim en estado 'draft' y devuelve su ID.
     """
+    now = datetime.utcnow().isoformat()
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute(
             """
-            INSERT INTO claims (patient_id, coverage_id, status)
-            VALUES (?, ?, 'draft')
+            INSERT INTO claims (
+                patient_id, coverage_id, status,
+                created_at, updated_at
+            )
+            VALUES (?, ?, 'draft', ?, ?)
             """,
-            (patient_id, coverage_id),
+            (patient_id, coverage_id, now, now),
         )
         conn.commit()
         return cur.lastrowid
@@ -24,10 +29,7 @@ def get_claim_by_id(claim_id: int):
     """
     with get_connection() as conn:
         cur = conn.cursor()
-        cur.execute(
-            "SELECT * FROM claims WHERE id = ?",
-            (claim_id,),
-        )
+        cur.execute("SELECT * FROM claims WHERE id = ?", (claim_id,))
         row = cur.fetchone()
         return dict(row) if row else None
 
@@ -38,27 +40,53 @@ def list_claims_by_patient(patient_id: int):
     """
     with get_connection() as conn:
         cur = conn.cursor()
-        cur.execute(
-            "SELECT * FROM claims WHERE patient_id = ? ORDER BY id",
-            (patient_id,),
-        )
+        cur.execute("SELECT * FROM claims WHERE patient_id = ? ORDER BY id", (patient_id,))
         rows = cur.fetchall()
         return [dict(r) for r in rows]
 
 
-def add_service_to_claim(service_id: int, claim_id: int) -> bool:
+def update_claim_cms_fields(
+    claim_id: int,
+    referring_provider_name: str | None = None,
+    referring_provider_npi: str | None = None,
+    reserved_local_use_19: str | None = None,
+    resubmission_code_22: str | None = None,
+    original_ref_no_22: str | None = None,
+    prior_authorization_23: str | None = None,
+) -> bool:
     """
-    Asocia un service a un claim (setea services.claim_id).
+    Actualiza campos CMS-1500 a nivel CLAIM:
+    17, 19, 22, 23. Todo es nullable.
     """
+    now = datetime.utcnow().isoformat()
+
+    sql = """
+    UPDATE claims
+    SET
+        referring_provider_name = ?,
+        referring_provider_npi = ?,
+        reserved_local_use_19 = ?,
+        resubmission_code_22 = ?,
+        original_ref_no_22 = ?,
+        prior_authorization_23 = ?,
+        updated_at = ?
+    WHERE id = ?
+    """
+
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute(
-            """
-            UPDATE services
-            SET claim_id = ?, updated_at = datetime('now')
-            WHERE id = ? AND claim_id IS NULL
-            """,
-            (claim_id, service_id),
+            sql,
+            (
+                referring_provider_name,
+                referring_provider_npi,
+                reserved_local_use_19,
+                resubmission_code_22,
+                original_ref_no_22,
+                prior_authorization_23,
+                now,
+                claim_id,
+            ),
         )
         conn.commit()
         return cur.rowcount > 0
@@ -70,9 +98,6 @@ def list_services_by_claim(claim_id: int):
     """
     with get_connection() as conn:
         cur = conn.cursor()
-        cur.execute(
-            "SELECT * FROM services WHERE claim_id = ? ORDER BY id",
-            (claim_id,),
-        )
+        cur.execute("SELECT * FROM services WHERE claim_id = ? ORDER BY id", (claim_id,))
         rows = cur.fetchall()
         return [dict(r) for r in rows]

@@ -7,22 +7,15 @@ from app.db.connection import get_connection
 def generate_cms1500_snapshot(claim_id: int):
     """
     Genera un snapshot inmutable de la CMS-1500 para un claim.
+    Snapshot = lectura fiel de DB, sin inventar datos.
     """
-
     with get_connection() as conn:
         cur = conn.cursor()
 
         # =========================
         # CLAIM
         # =========================
-        cur.execute(
-            """
-            SELECT id, patient_id, coverage_id, status
-            FROM claims
-            WHERE id = ?
-            """,
-            (claim_id,),
-        )
+        cur.execute("SELECT * FROM claims WHERE id = ?", (claim_id,))
         claim = cur.fetchone()
         if not claim:
             raise ValueError("Claim no existe")
@@ -30,18 +23,10 @@ def generate_cms1500_snapshot(claim_id: int):
         claim_data = dict(claim)
 
         # =========================
-        # PATIENT (Casillas 2–8)
+        # PATIENT (2–8 básicos)
         # =========================
-        cur.execute(
-            """
-            SELECT first_name, last_name, date_of_birth
-            FROM patients
-            WHERE id = ?
-            """,
-            (claim_data["patient_id"],),
-        )
+        cur.execute("SELECT * FROM patients WHERE id = ?", (claim_data["patient_id"],))
         p = cur.fetchone()
-
         patient = {
             "first_name": p["first_name"] if p else None,
             "last_name": p["last_name"] if p else None,
@@ -55,19 +40,10 @@ def generate_cms1500_snapshot(claim_id: int):
         }
 
         # =========================
-        # INSURANCE / PAYER (1, 9–11)
+        # INSURANCE / PAYER (1, 9–11 básicos)
         # =========================
-        cur.execute(
-            """
-            SELECT insurer_name, plan_name, policy_number,
-                   group_number, insured_id, start_date, end_date
-            FROM coverages
-            WHERE id = ?
-            """,
-            (claim_data["coverage_id"],),
-        )
+        cur.execute("SELECT * FROM coverages WHERE id = ?", (claim_data["coverage_id"],))
         c = cur.fetchone()
-
         insurance = {
             "insurer_name": c["insurer_name"] if c else None,
             "plan_name": c["plan_name"] if c else None,
@@ -79,35 +55,25 @@ def generate_cms1500_snapshot(claim_id: int):
         }
 
         # =========================
-        # SERVICES (24A–24J)
+        # SERVICES (24A–24J) + Box 20 at service-level
         # =========================
         cur.execute(
             """
-            SELECT
-                id,
-                claim_id,
-                service_date,
-                cpt_code,
-                units,
-                diagnosis_code,
-                description,
-                created_at,
-                updated_at
+            SELECT *
             FROM services
             WHERE claim_id = ?
             ORDER BY service_date
             """,
             (claim_id,),
         )
-        raw_services = [dict(row) for row in cur.fetchall()]
+        services = [dict(row) for row in cur.fetchall()]
 
-        services = []
-        for s in raw_services:
-            s["dx_pointer"] = "A"
-            services.append(s)
+        # Dx pointer (para render simple)
+        for s in services:
+            s["dx_pointer"] = "A" if s.get("diagnosis_code") else None
 
         # =========================
-        # DIAGNOSES (Casilla 21)
+        # DIAGNOSES (21)
         # =========================
         diagnoses = {
             "A": services[0]["diagnosis_code"] if services else None,
@@ -123,9 +89,7 @@ def generate_cms1500_snapshot(claim_id: int):
             """
             SELECT SUM(amount) AS total_charge
             FROM charges
-            WHERE service_id IN (
-                SELECT id FROM services WHERE claim_id = ?
-            )
+            WHERE service_id IN (SELECT id FROM services WHERE claim_id = ?)
             """,
             (claim_id,),
         )
@@ -137,9 +101,7 @@ def generate_cms1500_snapshot(claim_id: int):
             FROM applications
             WHERE charge_id IN (
                 SELECT id FROM charges
-                WHERE service_id IN (
-                    SELECT id FROM services WHERE claim_id = ?
-                )
+                WHERE service_id IN (SELECT id FROM services WHERE claim_id = ?)
             )
             """,
             (claim_id,),
@@ -152,9 +114,7 @@ def generate_cms1500_snapshot(claim_id: int):
             FROM adjustments
             WHERE charge_id IN (
                 SELECT id FROM charges
-                WHERE service_id IN (
-                    SELECT id FROM services WHERE claim_id = ?
-                )
+                WHERE service_id IN (SELECT id FROM services WHERE claim_id = ?)
             )
             """,
             (claim_id,),
@@ -168,48 +128,68 @@ def generate_cms1500_snapshot(claim_id: int):
             "balance_due": float(total_charge - amount_paid - total_adjustments),
         }
 
-                # =========================
-        # PROVIDER (31–33) desde provider_settings
         # =========================
-        from app.db.provider_settings import get_active_provider_settings
-
-        ps = get_active_provider_settings()
+        # PROVIDER SETTINGS (31–33) — desde DB
+        # =========================
+        cur.execute(
+            """
+            SELECT *
+            FROM provider_settings
+            WHERE active = 1
+            ORDER BY id
+            LIMIT 1
+            """
+        )
+        ps = cur.fetchone()
+        psd = dict(ps) if ps else None
 
         provider = {
-            "signature": ps["signature"] if ps else "Signature on File",
-            "signature_date": ps["signature_date"] if ps else None,
+            "signature": (psd.get("signature") if psd else "Signature on File"),
+            "signature_date": (psd.get("signature_date") if psd else None),
             "facility": {
-                "name": ps["facility_name"] if ps else None,
-                "address": ps["facility_address"] if ps else None,
-                "city": ps["facility_city"] if ps else None,
-                "state": ps["facility_state"] if ps else None,
-                "zip": ps["facility_zip"] if ps else None,
+                "name": psd.get("facility_name") if psd else None,
+                "address": psd.get("facility_address") if psd else None,
+                "city": psd.get("facility_city") if psd else None,
+                "state": psd.get("facility_state") if psd else None,
+                "zip": psd.get("facility_zip") if psd else None,
             },
             "billing": {
-                "name": ps["billing_name"] if ps else None,
-                "npi": ps["billing_npi"] if ps else None,
-                "tax_id": ps["billing_tax_id"] if ps else None,
-                "address": ps["billing_address"] if ps else None,
-                "city": ps["billing_city"] if ps else None,
-                "state": ps["billing_state"] if ps else None,
-                "zip": ps["billing_zip"] if ps else None,
+                "name": psd.get("billing_name") if psd else None,
+                "npi": psd.get("billing_npi") if psd else None,
+                "tax_id": psd.get("billing_tax_id") if psd else None,
+                "address": psd.get("billing_address") if psd else None,
+                "city": psd.get("billing_city") if psd else None,
+                "state": psd.get("billing_state") if psd else None,
+                "zip": psd.get("billing_zip") if psd else None,
             },
         }
 
+        # =========================
+        # CLAIM-LEVEL CMS fields (17/19/22/23)
+        # =========================
+        claim_cms = {
+            "box17_referring_provider": {
+                "name": claim_data.get("referring_provider_name"),
+                "npi": claim_data.get("referring_provider_npi"),
+            },
+            "box19_reserved_local_use": claim_data.get("reserved_local_use_19"),
+            "box22_resubmission": {
+                "code": claim_data.get("resubmission_code_22"),
+                "original_ref_no": claim_data.get("original_ref_no_22"),
+            },
+            "box23_prior_authorization": claim_data.get("prior_authorization_23"),
+        }
 
         # =========================
         # META
         # =========================
         meta = {
-            "claim_status": claim_data["status"],
-            "snapshot_version": "4.4",
+            "claim_status": claim_data.get("status"),
+            "snapshot_version": "5.1",
             "timezone": "PR",
             "generated_by": "system",
         }
 
-        # =========================
-        # SNAPSHOT FINAL
-        # =========================
         snapshot = {
             "claim": claim_data,
             "patient": patient,
@@ -218,6 +198,7 @@ def generate_cms1500_snapshot(claim_id: int):
             "services": services,
             "totals": totals,
             "provider": provider,
+            "claim_cms": claim_cms,
             "meta": meta,
             "generated_at": datetime.utcnow().isoformat(),
         }
@@ -227,25 +208,11 @@ def generate_cms1500_snapshot(claim_id: int):
 
         cur.execute(
             """
-            INSERT INTO cms1500_snapshots (
-                claim_id,
-                snapshot_json,
-                snapshot_hash,
-                created_at
-            )
+            INSERT INTO cms1500_snapshots (claim_id, snapshot_json, snapshot_hash, created_at)
             VALUES (?, ?, ?, ?)
             """,
-            (
-                claim_id,
-                snapshot_json,
-                snapshot_hash,
-                datetime.utcnow().isoformat(),
-            ),
+            (claim_id, snapshot_json, snapshot_hash, datetime.utcnow().isoformat()),
         )
-
         conn.commit()
 
-        return {
-            "hash": snapshot_hash,
-            "snapshot": snapshot,
-        }
+        return {"hash": snapshot_hash, "snapshot": snapshot}
