@@ -1,58 +1,107 @@
-from app.db import (
-    create_patient,
-    create_coverage,
-)
-from app.db.claims import create_claim, update_claim_cms_fields
-from app.db.services import create_service
-from app.db.charges import create_charge
+import sqlite3
+
+DB_PATH = "storage/lifetrack.db"
+
+conn = sqlite3.connect(DB_PATH)
+cur = conn.cursor()
+
+print("🔗 Conectado a DB")
+
+# -------------------------
+# Provider Settings
+# -------------------------
+cur.execute("SELECT COUNT(*) FROM provider_settings")
+if cur.fetchone()[0] == 0:
+    cur.execute("""
+        INSERT INTO provider_settings (
+            signature, active
+        ) VALUES (
+            'Signature on File', 1
+        )
+    """)
+    print("✅ provider_settings creado")
+else:
+    print("ℹ️ provider_settings ya existe")
+
+# -------------------------
+# Patient
+# -------------------------
+cur.execute("SELECT COUNT(*) FROM patients")
+if cur.fetchone()[0] == 0:
+    cur.execute("""
+        INSERT INTO patients (
+            first_name, last_name, date_of_birth
+        ) VALUES (
+            'Test', 'Paciente', '1990-01-01'
+        )
+    """)
+    print("✅ patient creado")
+
+# -------------------------
+# Coverage
+# -------------------------
+cur.execute("SELECT COUNT(*) FROM coverages")
+if cur.fetchone()[0] == 0:
+    cur.execute("""
+        INSERT INTO coverages (
+            patient_id, insurer_name, plan_name,
+            policy_number, start_date
+        ) VALUES (
+            1, 'TestInsurer', 'TestPlan',
+            'P1', '2026-01-01'
+        )
+    """)
+    print("✅ coverage creado")
+
+# -------------------------
+# Claim
+# -------------------------
+cur.execute("SELECT COUNT(*) FROM claims")
+if cur.fetchone()[0] == 0:
+    cur.execute("""
+        INSERT INTO claims (
+            patient_id, coverage_id, status
+        ) VALUES (
+            1, 1, 'draft'
+        )
+    """)
+    print("✅ claim creado")
+
+# -------------------------
+# Service (CMS-1500 real)
+# -------------------------
+cur.execute("SELECT COUNT(*) FROM services")
+if cur.fetchone()[0] == 0:
+    cur.execute("""
+        INSERT INTO services (
+            claim_id,
+            service_date,
+            place_of_service_24b,
+            emergency_24c,
+            cpt_code,
+            diagnosis_pointer_24e,
+            charge_amount_24f,
+            units_24g,
+            outside_lab_20,
+            lab_charges_20
+        ) VALUES (
+            1,
+            '2026-02-05',
+            '11',
+            0,
+            '90834',
+            'A',
+            150.00,
+            1,
+            0,
+            NULL
+        )
+    """)
+    print("✅ service creado")
 
 
-def main():
-    pid = create_patient("Test", "Paciente", "1990-01-01")
 
-    cov_id = create_coverage(
-        patient_id=pid,
-        insurer_name="TestInsurer",
-        plan_name="TestPlan",
-        policy_number="P1",
-        group_number="G1",
-        insured_id="I1",
-        start_date="2025-01-01",
-        end_date=None,
-    )
+conn.commit()
+conn.close()
 
-    claim_id = create_claim(pid, cov_id)
-
-    # Claim-level CMS fields: 17, 19, 22, 23
-    update_claim_cms_fields(
-        claim_id=claim_id,
-        referring_provider_name="Dr. Referidor Ejemplo",
-        referring_provider_npi="1999999999",
-        reserved_local_use_19="Nota local (opcional)",
-        resubmission_code_22=None,
-        original_ref_no_22=None,
-        prior_authorization_23="AUTH-123",
-    )
-
-    svc_id = create_service(
-        claim_id=claim_id,
-        service_date="2026-02-05",
-        cpt_code="90834",
-        units=1,
-        diagnosis_code="F41.1",
-        description="Psychotherapy",
-        outside_lab_20=0,
-        lab_charges_20=None,
-    )
-
-    create_charge(service_id=svc_id, amount=150.00)
-
-    print("BOOTSTRAP OK")
-    print("PATIENT_ID:", pid)
-    print("COVERAGE_ID:", cov_id)
-    print("CLAIM_ID:", claim_id)
-    print("SERVICE_ID:", svc_id)
-
-
-if __name__ == "__main__":
-    main()
+print("🎉 bootstrap_test_data finalizado correctamente")
