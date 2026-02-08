@@ -5,13 +5,17 @@ from app.views.cms1500_render import get_latest_snapshot_by_claim
 from app.routes.patients import patients_bp
 from app.routes.coverages import coverages_bp
 from app.routes.provider_settings import provider_settings_bp
+from app.routes.cms1500_pdf import cms1500_pdf_bp  # FASE C2 — PDF CMS-1500
 
 app = Flask(__name__)
 
+# Blueprints existentes
 app.register_blueprint(patients_bp)
 app.register_blueprint(coverages_bp)
 app.register_blueprint(provider_settings_bp)
 
+# Blueprint PDF (FASE C2)
+app.register_blueprint(cms1500_pdf_bp)
 
 @app.route("/cms1500/<int:claim_id>")
 def cms1500_view(claim_id):
@@ -19,7 +23,6 @@ def cms1500_view(claim_id):
     if not snapshot:
         return "No hay snapshot para este claim", 404
     return render_template("cms1500.html", snapshot=snapshot)
-
 
 print("LifeTrack local iniciado")
 
