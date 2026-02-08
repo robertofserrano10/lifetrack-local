@@ -1,5 +1,6 @@
 /* CMS-1500 print stylesheet
-   Objetivo: impresión estable (Letter), sin overflow, sin cortes feos.
+   FASE C1 — Print-Hardening
+   Objetivo: impresión estable (Letter), sin overflow ni cortes ilegales
 */
 
 @page {
@@ -7,10 +8,9 @@
   margin: 0.25in;
 }
 
-/* Ajuste general de impresión */
 html, body {
-  padding: 0 !important;
   margin: 0 !important;
+  padding: 0 !important;
 }
 
 body {
@@ -20,63 +20,47 @@ body {
   print-color-adjust: exact;
 }
 
-/* Ocultar debug técnico en impresión (si existe) */
+/* Ocultar bloques técnicos en impresión */
 .mono {
   display: none !important;
 }
 
-/* Evitar “explosión” de grids por texto largo */
-.cell {
+/* Protección contra texto largo */
+.cell,
+.val,
+td,
+th {
   min-width: 0 !important;
+  white-space: normal !important;
   overflow-wrap: anywhere !important;
   word-break: break-word !important;
   hyphens: auto !important;
 }
 
-/* Valores dentro de casillas */
-.val {
-  white-space: normal !important;
-  overflow-wrap: anywhere !important;
-  word-break: break-word !important;
-}
-
-/* Bandas: que no se partan a mitad de una banda (lo intenta el browser) */
-.band {
-  page-break-inside: avoid;
-  break-inside: avoid;
-}
-
-/* Filas también */
+/* Bandas completas: no partir a mitad */
+.band,
 .row {
   page-break-inside: avoid;
   break-inside: avoid;
 }
 
-/* Tablas (21 y 24): layout fijo para que no empujen columnas */
+/* Tablas CMS-1500 (21 y 24) */
 table {
   width: 100% !important;
   border-collapse: collapse !important;
   table-layout: fixed !important;
 }
 
-/* Celdas de tabla: wrap seguro */
-th, td {
-  overflow-wrap: anywhere !important;
-  word-break: break-word !important;
-  hyphens: auto !important;
-}
-
-/* Header de tabla: más compacto en print */
+/* Headers compactos en impresión */
 th {
   font-size: 10px !important;
   padding: 4px 2px !important;
 }
 
-/* Casilla 24: 2 líneas (número arriba + título abajo) */
+/* Encabezados casilla 24 (2 líneas) */
 th.th-24 {
   text-align: center !important;
   vertical-align: middle !important;
-  padding: 3px 2px !important;
 }
 
 th.th-24 .code {
@@ -94,7 +78,7 @@ th.th-24 .desc {
   margin-top: 2px !important;
 }
 
-/* Checkboxes: que salgan nítidos */
+/* Checkboxes nítidos */
 .cb {
   width: 12px !important;
   height: 12px !important;
