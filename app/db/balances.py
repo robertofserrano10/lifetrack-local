@@ -4,7 +4,7 @@ from app.db.connection import get_connection
 def get_charge_balance(charge_id: int) -> dict:
     """
     Calcula el balance de un charge:
-    charge.amount - sum(applications.amount_applied)
+    charge.amount - sum(applications.amount_applied) - sum(adjustments.amount)
     """
     with get_connection() as conn:
         cur = conn.cursor()
@@ -29,11 +29,22 @@ def get_charge_balance(charge_id: int) -> dict:
         )
         total_applied = float(cur.fetchone()[0])
 
+        cur.execute(
+            """
+            SELECT COALESCE(SUM(amount), 0)
+            FROM adjustments
+            WHERE charge_id = ?
+            """,
+            (charge_id,),
+        )
+        total_adjustments = float(cur.fetchone()[0])
+
         return {
             "charge_id": charge_id,
             "total_charge": total_charge,
             "total_applied": total_applied,
-            "balance": total_charge - total_applied,
+            "total_adjustments": total_adjustments,
+            "balance": total_charge - total_applied - total_adjustments,
         }
 
 
@@ -62,5 +73,6 @@ def get_claim_balance(claim_id: int) -> dict:
         "charges": balances,
         "total_charge": sum(b["total_charge"] for b in balances),
         "total_applied": sum(b["total_applied"] for b in balances),
+        "total_adjustments": sum(b["total_adjustments"] for b in balances),
         "balance_due": sum(b["balance"] for b in balances),
     }
