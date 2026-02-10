@@ -296,7 +296,7 @@ th.th-24 .desc {
     </div>
   </div>
 
-  <!-- =========================
+   <!-- =========================
        BANDA 7: 24 A–J (tabla)
        ========================= -->
   <div class="band">
@@ -323,7 +323,19 @@ th.th-24 .desc {
             <td>11</td>
             <td>N</td>
             <td>{{ s.cpt_code or "—" }}</td>
-            <td>{{ s.dx_pointer or "A" }}</td>
+            <td>
+              {{
+                (
+                  s.dx_pointer
+                  | default("A", true)
+                  | replace(" ", "")
+                  | replace(",", "")
+                  | upper
+                  | list
+                  | join(",")
+                )
+              }}
+            </td>
             <td class="right">—</td>
             <td class="right">{{ s.units or "—" }}</td>
             <td>—</td>
