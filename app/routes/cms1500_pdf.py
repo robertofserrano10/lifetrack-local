@@ -10,6 +10,7 @@ from playwright.sync_api import sync_playwright
 
 # USAMOS EXACTAMENTE LAS MISMAS FUENTES QUE main.py
 from app.views.cms1500_render import get_latest_snapshot_by_claim
+from app.utils.snapshot_hash import compute_snapshot_hash  # ← AÑADIDO
 
 cms1500_pdf_bp = Blueprint("cms1500_pdf", __name__)
 
@@ -26,8 +27,14 @@ def cms1500_pdf(claim_id):
     if not snapshot:
         return "No hay snapshot para este claim", 404
 
+    snapshot_hash = compute_snapshot_hash(snapshot)  # ← AÑADIDO
+
     # 2) Renderizar HTML EXACTO
-    html = render_template("cms1500.html", snapshot=snapshot)
+    html = render_template(
+        "cms1500.html",
+        snapshot=snapshot,
+        snapshot_hash=snapshot_hash,  # ← AÑADIDO
+    )
 
     # 3) Generar PDF con Chromium
     with tempfile.TemporaryDirectory() as tmpdir:

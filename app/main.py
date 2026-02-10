@@ -1,6 +1,7 @@
 from flask import Flask, render_template
 
 from app.views.cms1500_render import get_latest_snapshot_by_claim
+from app.utils.snapshot_hash import compute_snapshot_hash  # ← AÑADIDO
 
 from app.routes.patients import patients_bp
 from app.routes.coverages import coverages_bp
@@ -22,7 +23,14 @@ def cms1500_view(claim_id):
     snapshot = get_latest_snapshot_by_claim(claim_id)
     if not snapshot:
         return "No hay snapshot para este claim", 404
-    return render_template("cms1500.html", snapshot=snapshot)
+
+    snapshot_hash = compute_snapshot_hash(snapshot)  # ← AÑADIDO
+
+    return render_template(
+        "cms1500.html",
+        snapshot=snapshot,
+        snapshot_hash=snapshot_hash,  # ← AÑADIDO
+    )
 
 print("LifeTrack local iniciado")
 
