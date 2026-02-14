@@ -1,0 +1,78 @@
+
+<h1>Claim Financial Summary — ID {{ claim_id }}</h1>
+
+<h2>Resumen</h2>
+<ul>
+    <li>Total Charge: {{ balance.total_charge }}</li>
+    <li>Total Applied: {{ balance.total_applied }}</li>
+    <li>Total Adjustments: {{ balance.total_adjustments }}</li>
+    <li>Balance Due: {{ balance.balance_due }}</li>
+</ul>
+
+<h2>Charges</h2>
+<table border="1">
+<tr>
+    <th>ID</th>
+    <th>Amount</th>
+</tr>
+{% for c in charges %}
+<tr>
+    <td>{{ c.id }}</td>
+    <td>{{ c.amount }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h2>Payments</h2>
+<table border="1">
+<tr>
+    <th>ID</th>
+    <th>Amount</th>
+    <th>Method</th>
+    <th>Reference</th>
+</tr>
+{% for p in payments %}
+<tr>
+    <td>{{ p.id }}</td>
+    <td>{{ p.amount }}</td>
+    <td>{{ p.method }}</td>
+    <td>{{ p.reference }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h2>Applications</h2>
+<table border="1">
+<tr>
+    <th>ID</th>
+    <th>Payment</th>
+    <th>Charge</th>
+    <th>Amount</th>
+</tr>
+{% for a in applications %}
+<tr>
+    <td>{{ a.id }}</td>
+    <td>{{ a.payment_id }}</td>
+    <td>{{ a.charge_id }}</td>
+    <td>{{ a.amount_applied }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h2>Adjustments</h2>
+<table border="1">
+<tr>
+    <th>ID</th>
+    <th>Charge</th>
+    <th>Amount</th>
+    <th>Reason</th>
+</tr>
+{% for adj in adjustments %}
+<tr>
+    <td>{{ adj.id }}</td>
+    <td>{{ adj.charge_id }}</td>
+    <td>{{ adj.amount }}</td>
+    <td>{{ adj.reason }}</td>
+</tr>
+{% endfor %}
+</table>

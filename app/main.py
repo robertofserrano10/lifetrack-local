@@ -10,6 +10,8 @@ from app.routes.cms1500_pdf import cms1500_pdf_bp  # FASE C2 — PDF CMS-1500
 from app.routes.claim_balance import claim_balance_bp
 from app.routes.charge_balance import charge_balance_bp
 from app.routes.claim_payments import claim_payments_bp
+from app.routes.claim_adjustments import claim_adjustments_bp
+from app.routes.claim_financial_summary import claim_financial_summary_bp
 
 app = Flask(__name__)
 
@@ -20,6 +22,8 @@ app.register_blueprint(provider_settings_bp)
 app.register_blueprint(claim_balance_bp)
 app.register_blueprint(charge_balance_bp)
 app.register_blueprint(claim_payments_bp)
+app.register_blueprint(claim_adjustments_bp)
+app.register_blueprint(claim_financial_summary_bp)
 
 # Blueprint PDF (FASE C2)
 app.register_blueprint(cms1500_pdf_bp)
