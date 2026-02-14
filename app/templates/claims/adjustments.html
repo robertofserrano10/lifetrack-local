@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Claim Adjustments</title>
+</head>
+<body>
+
+<h1>Claim Adjustments — ID {{ claim_id }}</h1>
+
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>Charge ID</th>
+        <th>Amount</th>
+        <th>Reason</th>
+        <th>Created At</th>
+    </tr>
+
+    {% for adj in adjustments %}
+    <tr>
+        <td>{{ adj.id }}</td>
+        <td>{{ adj.charge_id }}</td>
+        <td>{{ adj.amount }}</td>
+        <td>{{ adj.reason }}</td>
+        <td>{{ adj.created_at }}</td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+</body>
+</html>
