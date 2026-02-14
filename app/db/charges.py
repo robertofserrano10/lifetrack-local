@@ -127,3 +127,4 @@ def delete_charge(charge_id: int):
         )
         conn.commit()
         return cur.rowcount > 0
+
