@@ -65,7 +65,6 @@ print(get_charge_balance(charge_id))
 # Adjustment (write-off)
 create_adjustment(
     charge_id=charge_id,
-    adjustment_type="writeoff",
     amount=20.00,
     reason="Contractual adjustment"
 )
