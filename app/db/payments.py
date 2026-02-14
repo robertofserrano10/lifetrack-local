@@ -16,9 +16,9 @@ def create_payment(amount: float, method: str, reference: str | None = None, rec
         raise ValueError("amount debe ser > 0")
     if method not in ALLOWED_METHODS:
         raise ValueError(f"method inválido. Use uno de: {sorted(ALLOWED_METHODS)}")
+    if not received_date:
+        raise ValueError("received_date es obligatorio (YYYY-MM-DD)")
 
-    if received_date is None:
-        received_date = datetime.utcnow().date().isoformat()
 
     now = datetime.utcnow().isoformat()
 
