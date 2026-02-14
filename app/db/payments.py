@@ -106,8 +106,27 @@ def update_payment(payment_id: int, amount: float, method: str, reference: str |
 
 
 def delete_payment(payment_id: int) -> bool:
+    """
+    No permite borrar un payment si tiene applications asociadas.
+    Protección de integridad financiera.
+    """
     with get_connection() as conn:
         cur = conn.cursor()
+
+        # Verificar si tiene applications
+        cur.execute(
+            """
+            SELECT COUNT(*)
+            FROM applications
+            WHERE payment_id = ?
+            """,
+            (int(payment_id),),
+        )
+        count = cur.fetchone()[0]
+
+        if count > 0:
+            raise ValueError("No se puede borrar: payment tiene applications")
+
         cur.execute("DELETE FROM payments WHERE id = ?", (int(payment_id),))
         conn.commit()
         return cur.rowcount > 0
