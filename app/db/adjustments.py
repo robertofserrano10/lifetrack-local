@@ -9,11 +9,28 @@ def create_adjustment(
 ) -> int:
     """
     Crea un adjustment (write-off, deductible, no cubierto, etc).
+
+    REGLAS:
+    - Charge debe existir.
+    - amount debe ser > 0.
     """
+
+    if amount is None or float(amount) <= 0:
+        raise ValueError("amount debe ser > 0")
+
     now = datetime.utcnow().isoformat()
 
     with get_connection() as conn:
         cur = conn.cursor()
+
+        # VALIDACIÓN ESTRUCTURAL
+        cur.execute(
+            "SELECT id FROM charges WHERE id = ?",
+            (charge_id,),
+        )
+        if not cur.fetchone():
+            raise ValueError("Charge no existe")
+
         cur.execute(
             """
             INSERT INTO adjustments (

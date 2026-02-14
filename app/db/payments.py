@@ -5,20 +5,12 @@ ALLOWED_METHODS = {"cash", "check", "eft", "other"}
 
 
 def create_payment(amount: float, method: str, reference: str | None = None, received_date: str | None = None) -> int:
-    """
-    Crea un payment y devuelve su ID.
-    - amount: monto recibido (ej. 150.00)
-    - method: cash | check | eft | other
-    - reference: opcional (ej. EOB-123, #cheque)
-    - received_date: YYYY-MM-DD opcional; si None, usa hoy (UTC)
-    """
     if amount is None or float(amount) <= 0:
         raise ValueError("amount debe ser > 0")
     if method not in ALLOWED_METHODS:
         raise ValueError(f"method inválido. Use uno de: {sorted(ALLOWED_METHODS)}")
-    if not received_date:
+    if received_date is None:
         raise ValueError("received_date es obligatorio (YYYY-MM-DD)")
-
 
     now = datetime.utcnow().isoformat()
 
@@ -44,9 +36,6 @@ def get_payment_by_id(payment_id: int):
 
 
 def list_payments(limit: int = 50):
-    """
-    Lista payments recientes (para debug/admin).
-    """
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute(
@@ -59,6 +48,39 @@ def list_payments(limit: int = 50):
             (int(limit),),
         )
         return [dict(r) for r in cur.fetchall()]
+
+
+def get_payment_balance(payment_id: int) -> dict:
+    """
+    Calcula:
+    payment.amount - SUM(applications.amount_applied)
+    """
+    with get_connection() as conn:
+        cur = conn.cursor()
+
+        cur.execute("SELECT amount FROM payments WHERE id = ?", (payment_id,))
+        row = cur.fetchone()
+        if not row:
+            raise ValueError("Payment no existe")
+
+        total_amount = float(row["amount"])
+
+        cur.execute(
+            """
+            SELECT COALESCE(SUM(amount_applied), 0)
+            FROM applications
+            WHERE payment_id = ?
+            """,
+            (payment_id,),
+        )
+        total_applied = float(cur.fetchone()[0])
+
+        return {
+            "payment_id": payment_id,
+            "total_amount": total_amount,
+            "total_applied": total_applied,
+            "remaining": total_amount - total_applied,
+        }
 
 
 def update_payment(payment_id: int, amount: float, method: str, reference: str | None, received_date: str) -> bool:
