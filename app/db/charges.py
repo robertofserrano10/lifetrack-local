@@ -7,9 +7,7 @@ def create_charge(service_id: int, amount: float):
     with get_connection() as conn:
         cur = conn.cursor()
 
-        # =========================
         # 1. Obtener claim_id del service
-        # =========================
         cur.execute(
             """
             SELECT claim_id
@@ -24,15 +22,11 @@ def create_charge(service_id: int, amount: float):
 
         claim_id = row["claim_id"]
 
-        # =========================
         # 2. Verificar bloqueo financiero
-        # =========================
         if is_claim_locked(claim_id):
             raise ValueError("Claim está congelado por snapshot")
 
-        # =========================
         # 3. Insertar charge
-        # =========================
         cur.execute(
             """
             INSERT INTO charges (
@@ -86,6 +80,42 @@ def get_charge_by_service(service_id: int):
 def update_charge(charge_id: int, amount: float):
     with get_connection() as conn:
         cur = conn.cursor()
+
+        # 1. Obtener service_id del charge
+        cur.execute(
+            """
+            SELECT service_id
+            FROM charges
+            WHERE id = ?
+            """,
+            (charge_id,),
+        )
+        row = cur.fetchone()
+        if not row:
+            raise ValueError("Charge no existe")
+
+        service_id = row["service_id"]
+
+        # 2. Obtener claim_id desde services
+        cur.execute(
+            """
+            SELECT claim_id
+            FROM services
+            WHERE id = ?
+            """,
+            (service_id,),
+        )
+        service_row = cur.fetchone()
+        if not service_row:
+            raise ValueError("Service no existe")
+
+        claim_id = service_row["claim_id"]
+
+        # 3. Verificar bloqueo financiero
+        if is_claim_locked(claim_id):
+            raise ValueError("Claim está congelado por snapshot")
+
+        # 4. Actualizar
         cur.execute(
             """
             UPDATE charges
