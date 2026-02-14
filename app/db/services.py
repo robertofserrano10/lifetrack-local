@@ -1,5 +1,6 @@
 from datetime import datetime
 from app.db.connection import get_connection
+from app.db.financial_lock import is_claim_locked
 
 
 def create_service(
@@ -30,6 +31,11 @@ def create_service(
     - charge_amount_24f es NOT NULL en schema; si no se provee, se guarda 0.0.
       El monto real del core financiero debe vivir en la tabla charges.
     """
+
+    # 🔒 BLOQUEO FINANCIERO
+    if is_claim_locked(claim_id):
+        raise ValueError("Claim está congelado por snapshot")
+
     now = datetime.utcnow().isoformat()
 
     if charge_amount_24f is None:
@@ -87,10 +93,34 @@ def update_service_box20(
 ) -> bool:
     """
     Actualiza Box 20 a nivel service.
+    Bloqueado si el claim está congelado.
     """
+
     now = datetime.utcnow().isoformat()
+
     with get_connection() as conn:
         cur = conn.cursor()
+
+        # 1. Obtener claim_id desde services
+        cur.execute(
+            """
+            SELECT claim_id
+            FROM services
+            WHERE id = ?
+            """,
+            (int(service_id),),
+        )
+        row = cur.fetchone()
+        if not row:
+            raise ValueError("Service no existe")
+
+        claim_id = row["claim_id"]
+
+        # 🔒 BLOQUEO FINANCIERO
+        if is_claim_locked(claim_id):
+            raise ValueError("Claim está congelado por snapshot")
+
+        # 2. Actualizar
         cur.execute(
             """
             UPDATE services
