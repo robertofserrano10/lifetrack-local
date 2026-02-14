@@ -7,6 +7,7 @@ from app.routes.patients import patients_bp
 from app.routes.coverages import coverages_bp
 from app.routes.provider_settings import provider_settings_bp
 from app.routes.cms1500_pdf import cms1500_pdf_bp  # FASE C2 — PDF CMS-1500
+from app.routes.claim_balance import claim_balance_bp
 
 app = Flask(__name__)
 
@@ -14,6 +15,7 @@ app = Flask(__name__)
 app.register_blueprint(patients_bp)
 app.register_blueprint(coverages_bp)
 app.register_blueprint(provider_settings_bp)
+app.register_blueprint(claim_balance_bp)
 
 # Blueprint PDF (FASE C2)
 app.register_blueprint(cms1500_pdf_bp)

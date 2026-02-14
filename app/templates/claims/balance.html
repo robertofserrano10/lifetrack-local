@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Claim Balance</title>
+    <meta charset="utf-8">
+</head>
+<body>
+
+<h1>Claim Balance — ID {{ balance.claim_id }}</h1>
+
+<h2>Resumen</h2>
+<ul>
+    <li>Total Charge: {{ balance.total_charge }}</li>
+    <li>Total Applied: {{ balance.total_applied }}</li>
+    <li>Total Adjustments: {{ balance.total_adjustments }}</li>
+    <li><strong>Balance Due: {{ balance.balance_due }}</strong></li>
+</ul>
+
+<h2>Detalle por Charge</h2>
+
+<table border="1" cellpadding="6">
+    <tr>
+        <th>Charge ID</th>
+        <th>Total Charge</th>
+        <th>Applied</th>
+        <th>Adjustments</th>
+        <th>Balance</th>
+    </tr>
+
+    {% for c in balance.charges %}
+    <tr>
+        <td>{{ c.charge_id }}</td>
+        <td>{{ c.total_charge }}</td>
+        <td>{{ c.total_applied }}</td>
+        <td>{{ c.total_adjustments }}</td>
+        <td>{{ c.balance }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>
