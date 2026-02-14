@@ -1,5 +1,6 @@
 from datetime import datetime
 from app.db.connection import get_connection
+from app.db.financial_lock import is_claim_locked
 
 
 def create_application(
@@ -14,6 +15,7 @@ def create_application(
     VALIDACIONES:
     - No permite aplicar más de lo disponible en el payment.
     - No permite aplicar más que el balance actual del charge.
+    - No permite aplicar si el claim está congelado por snapshot.
     """
 
     if amount_applied is None or float(amount_applied) <= 0:
@@ -25,7 +27,31 @@ def create_application(
         cur = conn.cursor()
 
         # =========================
-        # VALIDAR PAYMENT DISPONIBLE
+        # 1. Obtener claim_id del charge
+        # =========================
+        cur.execute(
+            """
+            SELECT s.claim_id
+            FROM charges c
+            JOIN services s ON s.id = c.service_id
+            WHERE c.id = ?
+            """,
+            (charge_id,),
+        )
+        row = cur.fetchone()
+        if not row:
+            raise ValueError("Charge no existe")
+
+        claim_id = row["claim_id"]
+
+        # =========================
+        # 2. Verificar bloqueo financiero
+        # =========================
+        if is_claim_locked(claim_id):
+            raise ValueError("Claim está congelado por snapshot")
+
+        # =========================
+        # 3. VALIDAR PAYMENT DISPONIBLE
         # =========================
         cur.execute(
             "SELECT amount FROM payments WHERE id = ?",
@@ -53,7 +79,7 @@ def create_application(
             raise ValueError("No hay suficiente monto disponible en el payment")
 
         # =========================
-        # VALIDAR BALANCE DEL CHARGE
+        # 4. VALIDAR BALANCE DEL CHARGE
         # =========================
         cur.execute(
             "SELECT amount FROM charges WHERE id = ?",
@@ -91,7 +117,7 @@ def create_application(
             raise ValueError("No se puede aplicar más del balance actual del charge")
 
         # =========================
-        # INSERTAR APPLICATION
+        # 5. INSERTAR APPLICATION
         # =========================
         cur.execute(
             """
@@ -113,7 +139,6 @@ def create_application(
 
         conn.commit()
         return cur.lastrowid
-
 
 
 def list_applications_by_charge(charge_id: int):
