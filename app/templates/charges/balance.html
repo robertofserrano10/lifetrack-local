@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Charge Balance</title>
+</head>
+<body>
+
+<h1>Charge Balance — ID {{ charge.id }}</h1>
+
+<h2>Resumen</h2>
+<ul>
+    <li>Total Charge: {{ balance.total_charge }}</li>
+    <li>Total Applied: {{ balance.total_applied }}</li>
+    <li>Total Adjustments: {{ balance.total_adjustments }}</li>
+    <li>Balance: {{ balance.balance }}</li>
+</ul>
+
+<h2>Datos Base</h2>
+<ul>
+    <li>Service ID: {{ charge.service_id }}</li>
+    <li>Monto Original: {{ charge.amount }}</li>
+</ul>
+
+</body>
+</html>
