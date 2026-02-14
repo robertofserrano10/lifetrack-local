@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Claim Payments</title>
+</head>
+<body>
+
+<h1>Claim Payments — ID {{ claim_id }}</h1>
+
+<h2>Payments</h2>
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>Amount</th>
+        <th>Method</th>
+        <th>Reference</th>
+        <th>Received Date</th>
+    </tr>
+    {% for p in payments %}
+    <tr>
+        <td>{{ p.id }}</td>
+        <td>{{ p.amount }}</td>
+        <td>{{ p.method }}</td>
+        <td>{{ p.reference }}</td>
+        <td>{{ p.received_date }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>Applications</h2>
+<table border="1">
+    <tr>
+        <th>Application ID</th>
+        <th>Payment ID</th>
+        <th>Charge ID</th>
+        <th>Amount Applied</th>
+    </tr>
+    {% for a in applications %}
+    <tr>
+        <td>{{ a.application_id }}</td>
+        <td>{{ a.payment_id }}</td>
+        <td>{{ a.charge_id }}</td>
+        <td>{{ a.amount_applied }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>
