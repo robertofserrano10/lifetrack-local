@@ -12,6 +12,7 @@ from app.routes.charge_balance import charge_balance_bp
 from app.routes.claim_payments import claim_payments_bp
 from app.routes.claim_adjustments import claim_adjustments_bp
 from app.routes.claim_financial_summary import claim_financial_summary_bp
+from app.routes.payment_balance import payment_balance_bp
 
 app = Flask(__name__)
 
@@ -24,6 +25,7 @@ app.register_blueprint(charge_balance_bp)
 app.register_blueprint(claim_payments_bp)
 app.register_blueprint(claim_adjustments_bp)
 app.register_blueprint(claim_financial_summary_bp)
+app.register_blueprint(payment_balance_bp)
 
 # Blueprint PDF (FASE C2)
 app.register_blueprint(cms1500_pdf_bp)
