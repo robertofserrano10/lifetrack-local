@@ -431,3 +431,45 @@ def list_snapshots_admin() -> list[dict]:
 
     finally:
         conn.close()
+
+# ============================================================
+# FASE G31 — Snapshot Detail (READ-ONLY)
+# ============================================================
+
+def get_snapshot_by_id(snapshot_id: int) -> Optional[Dict[str, Any]]:
+    """
+    Devuelve snapshot específico por ID.
+    Solo lectura.
+    No recalcula nada.
+    """
+
+    conn = _conn()
+    try:
+        cur = conn.cursor()
+
+        cur.execute(
+            """
+            SELECT id, claim_id, snapshot_json, snapshot_hash, created_at
+            FROM cms1500_snapshots
+            WHERE id = ?
+            """,
+            (snapshot_id,),
+        )
+
+        row = cur.fetchone()
+        if not row:
+            return None
+
+        payload = json.loads(row["snapshot_json"])
+
+        return {
+            "id": row["id"],
+            "claim_id": row["claim_id"],
+            "snapshot": payload,
+            "snapshot_hash": row["snapshot_hash"],
+            "created_at": row["created_at"],
+            "locked": True,
+        }
+
+    finally:
+        conn.close()

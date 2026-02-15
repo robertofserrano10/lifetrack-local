@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Snapshot Detail</title>
+</head>
+<body>
+
+<h1>Snapshot Detail</h1>
+
+<p><strong>Snapshot ID:</strong> {{ snapshot.id }}</p>
+<p><strong>Claim ID:</strong> {{ snapshot.claim_id }}</p>
+<p><strong>Hash:</strong> {{ snapshot.snapshot_hash }}</p>
+<p><strong>Created At:</strong> {{ snapshot.created_at }}</p>
+<p><strong>Locked:</strong> {{ snapshot.locked }}</p>
+
+<hr>
+
+<h2>Snapshot JSON (Frozen Legal Copy)</h2>
+
+<pre style="white-space: pre-wrap;">
+{{ snapshot.snapshot | tojson(indent=2) }}
+</pre>
+
+</body>
+</html>

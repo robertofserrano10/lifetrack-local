@@ -19,3 +19,20 @@ def snapshots_index():
         "admin/snapshots_index.html",
         snapshots=snapshots,
     )
+
+from app.db.cms1500_snapshot import get_snapshot_by_id
+from flask import render_template, abort
+
+# CORRECCIÓN: eliminar duplicación de prefijo
+@snapshots_admin_bp.route("/<int:snapshot_id>")
+def snapshot_detail(snapshot_id: int):
+
+    snap = get_snapshot_by_id(snapshot_id)
+
+    if not snap:
+        abort(404)
+
+    return render_template(
+        "admin/snapshot_detail.html",
+        snapshot=snap
+    )
