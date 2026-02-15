@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Snapshot Admin</title>
+</head>
+<body>
+    <h1>CMS-1500 Snapshots</h1>
+
+    <table border="1" cellpadding="6">
+        <thead>
+            <tr>
+                <th>Snapshot ID</th>
+                <th>Claim ID</th>
+                <th>Hash</th>
+                <th>Created At</th>
+                <th>Claim Status</th>
+                <th>Locked</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in snapshots %}
+            <tr>
+                <td>{{ s.snapshot_id }}</td>
+                <td>{{ s.claim_id }}</td>
+                <td style="font-size: 10px;">{{ s.snapshot_hash }}</td>
+                <td>{{ s.created_at }}</td>
+                <td>{{ s.claim_status }}</td>
+                <td>{{ s.locked }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

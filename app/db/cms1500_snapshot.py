@@ -384,3 +384,50 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
         return {"snapshot": snapshot, "snapshot_hash": snapshot_hash}
     finally:
         conn.close()
+# ============================================================
+# FASE G29 — Snapshot Index / Listing Layer (READ-ONLY)
+# ============================================================
+
+def list_snapshots_admin() -> list[dict]:
+    """
+    Lista administrativa de snapshots.
+    Solo lectura. No recalcula nada.
+    """
+
+    conn = _conn()
+    try:
+        cur = conn.cursor()
+
+        cur.execute(
+            """
+            SELECT
+                s.id AS snapshot_id,
+                s.claim_id,
+                s.snapshot_hash,
+                s.created_at,
+                c.status AS claim_status
+            FROM cms1500_snapshots s
+            JOIN claims c ON c.id = s.claim_id
+            ORDER BY s.id DESC
+            """
+        )
+
+        rows = cur.fetchall()
+
+        result = []
+        for r in rows:
+            result.append(
+                {
+                    "snapshot_id": r["snapshot_id"],
+                    "claim_id": r["claim_id"],
+                    "snapshot_hash": r["snapshot_hash"],
+                    "created_at": r["created_at"],
+                    "claim_status": r["claim_status"],
+                    "locked": True,
+                }
+            )
+
+        return result
+
+    finally:
+        conn.close()
