@@ -63,7 +63,6 @@ def update_claim_cms_fields(
     17, 19, 22, 23. Todo es nullable.
     """
 
-    # 🔒 BLOQUEO FINANCIERO
     if is_claim_locked(claim_id):
         raise ValueError("Claim está congelado por snapshot")
 
@@ -125,11 +124,9 @@ def delete_claim(claim_id: int) -> bool:
     with get_connection() as conn:
         cur = conn.cursor()
 
-        # 🔒 Bloqueo por snapshot
         if is_claim_locked(claim_id):
             raise ValueError("No se puede borrar: claim está congelado por snapshot")
 
-        # 🔎 Verificar si tiene services
         cur.execute(
             """
             SELECT 1
@@ -145,3 +142,83 @@ def delete_claim(claim_id: int) -> bool:
         cur.execute("DELETE FROM claims WHERE id = ?", (claim_id,))
         conn.commit()
         return cur.rowcount > 0
+
+
+# ============================================================
+# FASE G22 — ESTADO FINANCIERO DERIVADO (NO PERSISTENTE)
+# ============================================================
+
+def get_claim_financial_status(claim_id: int) -> dict:
+    """
+    Calcula estado financiero derivado del claim.
+    NO persiste nada en DB.
+
+    Estados:
+    - OPEN     → balance_due > 0
+    - PAID     → balance_due == 0
+    - OVERPAID → balance_due < 0
+    """
+
+    with get_connection() as conn:
+        cur = conn.cursor()
+
+        # Verificar existencia
+        cur.execute("SELECT id FROM claims WHERE id = ?", (claim_id,))
+        if not cur.fetchone():
+            raise ValueError("Claim no existe")
+
+        # Total charge
+        cur.execute(
+            """
+            SELECT COALESCE(SUM(c.amount), 0)
+            FROM charges c
+            JOIN services s ON s.id = c.service_id
+            WHERE s.claim_id = ?
+            """,
+            (claim_id,),
+        )
+        total_charge = float(cur.fetchone()[0])
+
+        # Total applied
+        cur.execute(
+            """
+            SELECT COALESCE(SUM(a.amount_applied), 0)
+            FROM applications a
+            JOIN charges c ON c.id = a.charge_id
+            JOIN services s ON s.id = c.service_id
+            WHERE s.claim_id = ?
+            """,
+            (claim_id,),
+        )
+        total_applied = float(cur.fetchone()[0])
+
+        # Total adjustments
+        cur.execute(
+            """
+            SELECT COALESCE(SUM(ad.amount), 0)
+            FROM adjustments ad
+            JOIN charges c ON c.id = ad.charge_id
+            JOIN services s ON s.id = c.service_id
+            WHERE s.claim_id = ?
+            """,
+            (claim_id,),
+        )
+        total_adjustments = float(cur.fetchone()[0])
+
+        balance_due = total_charge - total_applied - total_adjustments
+
+        if balance_due > 0:
+            status = "OPEN"
+        elif balance_due == 0:
+            status = "PAID"
+        else:
+            status = "OVERPAID"
+
+        return {
+            "claim_id": claim_id,
+            "total_charge": total_charge,
+            "total_applied": total_applied,
+            "total_adjustments": total_adjustments,
+            "balance_due": balance_due,
+            "status": status,
+        }
