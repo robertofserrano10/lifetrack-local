@@ -1,0 +1,24 @@
+<h1>Claims Overview — Administrativo</h1>
+
+<table border="1" cellpadding="5">
+    <tr>
+        <th>Claim ID</th>
+        <th>Paciente</th>
+        <th>Total Charge</th>
+        <th>Total Applied</th>
+        <th>Total Adjustments</th>
+        <th>Balance Due</th>
+        <th>Locked</th>
+    </tr>
+    {% for c in claims %}
+    <tr>
+        <td>{{ c.claim_id }}</td>
+        <td>{{ c.patient }}</td>
+        <td>{{ c.total_charge }}</td>
+        <td>{{ c.total_applied }}</td>
+        <td>{{ c.total_adjustments }}</td>
+        <td>{{ c.balance_due }}</td>
+        <td>{{ "YES" if c.locked else "NO" }}</td>
+    </tr>
+    {% endfor %}
+</table>
