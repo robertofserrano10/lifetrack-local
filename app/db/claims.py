@@ -162,12 +162,10 @@ def get_claim_financial_status(claim_id: int) -> dict:
     with get_connection() as conn:
         cur = conn.cursor()
 
-        # Verificar existencia
         cur.execute("SELECT id FROM claims WHERE id = ?", (claim_id,))
         if not cur.fetchone():
             raise ValueError("Claim no existe")
 
-        # Total charge
         cur.execute(
             """
             SELECT COALESCE(SUM(c.amount), 0)
@@ -179,7 +177,6 @@ def get_claim_financial_status(claim_id: int) -> dict:
         )
         total_charge = float(cur.fetchone()[0])
 
-        # Total applied
         cur.execute(
             """
             SELECT COALESCE(SUM(a.amount_applied), 0)
@@ -192,7 +189,6 @@ def get_claim_financial_status(claim_id: int) -> dict:
         )
         total_applied = float(cur.fetchone()[0])
 
-        # Total adjustments
         cur.execute(
             """
             SELECT COALESCE(SUM(ad.amount), 0)
@@ -222,3 +218,48 @@ def get_claim_financial_status(claim_id: int) -> dict:
             "balance_due": balance_due,
             "status": status,
         }
+
+
+# ============================================================
+# FASE G25 — ESTADO OPERACIONAL DERIVADO (NO PERSISTENTE)
+# ============================================================
+
+def get_claim_operational_status(claim_id: int) -> dict:
+    """
+    Estado operacional derivado.
+    NO se guarda en base de datos.
+
+    Reglas:
+    - Si no tiene snapshot → DRAFT
+    - Si tiene snapshot y balance_due > 0 → READY_TO_SUBMIT
+    - Si tiene snapshot y balance_due == 0 → CLOSED
+    - Si tiene snapshot y balance_due < 0 → OVERPAID
+    """
+
+    # Verificar existencia
+    claim = get_claim_by_id(claim_id)
+    if not claim:
+        raise ValueError("Claim no existe")
+
+    locked = is_claim_locked(claim_id)
+    financial = get_claim_financial_status(claim_id)
+
+    if not locked:
+        operational_status = "DRAFT"
+    else:
+        balance_due = financial["balance_due"]
+
+        if balance_due > 0:
+            operational_status = "READY_TO_SUBMIT"
+        elif balance_due == 0:
+            operational_status = "CLOSED"
+        else:
+            operational_status = "OVERPAID"
+
+    return {
+        "claim_id": claim_id,
+        "locked": locked,
+        "balance_due": financial["balance_due"],
+        "financial_status": financial["status"],
+        "operational_status": operational_status,
+    }
