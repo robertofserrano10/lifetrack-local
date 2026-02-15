@@ -3,10 +3,32 @@ from app.db.connection import get_connection
 from app.db.financial_lock import is_claim_locked
 
 
+# ============================================================
+# ESTADOS OPERACIONALES PERMITIDOS
+# ============================================================
+
+ALLOWED_STATUSES = {
+    "DRAFT",
+    "READY",
+    "SUBMITTED",
+    "DENIED",
+    "PAID",
+}
+
+VALID_TRANSITIONS = {
+    "DRAFT": {"READY"},
+    "READY": {"SUBMITTED"},
+    "SUBMITTED": {"DENIED", "PAID"},
+    "DENIED": {"READY"},
+    "PAID": set(),  # terminal
+}
+
+
+# ============================================================
+# CORE CLAIM CRUD
+# ============================================================
+
 def create_claim(patient_id: int, coverage_id: int) -> int:
-    """
-    Crea un claim en estado 'draft' y devuelve su ID.
-    """
     now = datetime.utcnow().isoformat()
     with get_connection() as conn:
         cur = conn.cursor()
@@ -16,7 +38,7 @@ def create_claim(patient_id: int, coverage_id: int) -> int:
                 patient_id, coverage_id, status,
                 created_at, updated_at
             )
-            VALUES (?, ?, 'draft', ?, ?)
+            VALUES (?, ?, 'DRAFT', ?, ?)
             """,
             (patient_id, coverage_id, now, now),
         )
@@ -25,9 +47,6 @@ def create_claim(patient_id: int, coverage_id: int) -> int:
 
 
 def get_claim_by_id(claim_id: int):
-    """
-    Devuelve un claim por ID o None.
-    """
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute("SELECT * FROM claims WHERE id = ?", (claim_id,))
@@ -36,9 +55,6 @@ def get_claim_by_id(claim_id: int):
 
 
 def list_claims_by_patient(patient_id: int):
-    """
-    Lista claims de un paciente.
-    """
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute(
@@ -49,6 +65,57 @@ def list_claims_by_patient(patient_id: int):
         return [dict(r) for r in rows]
 
 
+# ============================================================
+# TRANSICIÓN OPERACIONAL CONTROLADA (PERSISTENTE)
+# ============================================================
+
+def update_claim_operational_status(claim_id: int, new_status: str) -> bool:
+    """
+    Cambia el estado operacional persistido.
+    Reglas:
+    - Debe existir el claim.
+    - new_status debe estar en ALLOWED_STATUSES.
+    - Debe respetar VALID_TRANSITIONS.
+    - No permite cambio si claim está congelado por snapshot.
+    """
+
+    if new_status not in ALLOWED_STATUSES:
+        raise ValueError("Estado inválido")
+
+    with get_connection() as conn:
+        cur = conn.cursor()
+
+        cur.execute("SELECT status FROM claims WHERE id = ?", (claim_id,))
+        row = cur.fetchone()
+        if not row:
+            raise ValueError("Claim no existe")
+
+        current_status = row["status"]
+
+        if is_claim_locked(claim_id):
+            raise ValueError("Claim está congelado por snapshot")
+
+        if new_status not in VALID_TRANSITIONS.get(current_status, set()):
+            raise ValueError(
+                f"Transición inválida: {current_status} → {new_status}"
+            )
+
+        cur.execute(
+            """
+            UPDATE claims
+            SET status = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (new_status, datetime.utcnow().isoformat(), claim_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+
+
+# ============================================================
+# CMS UPDATE (RESPETA BLOQUEO)
+# ============================================================
+
 def update_claim_cms_fields(
     claim_id: int,
     referring_provider_name: str | None = None,
@@ -58,10 +125,6 @@ def update_claim_cms_fields(
     original_ref_no_22: str | None = None,
     prior_authorization_23: str | None = None,
 ) -> bool:
-    """
-    Actualiza campos CMS-1500 a nivel CLAIM:
-    17, 19, 22, 23. Todo es nullable.
-    """
 
     if is_claim_locked(claim_id):
         raise ValueError("Claim está congelado por snapshot")
@@ -100,32 +163,18 @@ def update_claim_cms_fields(
         return cur.rowcount > 0
 
 
-def list_services_by_claim(claim_id: int):
-    """
-    Lista services asociados a un claim.
-    """
-    with get_connection() as conn:
-        cur = conn.cursor()
-        cur.execute(
-            "SELECT * FROM services WHERE claim_id = ? ORDER BY id",
-            (claim_id,),
-        )
-        rows = cur.fetchall()
-        return [dict(r) for r in rows]
-
+# ============================================================
+# DELETE CONTROLADO
+# ============================================================
 
 def delete_claim(claim_id: int) -> bool:
-    """
-    REGLAS:
-    - No permite borrar si el claim tiene snapshot.
-    - No permite borrar si tiene services asociados.
-    """
-
     with get_connection() as conn:
         cur = conn.cursor()
 
         if is_claim_locked(claim_id):
-            raise ValueError("No se puede borrar: claim está congelado por snapshot")
+            raise ValueError(
+                "No se puede borrar: claim está congelado por snapshot"
+            )
 
         cur.execute(
             """
@@ -137,7 +186,9 @@ def delete_claim(claim_id: int) -> bool:
             (claim_id,),
         )
         if cur.fetchone():
-            raise ValueError("No se puede borrar: claim tiene services asociados")
+            raise ValueError(
+                "No se puede borrar: claim tiene services asociados"
+            )
 
         cur.execute("DELETE FROM claims WHERE id = ?", (claim_id,))
         conn.commit()
@@ -145,19 +196,10 @@ def delete_claim(claim_id: int) -> bool:
 
 
 # ============================================================
-# FASE G22 — ESTADO FINANCIERO DERIVADO (NO PERSISTENTE)
+# ESTADO FINANCIERO DERIVADO
 # ============================================================
 
 def get_claim_financial_status(claim_id: int) -> dict:
-    """
-    Calcula estado financiero derivado del claim.
-    NO persiste nada en DB.
-
-    Estados:
-    - OPEN     → balance_due > 0
-    - PAID     → balance_due == 0
-    - OVERPAID → balance_due < 0
-    """
 
     with get_connection() as conn:
         cur = conn.cursor()
@@ -221,22 +263,11 @@ def get_claim_financial_status(claim_id: int) -> dict:
 
 
 # ============================================================
-# FASE G25 — ESTADO OPERACIONAL DERIVADO (NO PERSISTENTE)
+# ESTADO OPERACIONAL DERIVADO
 # ============================================================
 
 def get_claim_operational_status(claim_id: int) -> dict:
-    """
-    Estado operacional derivado.
-    NO se guarda en base de datos.
 
-    Reglas:
-    - Si no tiene snapshot → DRAFT
-    - Si tiene snapshot y balance_due > 0 → READY_TO_SUBMIT
-    - Si tiene snapshot y balance_due == 0 → CLOSED
-    - Si tiene snapshot y balance_due < 0 → OVERPAID
-    """
-
-    # Verificar existencia
     claim = get_claim_by_id(claim_id)
     if not claim:
         raise ValueError("Claim no existe")
@@ -244,22 +275,10 @@ def get_claim_operational_status(claim_id: int) -> dict:
     locked = is_claim_locked(claim_id)
     financial = get_claim_financial_status(claim_id)
 
-    if not locked:
-        operational_status = "DRAFT"
-    else:
-        balance_due = financial["balance_due"]
-
-        if balance_due > 0:
-            operational_status = "READY_TO_SUBMIT"
-        elif balance_due == 0:
-            operational_status = "CLOSED"
-        else:
-            operational_status = "OVERPAID"
-
     return {
         "claim_id": claim_id,
+        "persisted_status": claim["status"],
         "locked": locked,
-        "balance_due": financial["balance_due"],
         "financial_status": financial["status"],
-        "operational_status": operational_status,
+        "balance_due": financial["balance_due"],
     }
