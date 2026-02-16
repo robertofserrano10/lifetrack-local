@@ -275,9 +275,21 @@ def get_claim_operational_status(claim_id: int) -> dict:
     locked = is_claim_locked(claim_id)
     financial = get_claim_financial_status(claim_id)
 
+    # DERIVED OPERATIONAL STATUS (NO PERSISTENTE)
+    if not locked:
+        derived_status = "DRAFT"
+    else:
+        if financial["balance_due"] > 0:
+            derived_status = "READY"
+        elif financial["balance_due"] == 0:
+            derived_status = "PAID"
+        else:
+            derived_status = "OVERPAID"
+
     return {
         "claim_id": claim_id,
         "persisted_status": claim["status"],
+        "operational_status": derived_status,   # ← AÑADIDO
         "locked": locked,
         "financial_status": financial["status"],
         "balance_due": financial["balance_due"],
