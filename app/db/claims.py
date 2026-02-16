@@ -289,7 +289,7 @@ def get_claim_operational_status(claim_id: int) -> dict:
     return {
         "claim_id": claim_id,
         "persisted_status": claim["status"],
-        "operational_status": derived_status,   # ← AÑADIDO
+        "operational_status": derived_status,
         "locked": locked,
         "financial_status": financial["status"],
         "balance_due": financial["balance_due"],

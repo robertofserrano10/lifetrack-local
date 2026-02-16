@@ -9,23 +9,32 @@
 
 <p><strong>Claim ID:</strong> {{ claim.id }}</p>
 
-<h2>Derived Financial Status</h2>
-<p>Status: {{ financial.status }}</p>
-<p>Balance Due: {{ financial.balance_due }}</p>
-
 <h2>Derived Operational Status</h2>
-<p>Status: {{ operational.persisted_status }}</p>
-<p>Locked: {{ operational.locked }}</p>
 
-<h2>Latest Snapshot</h2>
+<p><strong>Derived (Financial):</strong> {{ operational.financial_status }}</p>
+<p><strong>Persisted:</strong> {{ operational.persisted_status }}</p>
+<p><strong>Locked:</strong> {{ operational.locked }}</p>
 
-{% if latest_snapshot %}
-    <p>
-        Snapshot ID: {{ latest_snapshot.id }} |
-        <a href="/admin/snapshots/{{ latest_snapshot.id }}">View Snapshot</a>
+{% if operational.locked %}
+    <p style="color: red;">
+        LOCKED BY SNAPSHOT — Snapshot is legal frozen state.
     </p>
 {% else %}
-    <p>No snapshot exists.</p>
+
+    <h3>Change Operational Status</h3>
+
+    {% if transitions %}
+        <form method="POST">
+            {% for status in transitions %}
+                <button type="submit" name="new_status" value="{{ status }}">
+                    Move to {{ status }}
+                </button>
+            {% endfor %}
+        </form>
+    {% else %}
+        <p>No valid transitions available.</p>
+    {% endif %}
+
 {% endif %}
 
 </body>
