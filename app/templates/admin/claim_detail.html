@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Claim Admin View</title>
+</head>
+<body>
+
+<h1>Claim Admin View</h1>
+
+<p><strong>Claim ID:</strong> {{ claim.id }}</p>
+
+<h2>Derived Financial Status</h2>
+<p>Status: {{ financial.status }}</p>
+<p>Balance Due: {{ financial.balance_due }}</p>
+
+<h2>Derived Operational Status</h2>
+<p>Status: {{ operational.persisted_status }}</p>
+<p>Locked: {{ operational.locked }}</p>
+
+<h2>Latest Snapshot</h2>
+
+{% if latest_snapshot %}
+    <p>
+        Snapshot ID: {{ latest_snapshot.id }} |
+        <a href="/admin/snapshots/{{ latest_snapshot.id }}">View Snapshot</a>
+    </p>
+{% else %}
+    <p>No snapshot exists.</p>
+{% endif %}
+
+</body>
+</html>
