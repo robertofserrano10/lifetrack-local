@@ -21,17 +21,18 @@
     </p>
 {% else %}
 
-    <h3>Operational Actions</h3>
-
-    <form method="post" action="/admin/claims/{{ claim.id }}/transition">
-        <select name="new_status">
-            <option value="READY">READY</option>
-            <option value="SUBMITTED">SUBMITTED</option>
-            <option value="DENIED">DENIED</option>
-            <option value="PAID">PAID</option>
-        </select>
-        <button type="submit">Update Status</button>
-    </form>
+    {% if allowed_transitions %}
+        <h3>Operational Transitions</h3>
+        <form method="POST" action="/admin/claims/{{ claim.id }}/transition">
+            {% for status in allowed_transitions %}
+                <button type="submit" name="new_status" value="{{ status }}">
+                    Move to {{ status }}
+                </button>
+            {% endfor %}
+        </form>
+    {% else %}
+        <p>No valid transitions available.</p>
+    {% endif %}
 
 {% endif %}
 
