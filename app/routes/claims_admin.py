@@ -6,7 +6,10 @@ from app.db.claims import (
     update_claim_operational_status,
     VALID_TRANSITIONS,
 )
-from app.db.cms1500_snapshot import get_latest_snapshot_by_claim
+from app.db.cms1500_snapshot import (
+    get_latest_snapshot_by_claim,
+    generate_cms1500_snapshot,
+)
 
 claims_admin_bp = Blueprint(
     "claims_admin",
@@ -51,9 +54,19 @@ def claim_transition(claim_id: int):
     if not new_status:
         abort(400)
 
+    previous_status = claim["status"]
+
     try:
         update_claim_operational_status(claim_id, new_status)
     except Exception as e:
         return f"Transition blocked: {str(e)}", 400
+
+    # =========================================================
+    # G37 — AUTO SNAPSHOT ON SUBMITTED
+    # =========================================================
+    if previous_status != "SUBMITTED" and new_status == "SUBMITTED":
+        existing_snapshot = get_latest_snapshot_by_claim(claim_id)
+        if not existing_snapshot:
+            generate_cms1500_snapshot(claim_id)
 
     return redirect(url_for("claims_admin.claim_detail_admin", claim_id=claim_id))
