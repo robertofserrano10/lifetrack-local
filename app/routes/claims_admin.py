@@ -1,9 +1,9 @@
-from flask import Blueprint, render_template, abort
+from flask import Blueprint, render_template, abort, request, redirect, url_for
 from app.db.claims import (
     get_claim_by_id,
     get_claim_financial_status,
     get_claim_operational_status,
-    ALLOWED_STATUSES,
+    update_claim_operational_status,
     VALID_TRANSITIONS,
 )
 from app.db.cms1500_snapshot import get_latest_snapshot_by_claim
@@ -38,3 +38,22 @@ def claim_detail_admin(claim_id: int):
         latest_snapshot=latest_snapshot,
         allowed_transitions=allowed_transitions,
     )
+
+
+@claims_admin_bp.route("/<int:claim_id>/transition", methods=["POST"])
+def claim_transition(claim_id: int):
+
+    claim = get_claim_by_id(claim_id)
+    if not claim:
+        abort(404)
+
+    new_status = request.form.get("new_status")
+    if not new_status:
+        abort(400)
+
+    try:
+        update_claim_operational_status(claim_id, new_status)
+    except Exception as e:
+        return f"Transition blocked: {str(e)}", 400
+
+    return redirect(url_for("claims_admin.claim_detail_admin", claim_id=claim_id))
