@@ -72,6 +72,11 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
     Genera snapshot inmutable CMS-1500 para un claim y lo persiste con hash.
     REGLA: snapshot NO inventa datos: si faltan, quedan None/'—' en UI.
     """
+    existing = get_latest_snapshot_by_claim(claim_id)
+    if existing:
+     raise ValueError("Snapshot ya existe — claim congelado")
+
+
     conn = _conn()
     try:
         cur = conn.cursor()

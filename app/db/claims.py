@@ -70,14 +70,6 @@ def list_claims_by_patient(patient_id: int):
 # ============================================================
 
 def update_claim_operational_status(claim_id: int, new_status: str) -> bool:
-    """
-    Cambia el estado operacional persistido.
-    Reglas:
-    - Debe existir el claim.
-    - new_status debe estar en ALLOWED_STATUSES.
-    - Debe respetar VALID_TRANSITIONS.
-    - No permite cambio si claim está congelado por snapshot.
-    """
 
     if new_status not in ALLOWED_STATUSES:
         raise ValueError("Estado inválido")
@@ -92,8 +84,9 @@ def update_claim_operational_status(claim_id: int, new_status: str) -> bool:
 
         current_status = row["status"]
 
+        # HARD FREEZE CHECK
         if is_claim_locked(claim_id):
-            raise ValueError("Claim está congelado por snapshot")
+            raise ValueError("Claim congelado por snapshot — transición bloqueada")
 
         if new_status not in VALID_TRANSITIONS.get(current_status, set()):
             raise ValueError(
@@ -110,6 +103,7 @@ def update_claim_operational_status(claim_id: int, new_status: str) -> bool:
         )
         conn.commit()
         return cur.rowcount > 0
+
 
 
 # ============================================================
