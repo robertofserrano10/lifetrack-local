@@ -74,8 +74,7 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
     """
     existing = get_latest_snapshot_by_claim(claim_id)
     if existing:
-     raise ValueError("Snapshot ya existe — claim congelado")
-
+        raise ValueError("Snapshot ya existe — claim congelado")
 
     conn = _conn()
     try:
@@ -389,6 +388,8 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
         return {"snapshot": snapshot, "snapshot_hash": snapshot_hash}
     finally:
         conn.close()
+
+
 # ============================================================
 # FASE G29 — Snapshot Index / Listing Layer (READ-ONLY)
 # ============================================================
@@ -436,6 +437,7 @@ def list_snapshots_admin() -> list[dict]:
 
     finally:
         conn.close()
+
 
 # ============================================================
 # FASE G31 — Snapshot Detail (READ-ONLY)

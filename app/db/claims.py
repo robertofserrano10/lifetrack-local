@@ -1,6 +1,7 @@
 from datetime import datetime
 from app.db.connection import get_connection
 from app.db.financial_lock import is_claim_locked
+from app.db.event_ledger import log_event
 
 
 # ============================================================
@@ -102,8 +103,21 @@ def update_claim_operational_status(claim_id: int, new_status: str) -> bool:
             (new_status, datetime.utcnow().isoformat(), claim_id),
         )
         conn.commit()
-        return cur.rowcount > 0
 
+        # =========================================================
+        # G43 — EVENT LEDGER AUTOMÁTICO (NUEVO)
+        # =========================================================
+        log_event(
+            entity_type="claim",
+            entity_id=claim_id,
+            event_type="operational_transition",
+            event_data={
+                "from": current_status,
+                "to": new_status,
+            },
+        )
+
+        return cur.rowcount > 0
 
 
 # ============================================================
