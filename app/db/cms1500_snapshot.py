@@ -480,3 +480,46 @@ def get_snapshot_by_id(snapshot_id: int) -> Optional[Dict[str, Any]]:
 
     finally:
         conn.close()
+
+        # ============================================================
+# FASE G32 — Snapshot Integrity Verification (READ-ONLY)
+# ============================================================
+
+def verify_snapshot_integrity(snapshot_id: int) -> dict:
+    """
+    Recalcula el hash del snapshot_json almacenado
+    y lo compara con el snapshot_hash persistido.
+    No modifica nada.
+    """
+
+    conn = _conn()
+    try:
+        cur = conn.cursor()
+
+        cur.execute(
+            """
+            SELECT snapshot_json, snapshot_hash
+            FROM cms1500_snapshots
+            WHERE id = ?
+            """,
+            (snapshot_id,),
+        )
+
+        row = cur.fetchone()
+        if not row:
+            raise ValueError("Snapshot no existe")
+
+        stored_json = row["snapshot_json"]
+        stored_hash = row["snapshot_hash"]
+
+        recalculated_hash = _sha256(stored_json)
+
+        return {
+            "snapshot_id": snapshot_id,
+            "stored_hash": stored_hash,
+            "recalculated_hash": recalculated_hash,
+            "match": stored_hash == recalculated_hash,
+        }
+
+    finally:
+        conn.close()
