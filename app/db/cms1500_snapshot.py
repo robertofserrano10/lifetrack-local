@@ -211,13 +211,12 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
                         (s["modifier4"] if "modifier4" in s.keys() else None),
                     ],
                     "dx_pointer": dx_pointer_val,
-                    "diagnosis_code": diagnosis_code_val,  # si existe, lo guardamos
+                    "diagnosis_code": diagnosis_code_val,
                     "charge_amount_24f": charge_val,
                     "units": units_val,
                     "epsdt_24h": (s["epsdt_24h"] if "epsdt_24h" in s.keys() else None),
                     "id_qualifier_24i": (s["id_qualifier_24i"] if "id_qualifier_24i" in s.keys() else None),
                     "rendering_npi_24j": (s["rendering_npi_24j"] if "rendering_npi_24j" in s.keys() else None),
-                    # Box 20 (service-level)
                     "outside_lab_20": bool(s["outside_lab_20"]) if "outside_lab_20" in s.keys() else False,
                     "lab_charges_20": (s["lab_charges_20"] if "lab_charges_20" in s.keys() else None),
                 }
@@ -225,21 +224,15 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
 
         # -------------------------
         # Diagnoses (21 A–L)
-        # Regla: NO inventar. Si no hay diagnóstico extra, quedan None.
-        # Preferimos:
-        # 1) columnas claim-level (si existen) diagnosis_21a... (si algún día las agregas)
-        # 2) fallback: primer diagnosis_code disponible en services (si existe)
         # -------------------------
         diagnoses = {k: None for k in list("ABCDEFGHIJKL")}
 
-        # claim-level optional columns (si existen)
         for idx, letter in enumerate("ABCDEFGHIJKL", start=1):
             col = f"diagnosis_{idx}"
             if _table_has_column(conn, "claims", col):
                 val = base[col]
                 diagnoses[letter] = val
 
-        # fallback mínimo: si no hay ninguna diagnosis y services tiene diagnosis_code, usar la primera
         if all(v is None for v in diagnoses.values()) and has_diagnosis_code:
             for s in service_rows:
                 if s["diagnosis_code"]:
@@ -248,10 +241,6 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
 
         # -------------------------
         # Totals 28–30 (finanzas)
-        # total_charge = SUM(charges.amount) si existe; si no, SUM(services.charge_amount_24f)
-        # amount_paid  = SUM(applications.amount_applied)
-        # adjustments  = SUM(adjustments.amount)
-        # balance_due  = total_charge - amount_paid - adjustments
         # -------------------------
         cur.execute(
             """
@@ -323,7 +312,6 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
                 "coverage_id": base["coverage_id"],
                 "claim_number": base["claim_number"],
                 "status": base["status"],
-                # 10, 14–23, 26, 27 (claim-level)
                 "related_employment_10a": base["related_employment_10a"] if "related_employment_10a" in base.keys() else 0,
                 "related_auto_10b": base["related_auto_10b"] if "related_auto_10b" in base.keys() else 0,
                 "related_other_10c": base["related_other_10c"] if "related_other_10c" in base.keys() else 0,
@@ -368,10 +356,10 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
                     "zip": base["cov_insured_zip"],
                 },
             },
-            "diagnoses": diagnoses,   # 21 A–L
-            "services": services,     # 24A–24J + 20
-            "totals": totals,         # 28–30 (+ adjustments)
-            "provider": provider,     # 31–33
+            "diagnoses": diagnoses,
+            "services": services,
+            "totals": totals,
+            "provider": provider,
         }
 
         snapshot_json = _canonical_json(snapshot)
@@ -385,19 +373,16 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
             (claim_id, snapshot_json, snapshot_hash),
         )
         conn.commit()
+
         log_event(
             entity_type="claim",
             entity_id=claim_id,
             event_type="snapshot_created",
-            event_data={
-                "snapshot_hash": snapshot_hash,
-            },
+            event_data={"snapshot_hash": snapshot_hash},
         )
 
         return {"snapshot": snapshot, "snapshot_hash": snapshot_hash}
-         
 
-        return {"snapshot": snapshot, "snapshot_hash": snapshot_hash}
     finally:
         conn.close()
 
@@ -411,7 +396,6 @@ def list_snapshots_admin() -> list[dict]:
     Lista administrativa de snapshots.
     Solo lectura. No recalcula nada.
     """
-
     conn = _conn()
     try:
         cur = conn.cursor()
@@ -461,7 +445,6 @@ def get_snapshot_by_id(snapshot_id: int) -> Optional[Dict[str, Any]]:
     Solo lectura.
     No recalcula nada.
     """
-
     conn = _conn()
     try:
         cur = conn.cursor()
@@ -493,7 +476,8 @@ def get_snapshot_by_id(snapshot_id: int) -> Optional[Dict[str, Any]]:
     finally:
         conn.close()
 
-        # ============================================================
+
+# ============================================================
 # FASE G32 — Snapshot Integrity Verification (READ-ONLY)
 # ============================================================
 
@@ -501,16 +485,15 @@ def verify_snapshot_integrity(snapshot_id: int) -> dict:
     """
     Recalcula el hash del snapshot_json almacenado
     y lo compara con el snapshot_hash persistido.
-    No modifica nada.
+    No modifica snapshot. Solo registra auditoría en event_ledger.
     """
-
     conn = _conn()
     try:
         cur = conn.cursor()
 
         cur.execute(
             """
-            SELECT snapshot_json, snapshot_hash
+            SELECT id, claim_id, snapshot_json, snapshot_hash
             FROM cms1500_snapshots
             WHERE id = ?
             """,
@@ -525,12 +508,36 @@ def verify_snapshot_integrity(snapshot_id: int) -> dict:
         stored_hash = row["snapshot_hash"]
 
         recalculated_hash = _sha256(stored_json)
+        match = stored_hash == recalculated_hash
+
+        if match:
+            log_event(
+                entity_type="claim",
+                entity_id=row["claim_id"],
+                event_type="snapshot_integrity_verified",
+                event_data={
+                    "snapshot_id": row["id"],
+                    "hash": stored_hash,
+                },
+            )
+        else:
+            log_event(
+                entity_type="claim",
+                entity_id=row["claim_id"],
+                event_type="snapshot_integrity_failed",
+                event_data={
+                    "snapshot_id": row["id"],
+                    "expected_hash": stored_hash,
+                    "recalculated_hash": recalculated_hash,
+                },
+            )
 
         return {
-            "snapshot_id": snapshot_id,
+            "snapshot_id": row["id"],
+            "claim_id": row["claim_id"],
             "stored_hash": stored_hash,
             "recalculated_hash": recalculated_hash,
-            "match": stored_hash == recalculated_hash,
+            "match": match,
         }
 
     finally:
