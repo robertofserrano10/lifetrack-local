@@ -3,6 +3,7 @@ import hashlib
 import sqlite3
 from datetime import datetime
 from typing import Any, Dict, Optional
+from app.db.event_ledger import log_event
 
 DB_PATH = "storage/lifetrack.db"
 
@@ -384,6 +385,17 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
             (claim_id, snapshot_json, snapshot_hash),
         )
         conn.commit()
+        log_event(
+            entity_type="claim",
+            entity_id=claim_id,
+            event_type="snapshot_created",
+            event_data={
+                "snapshot_hash": snapshot_hash,
+            },
+        )
+
+        return {"snapshot": snapshot, "snapshot_hash": snapshot_hash}
+         
 
         return {"snapshot": snapshot, "snapshot_hash": snapshot_hash}
     finally:
