@@ -115,6 +115,17 @@ def update_claim_operational_status(claim_id: int, new_status: str) -> bool:
             (new_status, datetime.utcnow().isoformat(), claim_id),
         )
         conn.commit()
+        from app.db.event_ledger import log_event
+
+        log_event(
+            entity_type="claim",
+            entity_id=claim_id,
+            event_type="operational_transition",
+            event_data={
+                 "from": current_status,
+                 "to": new_status,
+            },
+       )
 
         # =========================================================
         # G43 — EVENT LEDGER AUTOMÁTICO (NUEVO)
