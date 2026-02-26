@@ -87,6 +87,18 @@ def update_claim_operational_status(claim_id: int, new_status: str) -> bool:
 
         # HARD FREEZE CHECK
         if is_claim_locked(claim_id):
+            from app.db.event_ledger import log_event
+
+            log_event(
+                entity_type="claim",
+                entity_id=claim_id,
+                event_type="freeze_blocked_transition",
+                event_data={
+                    "attempted_new_status": new_status,
+                    "current_status": current_status,
+                },
+           )
+
             raise ValueError("Claim congelado por snapshot — transición bloqueada")
 
         if new_status not in VALID_TRANSITIONS.get(current_status, set()):
