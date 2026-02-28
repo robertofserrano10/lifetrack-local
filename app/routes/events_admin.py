@@ -1,5 +1,9 @@
 from flask import Blueprint, render_template, request
 from app.db.event_ledger import list_events_admin, count_events_admin
+from flask import Response
+import json
+import csv
+import io
 
 events_admin_bp = Blueprint(
     "events_admin",
@@ -34,4 +38,46 @@ def events_index():
         has_next=has_next,
         claim_id=claim_id_raw,
         total=total,
+    )
+@events_admin_bp.route("/export/json", methods=["GET"])
+def export_events_json():
+    claim_id_raw = request.args.get("claim_id", "").strip()
+    claim_id = int(claim_id_raw) if claim_id_raw.isdigit() else None
+
+    events = list_events_admin(limit=100000, offset=0, claim_id=claim_id)
+
+    payload = json.dumps(events, indent=2, ensure_ascii=False)
+
+    return Response(
+        payload,
+        mimetype="application/json",
+        headers={
+            "Content-Disposition": "attachment; filename=event_ledger_export.json"
+        },
+    )
+
+
+@events_admin_bp.route("/export/csv", methods=["GET"])
+def export_events_csv():
+    claim_id_raw = request.args.get("claim_id", "").strip()
+    claim_id = int(claim_id_raw) if claim_id_raw.isdigit() else None
+
+    events = list_events_admin(limit=100000, offset=0, claim_id=claim_id)
+
+    output = io.StringIO()
+    writer = csv.DictWriter(
+        output,
+        fieldnames=["id", "entity_type", "entity_id", "event_type", "event_data", "created_at"],
+    )
+
+    writer.writeheader()
+    for e in events:
+        writer.writerow(e)
+
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": "attachment; filename=event_ledger_export.csv"
+        },
     )

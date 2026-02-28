@@ -24,6 +24,13 @@
     <button type="submit">Filter</button>
   </form>
 
+  
+  <div style="margin: 10px 0;">
+    <a href="/admin/events/export/json?claim_id={{ claim_id }}">Export JSON</a> |
+    <a href="/admin/events/export/csv?claim_id={{ claim_id }}">Export CSV</a>
+  </div>
+  
+
   <p><strong>Total events:</strong> {{ total }}</p>
 
   <table>
