@@ -1,12 +1,25 @@
-from flask import Flask, render_template
+import os
+import sqlite3
+from typing import Any, Dict, Optional
+
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+)
+
+from werkzeug.security import check_password_hash
 
 from app.views.cms1500_render import get_latest_snapshot_by_claim
-from app.utils.snapshot_hash import compute_snapshot_hash  # ← AÑADIDO
+from app.utils.snapshot_hash import compute_snapshot_hash
 
 from app.routes.patients import patients_bp
 from app.routes.coverages import coverages_bp
 from app.routes.provider_settings import provider_settings_bp
-from app.routes.cms1500_pdf import cms1500_pdf_bp  # FASE C2 — PDF CMS-1500
+from app.routes.cms1500_pdf import cms1500_pdf_bp
 from app.routes.claim_balance import claim_balance_bp
 from app.routes.charge_balance import charge_balance_bp
 from app.routes.claim_payments import claim_payments_bp
@@ -19,8 +32,106 @@ from app.routes.claims_admin import claims_admin_bp
 from app.routes.events_admin import events_admin_bp
 
 app = Flask(__name__)
+app.secret_key = "dev-secret-key"
 
-# Blueprints existentes
+DB_PATH = os.path.join("storage", "lifetrack.db")
+
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def get_current_user() -> Optional[Dict[str, Any]]:
+    user_id = session.get("user_id")
+    if not user_id:
+        return None
+
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT id, username, role FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+
+        if not row:
+            session.pop("user_id", None)
+            return None
+
+        return {
+            "id": row["id"],
+            "username": row["username"],
+            "role": row["role"],
+        }
+    finally:
+        conn.close()
+
+
+@app.context_processor
+def inject_current_user():
+    return {"current_user": get_current_user()}
+
+
+# =========================
+# HOME
+# =========================
+@app.route("/")
+def home():
+    user = get_current_user()
+    if not user:
+        return redirect(url_for("login"))
+    return redirect(url_for("claims_overview.claims_overview"))
+
+
+# =========================
+# LOGIN
+# =========================
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "GET":
+        return render_template("login.html")
+
+    username = request.form.get("username")
+    password = request.form.get("password")
+
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT id, username, password_hash, role FROM users WHERE username = ?",
+            (username,),
+        ).fetchone()
+
+        if not row:
+            return render_template(
+                "login.html",
+                error="Credenciales inválidas",
+            )
+
+        if not check_password_hash(row["password_hash"], password):
+            return render_template(
+                "login.html",
+                error="Credenciales inválidas",
+            )
+
+        session["user_id"] = row["id"]
+        return redirect(url_for("home"))
+    finally:
+        conn.close()
+
+
+# =========================
+# LOGOUT
+# =========================
+@app.route("/logout")
+def logout():
+    session.pop("user_id", None)
+    return redirect(url_for("login"))
+
+
+# =========================
+# BLUEPRINTS
+# =========================
 app.register_blueprint(patients_bp)
 app.register_blueprint(coverages_bp)
 app.register_blueprint(provider_settings_bp)
@@ -34,23 +145,26 @@ app.register_blueprint(claims_overview_bp)
 app.register_blueprint(snapshots_admin_bp)
 app.register_blueprint(claims_admin_bp)
 app.register_blueprint(events_admin_bp)
-
-# Blueprint PDF (FASE C2)
 app.register_blueprint(cms1500_pdf_bp)
 
+
+# =========================
+# CMS1500 VIEW
+# =========================
 @app.route("/cms1500/<int:claim_id>")
 def cms1500_view(claim_id):
     snapshot = get_latest_snapshot_by_claim(claim_id)
     if not snapshot:
         return "No hay snapshot para este claim", 404
 
-    snapshot_hash = compute_snapshot_hash(snapshot)  # ← AÑADIDO
+    snapshot_hash = compute_snapshot_hash(snapshot)
 
     return render_template(
         "cms1500.html",
         snapshot=snapshot,
-        snapshot_hash=snapshot_hash,  # ← AÑADIDO
+        snapshot_hash=snapshot_hash,
     )
+
 
 print("LifeTrack local iniciado")
 

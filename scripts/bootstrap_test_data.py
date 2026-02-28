@@ -1,17 +1,59 @@
+import os
 import sqlite3
+from werkzeug.security import generate_password_hash
 
 DB_PATH = "storage/lifetrack.db"
+SCHEMA_PATH = "storage/schema.sql"
 
 # =========================
-# Conexión a la base de datos
+# Crear DB y ejecutar schema.sql automáticamente
 # =========================
+
+db_exists = os.path.exists(DB_PATH)
+
 conn = sqlite3.connect(DB_PATH)
 cur = conn.cursor()
+
+if not db_exists:
+    print("📦 Base de datos no existe. Creando y ejecutando schema.sql...")
+    with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
+        schema_sql = f.read()
+        conn.executescript(schema_sql)
+    print("✅ schema.sql ejecutado correctamente")
+else:
+    print("ℹ️ Base de datos ya existe")
 
 print("🔗 Conectado a DB")
 
 # =========================
-# Provider Settings (31–33)
+# Usuario inicial (ETAPA H8-1)
+# =========================
+cur.execute("""
+    SELECT name FROM sqlite_master 
+    WHERE type='table' AND name='users'
+""")
+if not cur.fetchone():
+    raise RuntimeError("La tabla 'users' no existe. Verifica storage/schema.sql.")
+
+cur.execute("SELECT COUNT(*) FROM users")
+if cur.fetchone()[0] == 0:
+    password_hash = generate_password_hash("admin123")
+
+    cur.execute("""
+        INSERT INTO users (
+            username,
+            password_hash,
+            role,
+            active
+        ) VALUES (?, ?, ?, 1)
+    """, ("admin", password_hash, "ADMIN"))
+
+    print("✅ usuario ADMIN creado (user: admin / pass: admin123)")
+else:
+    print("ℹ️ usuarios ya existen")
+
+# =========================
+# Provider Settings
 # =========================
 cur.execute("SELECT COUNT(*) FROM provider_settings")
 if cur.fetchone()[0] == 0:
@@ -19,17 +61,14 @@ if cur.fetchone()[0] == 0:
         INSERT INTO provider_settings (
             signature,
             active
-        ) VALUES (
-            'Signature on File',
-            1
-        )
+        ) VALUES ('Signature on File', 1)
     """)
     print("✅ provider_settings creado")
 else:
     print("ℹ️ provider_settings ya existe")
 
 # =========================
-# Patient (2,3,8)
+# Patient
 # =========================
 cur.execute("SELECT COUNT(*) FROM patients")
 if cur.fetchone()[0] == 0:
@@ -51,7 +90,7 @@ else:
     print("ℹ️ patient ya existe")
 
 # =========================
-# Coverage (1,1a,4,6,7,9,11)
+# Coverage
 # =========================
 cur.execute("SELECT COUNT(*) FROM coverages")
 if cur.fetchone()[0] == 0:
@@ -79,7 +118,7 @@ else:
     print("ℹ️ coverage ya existe")
 
 # =========================
-# Claim (10,14–23,26,27)
+# Claim
 # =========================
 cur.execute("SELECT COUNT(*) FROM claims")
 if cur.fetchone()[0] == 0:
@@ -101,7 +140,7 @@ else:
     print("ℹ️ claim ya existe")
 
 # =========================
-# Service (24A–24J + 20)
+# Service
 # =========================
 cur.execute("SELECT COUNT(*) FROM services")
 if cur.fetchone()[0] == 0:
@@ -136,9 +175,6 @@ if cur.fetchone()[0] == 0:
 else:
     print("ℹ️ service ya existe")
 
-# =========================
-# Commit y cierre
-# =========================
 conn.commit()
 conn.close()
 
