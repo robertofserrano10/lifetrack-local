@@ -286,7 +286,7 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
         totals = {
             "total_charge": float(round(total_charge, 2)),
             "amount_paid": float(round(amount_paid, 2)),
-            "adjustments": float(round(adjustments_total, 2)),
+            "total_adjustments": float(round(adjustments_total, 2)),
             "balance_due": float(round(balance_due, 2)),
         }
 
@@ -381,7 +381,8 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
             event_data={"snapshot_hash": snapshot_hash},
         )
 
-        return {"snapshot": snapshot, "snapshot_hash": snapshot_hash}
+        # ÚNICO CAMBIO: añadir "hash" para compatibilidad con tests que esperan r["hash"]
+        return {"snapshot": snapshot, "snapshot_hash": snapshot_hash, "hash": snapshot_hash}
 
     finally:
         conn.close()

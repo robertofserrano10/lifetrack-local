@@ -202,6 +202,20 @@ CREATE TABLE IF NOT EXISTS adjustments (
 );
 
 -- =========================
+-- Event Ledger (FASE G42)
+-- =========================
+CREATE TABLE IF NOT EXISTS event_ledger (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_type TEXT NOT NULL,
+    entity_id INTEGER NOT NULL,
+    event_type TEXT NOT NULL,
+    event_data TEXT,
+    created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_event_entity ON event_ledger(entity_type, entity_id);
+
+-- =========================
 -- CMS-1500 Snapshots
 -- =========================
 CREATE TABLE IF NOT EXISTS cms1500_snapshots (
