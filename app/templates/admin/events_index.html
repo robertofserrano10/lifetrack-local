@@ -3,8 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <title>Event Ledger Admin</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 6px; vertical-align: top; }
+    th { background-color: #f4f4f4; }
+    pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; }
+    .small { font-size: 12px; color: #555; }
+    .pagination { margin-top: 15px; }
+    .pagination a { margin-right: 10px; }
+  </style>
 </head>
 <body>
+
   <h1>Event Ledger Admin</h1>
 
   <form method="GET" action="/admin/events/">
@@ -13,9 +24,9 @@
     <button type="submit">Filter</button>
   </form>
 
-  <p>Total events: {{ total }}</p>
+  <p><strong>Total events:</strong> {{ total }}</p>
 
-  <table border="1" cellpadding="6" cellspacing="0">
+  <table>
     <thead>
       <tr>
         <th>ID</th>
@@ -29,25 +40,37 @@
       {% for e in events %}
       <tr>
         <td>{{ e.id }}</td>
-        <td>{{ e.created_at }}</td>
-        <td>{{ e.entity_type }} #{{ e.entity_id }}</td>
-        <td>{{ e.event_type }}</td>
-        <td><pre>{{ e.event_data }}</pre></td>
+        <td class="small">
+          {{ e.created_at }}
+        </td>
+        <td>
+          {{ e.entity_type }}
+          #{{ e.entity_id }}
+          {% if e.entity_type == "claim" %}
+            <br>
+            <a href="/admin/claims/{{ e.entity_id }}">View Claim</a>
+          {% endif %}
+        </td>
+        <td><strong>{{ e.event_type }}</strong></td>
+        <td>
+          <pre>{{ e.event_data }}</pre>
+        </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 
-  <div style="margin-top: 12px;">
+  <div class="pagination">
     {% if has_prev %}
       <a href="/admin/events/?page={{ page - 1 }}&claim_id={{ claim_id }}">Prev</a>
     {% endif %}
 
-    <span> Page {{ page }} </span>
+    <strong>Page {{ page }}</strong>
 
     {% if has_next %}
       <a href="/admin/events/?page={{ page + 1 }}&claim_id={{ claim_id }}">Next</a>
     {% endif %}
   </div>
+
 </body>
 </html>
