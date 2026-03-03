@@ -136,6 +136,40 @@ def delete_charge(charge_id: int):
     with get_connection() as conn:
         cur = conn.cursor()
 
+        # 1. Obtener service_id
+        cur.execute(
+            """
+            SELECT service_id
+            FROM charges
+            WHERE id = ?
+            """,
+            (charge_id,),
+        )
+        row = cur.fetchone()
+        if not row:
+            raise ValueError("Charge no existe")
+
+        service_id = row["service_id"]
+
+        # 2. Obtener claim_id
+        cur.execute(
+            """
+            SELECT claim_id
+            FROM services
+            WHERE id = ?
+            """,
+            (service_id,),
+        )
+        service_row = cur.fetchone()
+        if not service_row:
+            raise ValueError("Service no existe")
+
+        claim_id = service_row["claim_id"]
+
+        # 🔒 BLOQUEO FINANCIERO
+        if is_claim_locked(claim_id):
+            raise ValueError("Claim está congelado por snapshot")
+
         # Verificar si tiene applications
         cur.execute(
             """
@@ -149,6 +183,7 @@ def delete_charge(charge_id: int):
         if cur.fetchone():
             raise ValueError("No se puede borrar: charge tiene applications")
 
+        # Eliminar
         cur.execute(
             """
             DELETE FROM charges
