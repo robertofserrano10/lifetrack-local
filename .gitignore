@@ -9,3 +9,8 @@ storage/*.db
 
 # Exports dinámicos
 exports/
+
+# Local debug scripts
+check_tables.py
+app/check_tables.py
+
