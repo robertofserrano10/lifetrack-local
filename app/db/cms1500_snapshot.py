@@ -3,6 +3,7 @@ import hashlib
 import sqlite3
 from datetime import datetime
 from typing import Any, Dict, Optional
+
 from app.db.event_ledger import log_event
 
 DB_PATH = "storage/lifetrack.db"
@@ -43,27 +44,50 @@ def get_latest_snapshot_by_claim(claim_id: int) -> Optional[Dict[str, Any]]:
     conn = _conn()
     try:
         cur = conn.cursor()
-        cur.execute(
-            """
-            SELECT id, claim_id, snapshot_json, snapshot_hash, created_at
-            FROM cms1500_snapshots
-            WHERE claim_id = ?
-            ORDER BY id DESC
-            LIMIT 1
-            """,
-            (claim_id,),
-        )
+
+        has_version_number = _table_has_column(conn, "cms1500_snapshots", "version_number")
+
+        if has_version_number:
+            cur.execute(
+                """
+                SELECT id, claim_id, version_number, snapshot_json, snapshot_hash, created_at
+                FROM cms1500_snapshots
+                WHERE claim_id = ?
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                (claim_id,),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT id, claim_id, snapshot_json, snapshot_hash, created_at
+                FROM cms1500_snapshots
+                WHERE claim_id = ?
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                (claim_id,),
+            )
+
         row = cur.fetchone()
         if not row:
             return None
+
         payload = json.loads(row["snapshot_json"])
-        return {
+        out = {
             "id": row["id"],
             "claim_id": row["claim_id"],
             "snapshot": payload,
             "snapshot_hash": row["snapshot_hash"],
             "created_at": row["created_at"],
         }
+
+        if has_version_number:
+            out["version_number"] = row["version_number"]
+
+        return out
+
     finally:
         conn.close()
 
@@ -263,7 +287,10 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
             """
             SELECT amount_applied
             FROM applications
-            WHERE charge_id IN (SELECT id FROM charges WHERE service_id IN (SELECT id FROM services WHERE claim_id = ?))
+            WHERE charge_id IN (
+                SELECT id FROM charges
+                WHERE service_id IN (SELECT id FROM services WHERE claim_id = ?)
+            )
             """,
             (claim_id,),
         )
@@ -274,7 +301,10 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
             """
             SELECT amount
             FROM adjustments
-            WHERE charge_id IN (SELECT id FROM charges WHERE service_id IN (SELECT id FROM services WHERE claim_id = ?))
+            WHERE charge_id IN (
+                SELECT id FROM charges
+                WHERE service_id IN (SELECT id FROM services WHERE claim_id = ?)
+            )
             """,
             (claim_id,),
         )
@@ -300,11 +330,15 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
             ]
         ).strip() or None
 
+        # Version de negocio (metadata) y version_number (DB) deben existir si el schema los requiere
+        version_number = 1
+
         snapshot = {
             "meta": {
                 "claim_id": base["id"],
                 "created_at": datetime.utcnow().isoformat(),
                 "version": "B1",
+                "version_number": version_number,
             },
             "claim": {
                 "id": base["id"],
@@ -365,13 +399,25 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
         snapshot_json = _canonical_json(snapshot)
         snapshot_hash = _sha256(snapshot_json)
 
-        cur.execute(
-            """
-            INSERT INTO cms1500_snapshots (claim_id, snapshot_json, snapshot_hash)
-            VALUES (?, ?, ?)
-            """,
-            (claim_id, snapshot_json, snapshot_hash),
-        )
+        has_version_number_col = _table_has_column(conn, "cms1500_snapshots", "version_number")
+
+        if has_version_number_col:
+            cur.execute(
+                """
+                INSERT INTO cms1500_snapshots (claim_id, version_number, snapshot_json, snapshot_hash)
+                VALUES (?, ?, ?, ?)
+                """,
+                (claim_id, int(version_number), snapshot_json, snapshot_hash),
+            )
+        else:
+            cur.execute(
+                """
+                INSERT INTO cms1500_snapshots (claim_id, snapshot_json, snapshot_hash)
+                VALUES (?, ?, ?)
+                """,
+                (claim_id, snapshot_json, snapshot_hash),
+            )
+
         conn.commit()
 
         log_event(
@@ -381,8 +427,13 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
             event_data={"snapshot_hash": snapshot_hash},
         )
 
-        # ÚNICO CAMBIO: añadir "hash" para compatibilidad con tests que esperan r["hash"]
-        return {"snapshot": snapshot, "snapshot_hash": snapshot_hash, "hash": snapshot_hash}
+        # Compat tests: r["hash"] y r["snapshot_hash"]
+        return {
+            "snapshot": snapshot,
+            "snapshot_hash": snapshot_hash,
+            "hash": snapshot_hash,
+            "version_number": version_number,
+        }
 
     finally:
         conn.close()
@@ -400,35 +451,53 @@ def list_snapshots_admin() -> list[dict]:
     conn = _conn()
     try:
         cur = conn.cursor()
+        has_version_number = _table_has_column(conn, "cms1500_snapshots", "version_number")
 
-        cur.execute(
-            """
-            SELECT
-                s.id AS snapshot_id,
-                s.claim_id,
-                s.snapshot_hash,
-                s.created_at,
-                c.status AS claim_status
-            FROM cms1500_snapshots s
-            JOIN claims c ON c.id = s.claim_id
-            ORDER BY s.id DESC
-            """
-        )
+        if has_version_number:
+            cur.execute(
+                """
+                SELECT
+                    s.id AS snapshot_id,
+                    s.claim_id,
+                    s.version_number,
+                    s.snapshot_hash,
+                    s.created_at,
+                    c.status AS claim_status
+                FROM cms1500_snapshots s
+                JOIN claims c ON c.id = s.claim_id
+                ORDER BY s.id DESC
+                """
+            )
+        else:
+            cur.execute(
+                """
+                SELECT
+                    s.id AS snapshot_id,
+                    s.claim_id,
+                    s.snapshot_hash,
+                    s.created_at,
+                    c.status AS claim_status
+                FROM cms1500_snapshots s
+                JOIN claims c ON c.id = s.claim_id
+                ORDER BY s.id DESC
+                """
+            )
 
         rows = cur.fetchall()
 
         result = []
         for r in rows:
-            result.append(
-                {
-                    "snapshot_id": r["snapshot_id"],
-                    "claim_id": r["claim_id"],
-                    "snapshot_hash": r["snapshot_hash"],
-                    "created_at": r["created_at"],
-                    "claim_status": r["claim_status"],
-                    "locked": True,
-                }
-            )
+            item = {
+                "snapshot_id": r["snapshot_id"],
+                "claim_id": r["claim_id"],
+                "snapshot_hash": r["snapshot_hash"],
+                "created_at": r["created_at"],
+                "claim_status": r["claim_status"],
+                "locked": True,
+            }
+            if has_version_number:
+                item["version_number"] = r["version_number"]
+            result.append(item)
 
         return result
 
@@ -449,15 +518,26 @@ def get_snapshot_by_id(snapshot_id: int) -> Optional[Dict[str, Any]]:
     conn = _conn()
     try:
         cur = conn.cursor()
+        has_version_number = _table_has_column(conn, "cms1500_snapshots", "version_number")
 
-        cur.execute(
-            """
-            SELECT id, claim_id, snapshot_json, snapshot_hash, created_at
-            FROM cms1500_snapshots
-            WHERE id = ?
-            """,
-            (snapshot_id,),
-        )
+        if has_version_number:
+            cur.execute(
+                """
+                SELECT id, claim_id, version_number, snapshot_json, snapshot_hash, created_at
+                FROM cms1500_snapshots
+                WHERE id = ?
+                """,
+                (snapshot_id,),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT id, claim_id, snapshot_json, snapshot_hash, created_at
+                FROM cms1500_snapshots
+                WHERE id = ?
+                """,
+                (snapshot_id,),
+            )
 
         row = cur.fetchone()
         if not row:
@@ -465,7 +545,7 @@ def get_snapshot_by_id(snapshot_id: int) -> Optional[Dict[str, Any]]:
 
         payload = json.loads(row["snapshot_json"])
 
-        return {
+        out = {
             "id": row["id"],
             "claim_id": row["claim_id"],
             "snapshot": payload,
@@ -473,6 +553,10 @@ def get_snapshot_by_id(snapshot_id: int) -> Optional[Dict[str, Any]]:
             "created_at": row["created_at"],
             "locked": True,
         }
+        if has_version_number:
+            out["version_number"] = row["version_number"]
+
+        return out
 
     finally:
         conn.close()

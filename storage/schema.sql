@@ -202,7 +202,7 @@ CREATE TABLE IF NOT EXISTS adjustments (
 );
 
 -- =========================
--- Event Ledger (FASE G42)
+-- Event Ledger
 -- =========================
 CREATE TABLE IF NOT EXISTS event_ledger (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -216,19 +216,23 @@ CREATE TABLE IF NOT EXISTS event_ledger (
 CREATE INDEX IF NOT EXISTS idx_event_entity ON event_ledger(entity_type, entity_id);
 
 -- =========================
--- CMS-1500 Snapshots
+-- CMS-1500 Snapshots (VERSIONED)
 -- =========================
 CREATE TABLE IF NOT EXISTS cms1500_snapshots (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     claim_id INTEGER NOT NULL,
+    version_number INTEGER NOT NULL,
     snapshot_json TEXT NOT NULL,
     snapshot_hash TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (claim_id) REFERENCES claims(id)
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_snapshot_claim_version
+ON cms1500_snapshots(claim_id, version_number);
+
+CREATE INDEX IF NOT EXISTS idx_snapshots_claim ON cms1500_snapshots(claim_id);
 CREATE INDEX IF NOT EXISTS idx_services_claim ON services(claim_id);
 CREATE INDEX IF NOT EXISTS idx_charges_service ON charges(service_id);
 CREATE INDEX IF NOT EXISTS idx_applications_charge ON applications(charge_id);
 CREATE INDEX IF NOT EXISTS idx_adjustments_charge ON adjustments(charge_id);
-CREATE INDEX IF NOT EXISTS idx_snapshots_claim ON cms1500_snapshots(claim_id);
