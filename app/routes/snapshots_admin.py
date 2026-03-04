@@ -1,6 +1,10 @@
 from flask import Blueprint, render_template, abort
 
-from app.db.cms1500_snapshot import list_snapshots_admin, get_snapshot_by_id
+from app.db.cms1500_snapshot import (
+    list_snapshots_admin,
+    get_snapshot_by_id,
+    verify_snapshot_integrity,
+)
 
 
 snapshots_admin_bp = Blueprint(
@@ -38,4 +42,24 @@ def snapshot_detail(snapshot_id: int):
     return render_template(
         "admin/snapshot_detail.html",
         snapshot=snap,
+    )
+
+
+@snapshots_admin_bp.route("/<int:snapshot_id>/verify", methods=["GET"])
+def snapshot_verify(snapshot_id: int):
+    """
+    G43 — Verificación de integridad del snapshot.
+    Recalcula hash y lo compara con el almacenado.
+    No modifica snapshot.
+    """
+    result = verify_snapshot_integrity(snapshot_id)
+
+    snap = get_snapshot_by_id(snapshot_id)
+    if not snap:
+        abort(404)
+
+    return render_template(
+        "admin/snapshot_detail.html",
+        snapshot=snap,
+        integrity=result,
     )
