@@ -64,3 +64,69 @@ def validate_claim_ready_for_snapshot(claim_id: int):
             errors.append(f"Service #{idx} con units inválidas")
 
     return len(errors) == 0, errors
+def validate_claim_ready_for_submission(claim_id: int) -> None:
+    """
+    Valida estructura mínima obligatoria antes de permitir transición a SUBMITTED.
+    Lanza ValueError si algo no cumple.
+    """
+
+    with get_connection() as conn:
+        cur = conn.cursor()
+
+        # 1️⃣ Claim existe
+        cur.execute("SELECT id FROM claims WHERE id = ?", (claim_id,))
+        if not cur.fetchone():
+            raise ValueError("Claim no existe")
+
+        # 2️⃣ Provider activo
+        cur.execute(
+            """
+            SELECT 1
+            FROM provider_settings
+            WHERE active = 1
+            LIMIT 1
+            """
+        )
+        if not cur.fetchone():
+            raise ValueError("No hay provider_settings activo")
+
+        # 3️⃣ Al menos un service
+        cur.execute(
+            """
+            SELECT 1
+            FROM services
+            WHERE claim_id = ?
+            LIMIT 1
+            """,
+            (claim_id,),
+        )
+        if not cur.fetchone():
+            raise ValueError("Claim no tiene services")
+
+        # 4️⃣ Al menos un charge
+        cur.execute(
+            """
+            SELECT 1
+            FROM charges c
+            JOIN services s ON s.id = c.service_id
+            WHERE s.claim_id = ?
+            LIMIT 1
+            """,
+            (claim_id,),
+        )
+        if not cur.fetchone():
+            raise ValueError("Claim no tiene charges")
+
+        # 5️⃣ total_charge > 0
+        cur.execute(
+            """
+            SELECT COALESCE(SUM(c.amount), 0)
+            FROM charges c
+            JOIN services s ON s.id = c.service_id
+            WHERE s.claim_id = ?
+            """,
+            (claim_id,),
+        )
+        total_charge = float(cur.fetchone()[0])
+        if total_charge <= 0:
+            raise ValueError("Total charge debe ser mayor que 0")
