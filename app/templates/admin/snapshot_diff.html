@@ -1,0 +1,72 @@
+<!-- app/templates/admin/snapshot_diff.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Snapshot Diff</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 6px;
+            text-align: left;
+        }
+
+        th {
+            background: #eee;
+        }
+
+        .changed {
+            background: #fff3cd;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Snapshot Diff</h2>
+
+<p>
+Snapshot A: {{ snapshot_a.id }}  
+Version: {{ snapshot_a.version_number }}
+</p>
+
+<p>
+Snapshot B: {{ snapshot_b.id }}  
+Version: {{ snapshot_b.version_number }}
+</p>
+
+<table>
+
+<thead>
+<tr>
+<th>Field</th>
+<th>Version A</th>
+<th>Version B</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for row in diff %}
+<tr class="changed">
+<td>{{ row.field }}</td>
+<td>{{ row.version_a }}</td>
+<td>{{ row.version_b }}</td>
+</tr>
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</body>
+</html>
