@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 from app.db.event_ledger import log_event
-
 from app.config import DB_PATH
 
 
@@ -95,15 +94,47 @@ def get_latest_snapshot_by_claim(claim_id: int) -> Optional[Dict[str, Any]]:
 def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
     """
     Genera snapshot inmutable CMS-1500 para un claim y lo persiste con hash.
-    REGLA: snapshot NO inventa datos: si faltan, quedan None/'—' en UI.
-    """
-    existing = get_latest_snapshot_by_claim(claim_id)
-    if existing:
-        raise ValueError("Snapshot ya existe — claim congelado")
 
+    G40 — soporta múltiples versiones controladas por resubmission:
+    - Si NO existen snapshots previos: crea version_number = 1
+    - Si YA existen snapshots: requiere resubmission_code_22 y original_ref_no_22 en claims,
+      entonces crea version_number = max(version_number) + 1
+    """
     conn = _conn()
     try:
         cur = conn.cursor()
+
+        # =========================================================
+        # G40 — VERSIONING LOGIC (no congela por "existe snapshot")
+        # =========================================================
+        cur.execute(
+            """
+            SELECT resubmission_code_22, original_ref_no_22
+            FROM claims
+            WHERE id = ?
+            """,
+            (claim_id,),
+        )
+        claim_row = cur.fetchone()
+        if not claim_row:
+            raise ValueError("Claim no existe")
+
+        cur.execute(
+            """
+            SELECT COALESCE(MAX(version_number), 0)
+            FROM cms1500_snapshots
+            WHERE claim_id = ?
+            """,
+            (claim_id,),
+        )
+        max_version = int(cur.fetchone()[0])
+
+        if max_version == 0:
+            version_number = 1
+        else:
+            if not claim_row["resubmission_code_22"] or not claim_row["original_ref_no_22"]:
+                raise ValueError("Resubmission requerida para nueva versión de snapshot")
+            version_number = max_version + 1
 
         # -------------------------
         # Claim + Patient + Coverage
@@ -330,9 +361,6 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
             ]
         ).strip() or None
 
-        # Version de negocio (metadata) y version_number (DB) deben existir si el schema los requiere
-        version_number = 1
-
         snapshot = {
             "meta": {
                 "claim_id": base["id"],
@@ -424,7 +452,7 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
             entity_type="claim",
             entity_id=claim_id,
             event_type="snapshot_created",
-            event_data={"snapshot_hash": snapshot_hash},
+            event_data={"snapshot_hash": snapshot_hash, "version_number": int(version_number)},
         )
 
         # Compat tests: r["hash"] y r["snapshot_hash"]
@@ -432,7 +460,7 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
             "snapshot": snapshot,
             "snapshot_hash": snapshot_hash,
             "hash": snapshot_hash,
-            "version_number": version_number,
+            "version_number": int(version_number),
         }
 
     finally:
