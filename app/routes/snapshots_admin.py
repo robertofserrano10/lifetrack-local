@@ -6,7 +6,6 @@ from app.db.cms1500_snapshot import (
     verify_snapshot_integrity,
 )
 
-
 snapshots_admin_bp = Blueprint(
     "snapshots_admin",
     __name__,
@@ -17,6 +16,7 @@ snapshots_admin_bp = Blueprint(
 @snapshots_admin_bp.route("/", methods=["GET"])
 def snapshots_index():
     snapshots = list_snapshots_admin()
+
     return render_template(
         "admin/snapshots_index.html",
         snapshots=snapshots,
@@ -82,7 +82,7 @@ def snapshot_api(snapshot_id: int):
 
 
 # =========================================================
-# G45 — Snapshot Diff Auditoría
+# G45 — Snapshot Diff
 # =========================================================
 
 def _flatten(prefix, obj, out):
@@ -101,12 +101,6 @@ def _flatten(prefix, obj, out):
 
 @snapshots_admin_bp.route("/diff", methods=["GET"])
 def snapshot_diff():
-
-    """
-    Compara dos snapshots y muestra los cambios.
-    Uso:
-    /admin/snapshots/diff?a=1&b=2
-    """
 
     a = request.args.get("a", type=int)
     b = request.args.get("b", type=int)
@@ -136,7 +130,6 @@ def snapshot_diff():
         vb = flat_b.get(k)
 
         if va != vb:
-
             diff.append(
                 {
                     "field": k,
@@ -150,4 +143,29 @@ def snapshot_diff():
         snapshot_a=snap_a,
         snapshot_b=snap_b,
         diff=diff,
+    )
+
+
+# =========================================================
+# G46 — Snapshot Index by Claim
+# =========================================================
+
+@snapshots_admin_bp.route("/claim/<int:claim_id>", methods=["GET"])
+def snapshots_by_claim(claim_id: int):
+
+    all_snaps = list_snapshots_admin()
+
+    claim_snaps = [
+        s for s in all_snaps if s["claim_id"] == claim_id
+    ]
+
+    claim_snaps.sort(
+        key=lambda x: x.get("version_number", 0),
+        reverse=True
+    )
+
+    return render_template(
+        "admin/snapshots_claim_index.html",
+        claim_id=claim_id,
+        snapshots=claim_snaps,
     )
