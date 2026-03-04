@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 
 from app.db.event_ledger import log_event
 
-DB_PATH = "storage/lifetrack.db"
+from app.config import DB_PATH
 
 
 def _conn() -> sqlite3.Connection:
