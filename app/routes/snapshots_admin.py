@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, abort
+from flask import Blueprint, render_template, abort, jsonify
 
 from app.db.cms1500_snapshot import (
     list_snapshots_admin,
@@ -19,7 +19,6 @@ def snapshots_index():
     """
     Vista administrativa de snapshots CMS-1500.
     READ-ONLY.
-    No recalcula nada.
     """
     snapshots = list_snapshots_admin()
     return render_template(
@@ -33,7 +32,6 @@ def snapshot_detail(snapshot_id: int):
     """
     Vista detalle de un snapshot CMS-1500.
     READ-ONLY.
-    No recalcula nada.
     """
     snap = get_snapshot_by_id(snapshot_id)
     if not snap:
@@ -45,13 +43,12 @@ def snapshot_detail(snapshot_id: int):
     )
 
 
+# =========================================================
+# G43 — Snapshot Integrity Verification
+# =========================================================
+
 @snapshots_admin_bp.route("/<int:snapshot_id>/verify", methods=["GET"])
 def snapshot_verify(snapshot_id: int):
-    """
-    G43 — Verificación de integridad del snapshot.
-    Recalcula hash y lo compara con el almacenado.
-    No modifica snapshot.
-    """
     result = verify_snapshot_integrity(snapshot_id)
 
     snap = get_snapshot_by_id(snapshot_id)
@@ -63,3 +60,29 @@ def snapshot_verify(snapshot_id: int):
         snapshot=snap,
         integrity=result,
     )
+
+
+# =========================================================
+# G44 — SNAPSHOT API
+# =========================================================
+
+@snapshots_admin_bp.route("/api", methods=["GET"])
+def snapshots_api():
+    """
+    Devuelve listado JSON de snapshots.
+    Usado por futura UI.
+    """
+    snapshots = list_snapshots_admin()
+    return jsonify(snapshots)
+
+
+@snapshots_admin_bp.route("/api/<int:snapshot_id>", methods=["GET"])
+def snapshot_api(snapshot_id: int):
+    """
+    Devuelve snapshot específico en JSON.
+    """
+    snap = get_snapshot_by_id(snapshot_id)
+    if not snap:
+        abort(404)
+
+    return jsonify(snap)
