@@ -9,6 +9,8 @@
 
 <link rel="stylesheet" href="/static/css/admin_layout.css">
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 <script src="/static/js/theme_toggle.js" defer></script>
 
 </head>
@@ -17,71 +19,99 @@
 
 <div class="admin-container">
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
+<!-- SIDEBAR -->
+<aside class="sidebar">
 
-        <div class="sidebar-logo">
-            LifeTrack
-        </div>
+<div class="sidebar-logo">
+<i class="fa-solid fa-heart-pulse"></i> LifeTrack
+</div>
 
-        <nav class="sidebar-nav">
+<nav class="sidebar-nav">
 
-            <a href="/admin/dashboard">Dashboard</a>
+<a href="/admin/dashboard">
+<i class="fa-solid fa-chart-line"></i>
+<span>Dashboard</span>
+</a>
 
-            <a href="/admin/patients">Patients</a>
+<a href="/admin/patients">
+<i class="fa-solid fa-user"></i>
+<span>Patients</span>
+</a>
 
-            <a href="/admin/services">Services</a>
+<a href="/admin/services">
+<i class="fa-solid fa-stethoscope"></i>
+<span>Services</span>
+</a>
 
-            <a href="/admin/claims">Claims</a>
+<a href="/admin/claims">
+<i class="fa-solid fa-file-medical"></i>
+<span>Claims</span>
+</a>
 
-            <a href="/admin/snapshots">Snapshots</a>
+<a href="/admin/snapshots">
+<i class="fa-solid fa-snowflake"></i>
+<span>Snapshots</span>
+</a>
 
-            <a href="/admin/finances">Finances</a>
+<a href="/admin/finances">
+<i class="fa-solid fa-dollar-sign"></i>
+<span>Finances</span>
+</a>
 
-            <a href="/admin/events">Event Ledger</a>
+<a href="/admin/events">
+<i class="fa-solid fa-clock-rotate-left"></i>
+<span>Event Ledger</span>
+</a>
 
-            <a href="/admin/reports">Reports</a>
+<a href="/admin/reports">
+<i class="fa-solid fa-chart-pie"></i>
+<span>Reports</span>
+</a>
 
-            <a href="/admin/settings">Settings</a>
+<a href="/admin/settings">
+<i class="fa-solid fa-gear"></i>
+<span>Settings</span>
+</a>
 
-        </nav>
+</nav>
 
-    </aside>
-
-
-    <!-- MAIN AREA -->
-    <div class="main-area">
-
-        <!-- HEADER -->
-        <header class="admin-header">
-
-            <div class="header-left">
-                LifeTrack Clearinghouse
-            </div>
-
-            <div class="header-right">
-
-                <button id="theme-toggle">
-                    Toggle Theme
-                </button>
-
-            </div>
-
-        </header>
+</aside>
 
 
-        <!-- CONTENT -->
-        <main class="admin-content">
+<!-- MAIN -->
+<div class="main-area">
 
-            {% block content %}
-            {% endblock %}
+<header class="admin-header">
 
-        </main>
+<div class="header-left">
 
-    </div>
+<span class="system-title">
+LifeTrack Clearinghouse
+</span>
+
+</div>
+
+<div class="header-right">
+
+<button id="theme-toggle">
+<i class="fa-solid fa-moon"></i>
+</button>
+
+</div>
+
+</header>
+
+
+<main class="admin-content">
+
+{% block content %}
+{% endblock %}
+
+</main>
+
+</div>
 
 </div>
 
 </body>
-
 </html>
