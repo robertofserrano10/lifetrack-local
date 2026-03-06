@@ -11,14 +11,10 @@
 <p><strong>Claim Number:</strong> {{ claim.claim_number }}</p>
 <p><strong>Status:</strong> {{ claim.status }}</p>
 
-</div>
-
-
-<div class="card">
-
-<h2>Patient</h2>
-
-<p>{{ claim.patient_id }}</p>
+{% if latest_snapshot %}
+<p><strong>Snapshot:</strong> v{{ latest_snapshot.version_number }}</p>
+<span class="badge-locked">LOCKED</span>
+{% endif %}
 
 </div>
 
@@ -27,39 +23,61 @@
 
 <h2>Financial Status</h2>
 
-<p>{{ financial.status }}</p>
+<p>Status: {{ financial.status }}</p>
+
+<p>Total Charge: {{ financial.total_charge }}</p>
+
+<p>Total Paid: {{ financial.total_charge - financial.balance_due }}</p>
+
+<p>Balance: {{ financial.balance_due }}</p>
 
 </div>
 
 
 <div class="card">
 
-<h2>Operational Status</h2>
+<h2>Services</h2>
 
-<p>{{ operational.status }}</p>
+<table class="claims-table">
+
+<thead>
+
+<tr>
+<th>Date</th>
+<th>CPT</th>
+<th>Units</th>
+<th>Charge</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for s in services %}
+
+<tr>
+
+<td>{{ s.service_date }}</td>
+<td>{{ s.cpt_code }}</td>
+<td>{{ s.units_24g }}</td>
+<td>{{ s.charge_amount_24f }}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
 
 </div>
-
-
-{% if latest_snapshot %}
-
-<div class="card">
-
-<h2>Snapshot</h2>
-
-<p>Version: {{ latest_snapshot.version_number }}</p>
-<p>Hash: {{ latest_snapshot.snapshot_hash }}</p>
-
-</div>
-
-{% endif %}
 
 
 {% if allowed_transitions %}
 
 <div class="card">
 
-<h2>Change Status</h2>
+<h2>Operational Transition</h2>
 
 <form method="POST" action="/admin/claims/{{ claim.id }}/transition">
 

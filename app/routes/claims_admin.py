@@ -15,6 +15,10 @@ from app.db.cms1500_snapshot import (
 
 from app.db.event_ledger import log_event
 
+# H3.3 — lectura directa de servicios
+import sqlite3
+from app.config import DB_PATH
+
 
 claims_admin_bp = Blueprint(
     "claims_admin",
@@ -40,6 +44,33 @@ def claim_detail_admin(claim_id: int):
         current = claim["status"]
         allowed_transitions = sorted(list(VALID_TRANSITIONS.get(current, set())))
 
+    # =========================================================
+    # H3.3 — SERVICES LIST FOR CLAIM
+    # =========================================================
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT
+            id,
+            service_date,
+            cpt_code,
+            units_24g,
+            charge_amount_24f
+        FROM services
+        WHERE claim_id = ?
+        ORDER BY service_date
+        """,
+        (claim_id,),
+    )
+
+    services = cur.fetchall()
+
+    conn.close()
+
     return render_template(
         "admin/claim_detail.html",
         claim=claim,
@@ -47,6 +78,7 @@ def claim_detail_admin(claim_id: int):
         operational=operational,
         latest_snapshot=latest_snapshot,
         allowed_transitions=allowed_transitions,
+        services=services,
     )
 
 

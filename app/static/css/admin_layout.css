@@ -208,3 +208,12 @@ border-radius: 4px;
 font-size: 12px;
 
 }
+.card {
+
+background: var(--bg);
+padding: 20px;
+border: 1px solid var(--border);
+margin-bottom: 20px;
+border-radius: 6px;
+
+}
