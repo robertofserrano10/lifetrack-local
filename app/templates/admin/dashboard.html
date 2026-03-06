@@ -1,0 +1,31 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Dashboard</h1>
+
+<div class="dashboard-grid">
+
+<div class="dashboard-card">
+<h3>Total Claims</h3>
+<p>{{ stats.total_claims }}</p>
+</div>
+
+<div class="dashboard-card">
+<h3>Submitted</h3>
+<p>{{ stats.submitted }}</p>
+</div>
+
+<div class="dashboard-card">
+<h3>Paid</h3>
+<p>{{ stats.paid }}</p>
+</div>
+
+<div class="dashboard-card">
+<h3>Locked Snapshots</h3>
+<p>{{ stats.snapshots }}</p>
+</div>
+
+</div>
+
+{% endblock %}

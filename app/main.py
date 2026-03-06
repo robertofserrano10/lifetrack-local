@@ -30,6 +30,7 @@ from app.routes.claims_overview import claims_overview_bp
 from app.routes.snapshots_admin import snapshots_admin_bp
 from app.routes.claims_admin import claims_admin_bp
 from app.routes.events_admin import events_admin_bp
+from app.routes.admin_dashboard import dashboard_admin_bp
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"
@@ -146,6 +147,7 @@ app.register_blueprint(snapshots_admin_bp)
 app.register_blueprint(claims_admin_bp)
 app.register_blueprint(events_admin_bp)
 app.register_blueprint(cms1500_pdf_bp)
+app.register_blueprint(dashboard_admin_bp)
 
 
 # =========================
