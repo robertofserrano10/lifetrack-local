@@ -1,26 +1,33 @@
 {% extends "layouts/admin_base.html" %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Snapshot Detail</title>
-</head>
-<body>
+
+{% block content %}
 
 <h1>Snapshot Detail</h1>
 
+<div class="card">
+
 <p><strong>Snapshot ID:</strong> {{ snapshot.id }}</p>
 <p><strong>Claim ID:</strong> {{ snapshot.claim_id }}</p>
-<p><strong>Hash:</strong> {{ snapshot.snapshot_hash }}</p>
+<p><strong>Hash:</strong></p>
+
+<pre style="font-family:monospace;">
+{{ snapshot.snapshot_hash }}
+</pre>
+
 <p><strong>Created At:</strong> {{ snapshot.created_at }}</p>
 <p><strong>Locked:</strong> {{ snapshot.locked }}</p>
 
-<hr>
+</div>
+
+
+<div class="card">
 
 <h2>Snapshot JSON (Frozen Legal Copy)</h2>
 
-<pre style="white-space: pre-wrap;">
+<pre style="white-space: pre-wrap; font-family:monospace;">
 {{ snapshot.snapshot | tojson(indent=2) }}
 </pre>
 
-</body>
-</html>
+</div>
+
+{% endblock %}

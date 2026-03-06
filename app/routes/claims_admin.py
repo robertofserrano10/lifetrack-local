@@ -11,6 +11,7 @@ from app.db.claims import (
 from app.db.cms1500_snapshot import (
     get_latest_snapshot_by_claim,
     generate_cms1500_snapshot,
+    list_snapshots_admin,
 )
 
 from app.db.event_ledger import log_event
@@ -71,6 +72,16 @@ def claim_detail_admin(claim_id: int):
 
     conn.close()
 
+    # =========================================================
+    # H3.4 — SNAPSHOTS FOR CLAIM
+    # =========================================================
+    all_snaps = list_snapshots_admin()
+
+    claim_snapshots = [
+        s for s in all_snaps
+        if s["claim_id"] == claim_id
+    ]
+
     return render_template(
         "admin/claim_detail.html",
         claim=claim,
@@ -79,6 +90,7 @@ def claim_detail_admin(claim_id: int):
         latest_snapshot=latest_snapshot,
         allowed_transitions=allowed_transitions,
         services=services,
+        snapshots=claim_snapshots,
     )
 
 
