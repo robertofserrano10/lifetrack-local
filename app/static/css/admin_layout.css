@@ -184,3 +184,27 @@ font-weight: bold;
 margin: 0;
 
 }
+.claims-table {
+
+width: 100%;
+border-collapse: collapse;
+margin-top: 20px;
+
+}
+
+.claims-table th,
+.claims-table td {
+
+border: 1px solid var(--border);
+padding: 10px;
+
+}
+
+.badge-locked {
+
+background: #ffcc00;
+padding: 4px 8px;
+border-radius: 4px;
+font-size: 12px;
+
+}

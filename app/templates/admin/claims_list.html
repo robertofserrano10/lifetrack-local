@@ -1,0 +1,63 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Claims</h1>
+
+<table class="claims-table">
+
+<thead>
+<tr>
+
+<th>Claim</th>
+<th>Patient</th>
+<th>Status</th>
+<th>Financial</th>
+<th>Locked</th>
+<th>Snapshot</th>
+<th>Open</th>
+
+</tr>
+</thead>
+
+<tbody>
+
+{% for c in claims %}
+
+<tr>
+
+<td>{{ c.claim_number }}</td>
+
+<td>{{ c.patient }}</td>
+
+<td>{{ c.status }}</td>
+
+<td>{{ c.financial_status }}</td>
+
+<td>
+{% if c.locked %}
+<span class="badge-locked">LOCKED</span>
+{% endif %}
+</td>
+
+<td>
+{% if c.snapshot_version %}
+v{{ c.snapshot_version }}
+{% endif %}
+</td>
+
+<td>
+<a href="/admin/claims/{{ c.id }}">
+open
+</a>
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+{% endblock %}

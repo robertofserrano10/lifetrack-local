@@ -1,41 +1,82 @@
 {% extends "layouts/admin_base.html" %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Claim Admin View</title>
-</head>
-<body>
 
-<h1>Claim Admin View</h1>
+{% block content %}
 
-<p><strong>Claim ID:</strong> {{ claim.id }}</p>
+<h1>Claim Detail</h1>
 
-<h2>Derived Operational Status</h2>
+<div class="card">
 
-<p><strong>Derived (Financial):</strong> {{ operational.financial_status }}</p>
-<p><strong>Persisted:</strong> {{ operational.persisted_status }}</p>
-<p><strong>Locked:</strong> {{ operational.locked }}</p>
+<h2>Claim</h2>
 
-{% if operational.locked %}
-    <p style="color: red;">
-        LOCKED BY SNAPSHOT — Snapshot is legal frozen state.
-    </p>
-{% else %}
+<p><strong>Claim Number:</strong> {{ claim.claim_number }}</p>
+<p><strong>Status:</strong> {{ claim.status }}</p>
 
-    {% if allowed_transitions %}
-        <h3>Operational Transitions</h3>
-        <form method="POST" action="/admin/claims/{{ claim.id }}/transition">
-            {% for status in allowed_transitions %}
-                <button type="submit" name="new_status" value="{{ status }}">
-                    Move to {{ status }}
-                </button>
-            {% endfor %}
-        </form>
-    {% else %}
-        <p>No valid transitions available.</p>
-    {% endif %}
+</div>
+
+
+<div class="card">
+
+<h2>Patient</h2>
+
+<p>{{ claim.patient_id }}</p>
+
+</div>
+
+
+<div class="card">
+
+<h2>Financial Status</h2>
+
+<p>{{ financial.status }}</p>
+
+</div>
+
+
+<div class="card">
+
+<h2>Operational Status</h2>
+
+<p>{{ operational.status }}</p>
+
+</div>
+
+
+{% if latest_snapshot %}
+
+<div class="card">
+
+<h2>Snapshot</h2>
+
+<p>Version: {{ latest_snapshot.version_number }}</p>
+<p>Hash: {{ latest_snapshot.snapshot_hash }}</p>
+
+</div>
 
 {% endif %}
 
-</body>
-</html>
+
+{% if allowed_transitions %}
+
+<div class="card">
+
+<h2>Change Status</h2>
+
+<form method="POST" action="/admin/claims/{{ claim.id }}/transition">
+
+<select name="new_status">
+
+{% for s in allowed_transitions %}
+<option value="{{ s }}">{{ s }}</option>
+{% endfor %}
+
+</select>
+
+<button type="submit">Apply</button>
+
+</form>
+
+</div>
+
+{% endif %}
+
+{% endblock %}
