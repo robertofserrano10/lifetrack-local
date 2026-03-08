@@ -1,84 +1,83 @@
 {% extends "layouts/admin_base.html" %}
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>Event Ledger Admin</title>
-  <style>
-    body { font-family: Arial, sans-serif; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 6px; vertical-align: top; }
-    th { background-color: #f4f4f4; }
-    pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; }
-    .small { font-size: 12px; color: #555; }
-    .pagination { margin-top: 15px; }
-    .pagination a { margin-right: 10px; }
-  </style>
-</head>
-<body>
 
-  <h1>Event Ledger Admin</h1>
+{% block content %}
 
-  <form method="GET" action="/admin/events/">
-    <label>Claim ID (optional):</label>
-    <input name="claim_id" value="{{ claim_id }}" />
-    <button type="submit">Filter</button>
-  </form>
 
-  
-  <div style="margin: 10px 0;">
-    <a href="/admin/events/export/json?claim_id={{ claim_id }}">Export JSON</a> |
-    <a href="/admin/events/export/csv?claim_id={{ claim_id }}">Export CSV</a>
-  </div>
-  
+<h1>Event Ledger Admin</h1>
 
-  <p><strong>Total events:</strong> {{ total }}</p>
+<form method="GET" action="/admin/events/">
+  <label>Claim ID (optional):</label>
+  <input name="claim_id" value="{{ claim_id }}" />
+  <button type="submit">Filter</button>
+</form>
 
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Created At</th>
-        <th>Entity</th>
-        <th>Event Type</th>
-        <th>Event Data</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for e in events %}
-      <tr>
-        <td>{{ e.id }}</td>
-        <td class="small">
-          {{ e.created_at }}
-        </td>
-        <td>
-          {{ e.entity_type }}
-          #{{ e.entity_id }}
-          {% if e.entity_type == "claim" %}
-            <br>
-            <a href="/admin/claims/{{ e.entity_id }}">View Claim</a>
-          {% endif %}
-        </td>
-        <td><strong>{{ e.event_type }}</strong></td>
-        <td>
-          <pre>{{ e.event_data }}</pre>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div style="margin: 10px 0;">
+  <a href="/admin/events/export/json?claim_id={{ claim_id }}">Export JSON</a> |
+  <a href="/admin/events/export/csv?claim_id={{ claim_id }}">Export CSV</a>
+</div>
 
-  <div class="pagination">
-    {% if has_prev %}
-      <a href="/admin/events/?page={{ page - 1 }}&claim_id={{ claim_id }}">Prev</a>
-    {% endif %}
+<p><strong>Total events:</strong> {{ total }}</p>
 
-    <strong>Page {{ page }}</strong>
+<table class="claims-table">
 
-    {% if has_next %}
-      <a href="/admin/events/?page={{ page + 1 }}&claim_id={{ claim_id }}">Next</a>
-    {% endif %}
-  </div>
+<thead>
+<tr>
+<th>ID</th>
+<th>Created At</th>
+<th>Entity</th>
+<th>Event Type</th>
+<th>Event Data</th>
+</tr>
+</thead>
 
-</body>
-</html>
+<tbody>
+
+{% for e in events %}
+
+<tr>
+
+<td>{{ e.id }}</td>
+
+<td class="small">
+{{ e.created_at }}
+</td>
+
+<td>
+{{ e.entity_type }} #{{ e.entity_id }}
+
+{% if e.entity_type == "claim" %}
+<br>
+<a href="/admin/claims/{{ e.entity_id }}">View Claim</a>
+{% endif %}
+
+</td>
+
+<td><strong>{{ e.event_type }}</strong></td>
+
+<td>
+<pre>{{ e.event_data }}</pre>
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+<div class="pagination">
+
+{% if has_prev %}
+<a href="/admin/events/?page={{ page - 1 }}&claim_id={{ claim_id }}">Prev</a>
+{% endif %}
+
+<strong>Page {{ page }}</strong>
+
+{% if has_next %}
+<a href="/admin/events/?page={{ page + 1 }}&claim_id={{ claim_id }}">Next</a>
+{% endif %}
+
+</div>
+
+{% endblock %}
