@@ -1,0 +1,53 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Reports</h1>
+
+<div class="card">
+
+<h2>System Totals</h2>
+
+<table class="claims-table">
+
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr>
+<td>Total Patients</td>
+<td>{{ total_patients }}</td>
+</tr>
+
+<tr>
+<td>Total Claims</td>
+<td>{{ total_claims }}</td>
+</tr>
+
+<tr>
+<td>Total Charges</td>
+<td>{{ total_charges }}</td>
+</tr>
+
+<tr>
+<td>Total Payments</td>
+<td>{{ total_payments }}</td>
+</tr>
+
+<tr>
+<td>Total Adjustments</td>
+<td>{{ total_adjustments }}</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}
