@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, abort
 import sqlite3
 from app.config import DB_PATH
 
+from app.security.auth import login_required, role_required
+
 
 patients_admin_bp = Blueprint(
     "patients_admin",
@@ -14,6 +16,8 @@ patients_admin_bp = Blueprint(
 # Patients list
 # =========================================================
 @patients_admin_bp.route("/")
+@login_required
+@role_required("ADMIN", "FACTURADOR", "RECEPCION")
 def patients_list():
 
     conn = sqlite3.connect(DB_PATH)
@@ -48,6 +52,8 @@ def patients_list():
 # Patient detail
 # =========================================================
 @patients_admin_bp.route("/<int:patient_id>")
+@login_required
+@role_required("ADMIN", "FACTURADOR", "RECEPCION")
 def patient_detail(patient_id: int):
 
     conn = sqlite3.connect(DB_PATH)

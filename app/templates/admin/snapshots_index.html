@@ -1,35 +1,54 @@
 {% extends "layouts/admin_base.html" %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Snapshot Admin</title>
-</head>
-<body>
-    <h1>CMS-1500 Snapshots</h1>
 
-    <table border="1" cellpadding="6">
-        <thead>
-            <tr>
-                <th>Snapshot ID</th>
-                <th>Claim ID</th>
-                <th>Hash</th>
-                <th>Created At</th>
-                <th>Claim Status</th>
-                <th>Locked</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for s in snapshots %}
-            <tr>
-                <td>{{ s.snapshot_id }}</td>
-                <td>{{ s.claim_id }}</td>
-                <td style="font-size: 10px;">{{ s.snapshot_hash }}</td>
-                <td>{{ s.created_at }}</td>
-                <td>{{ s.claim_status }}</td>
-                <td>{{ s.locked }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
+{% block content %}
+
+<h1>Snapshots</h1>
+
+<div class="card">
+
+<table class="claims-table">
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Claim</th>
+<th>Version</th>
+<th>Created</th>
+<th>Hash</th>
+<th>Open</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for s in snapshots %}
+
+<tr>
+
+<td>{{ s.id }}</td>
+
+<td>{{ s.claim_number }}</td>
+
+<td>v{{ s.version_number }}</td>
+
+<td>{{ s.created_at }}</td>
+
+<td style="font-family:monospace">{{ s.snapshot_hash }}</td>
+
+<td>
+<a href="/admin/snapshots/{{ s.id }}">
+view
+</a>
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}

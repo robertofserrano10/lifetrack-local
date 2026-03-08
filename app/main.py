@@ -38,6 +38,7 @@ from app.routes.admin_finances import finances_admin_bp
 from app.routes.admin_reports import reports_admin_bp
 from app.routes.admin_settings import settings_admin_bp
 
+
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"
 
@@ -88,7 +89,7 @@ def home():
     user = get_current_user()
     if not user:
         return redirect(url_for("login"))
-    return redirect(url_for("claims_overview.claims_overview"))
+    return redirect(url_for("admin_dashboard.dashboard"))
 
 
 # =========================
@@ -122,6 +123,8 @@ def login():
             )
 
         session["user_id"] = row["id"]
+        session["role"] = row["role"]   # ← CAMBIO APLICADO
+
         return redirect(url_for("home"))
     finally:
         conn.close()
@@ -133,6 +136,7 @@ def login():
 @app.route("/logout")
 def logout():
     session.pop("user_id", None)
+    session.pop("role", None)  # ← limpiar rol también
     return redirect(url_for("login"))
 
 
@@ -160,6 +164,7 @@ app.register_blueprint(services_admin_bp)
 app.register_blueprint(finances_admin_bp)
 app.register_blueprint(reports_admin_bp)
 app.register_blueprint(settings_admin_bp)
+
 
 # =========================
 # CMS1500 VIEW

@@ -2,6 +2,8 @@ from flask import Blueprint, render_template
 import sqlite3
 from app.config import DB_PATH
 
+from app.security.auth import login_required, role_required
+
 
 services_admin_bp = Blueprint(
     "services_admin",
@@ -11,6 +13,8 @@ services_admin_bp = Blueprint(
 
 
 @services_admin_bp.route("/")
+@login_required
+@role_required("ADMIN", "FACTURADOR", "RECEPCION")
 def services_list():
 
     conn = sqlite3.connect(DB_PATH)

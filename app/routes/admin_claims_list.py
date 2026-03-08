@@ -5,6 +5,8 @@ from app.config import DB_PATH
 from app.db.cms1500_snapshot import get_latest_snapshot_by_claim
 from app.db.claims import get_claim_financial_status
 
+from app.security.auth import login_required, role_required
+
 
 claims_list_bp = Blueprint(
     "claims_list",
@@ -14,6 +16,8 @@ claims_list_bp = Blueprint(
 
 
 @claims_list_bp.route("/claims")
+@login_required
+@role_required("ADMIN", "FACTURADOR", "RECEPCION", "DRA")
 def claims_list():
 
     conn = sqlite3.connect(DB_PATH)
