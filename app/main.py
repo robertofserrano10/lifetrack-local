@@ -36,6 +36,7 @@ from app.routes.admin_patients import patients_admin_bp
 from app.routes.admin_services import services_admin_bp
 from app.routes.admin_finances import finances_admin_bp
 from app.routes.admin_reports import reports_admin_bp
+from app.routes.admin_settings import settings_admin_bp
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"
@@ -158,7 +159,7 @@ app.register_blueprint(patients_admin_bp)
 app.register_blueprint(services_admin_bp)
 app.register_blueprint(finances_admin_bp)
 app.register_blueprint(reports_admin_bp)
-
+app.register_blueprint(settings_admin_bp)
 
 # =========================
 # CMS1500 VIEW

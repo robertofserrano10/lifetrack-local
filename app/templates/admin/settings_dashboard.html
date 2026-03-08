@@ -1,0 +1,45 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Settings</h1>
+
+<div class="card">
+
+<h2>System Users</h2>
+
+<table class="claims-table">
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Username</th>
+<th>Role</th>
+<th>Active</th>
+<th>Created</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for u in users %}
+
+<tr>
+
+<td>{{ u.id }}</td>
+<td>{{ u.username }}</td>
+<td>{{ u.role }}</td>
+<td>{{ u.active }}</td>
+<td>{{ u.created_at }}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}
