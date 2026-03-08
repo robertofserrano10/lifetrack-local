@@ -34,6 +34,7 @@ from app.routes.admin_dashboard import dashboard_admin_bp
 from app.routes.admin_claims_list import claims_list_bp
 from app.routes.admin_patients import patients_admin_bp
 from app.routes.admin_services import services_admin_bp
+from app.routes.admin_finances import finances_admin_bp
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"
@@ -154,6 +155,7 @@ app.register_blueprint(dashboard_admin_bp)
 app.register_blueprint(claims_list_bp)
 app.register_blueprint(patients_admin_bp)
 app.register_blueprint(services_admin_bp)
+app.register_blueprint(finances_admin_bp)
 
 
 # =========================

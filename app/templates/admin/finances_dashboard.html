@@ -1,0 +1,113 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Finances</h1>
+
+<div class="card">
+
+<h2>Charges</h2>
+
+<table class="claims-table">
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Claim</th>
+<th>Date</th>
+<th>CPT</th>
+<th>Amount</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for c in charges %}
+
+<tr>
+<td>{{ c.id }}</td>
+<td>{{ c.claim_number }}</td>
+<td>{{ c.service_date }}</td>
+<td>{{ c.cpt_code }}</td>
+<td>{{ c.amount }}</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<div class="card">
+
+<h2>Payments</h2>
+
+<table class="claims-table">
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Claim</th>
+<th>Date</th>
+<th>Amount</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for p in payments %}
+
+<tr>
+<td>{{ p.id }}</td>
+<td>{{ p.claim_number }}</td>
+<td>{{ p.payment_date }}</td>
+<td>{{ p.amount }}</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<div class="card">
+
+<h2>Adjustments</h2>
+
+<table class="claims-table">
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Claim</th>
+<th>Reason</th>
+<th>Amount</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for a in adjustments %}
+
+<tr>
+<td>{{ a.id }}</td>
+<td>{{ a.claim_number }}</td>
+<td>{{ a.reason }}</td>
+<td>{{ a.amount }}</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}
