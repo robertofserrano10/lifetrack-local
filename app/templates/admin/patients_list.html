@@ -1,0 +1,56 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Patients</h1>
+
+<div class="card">
+
+<table class="claims-table">
+
+<thead>
+
+<tr>
+<th>ID</th>
+<th>Last Name</th>
+<th>First Name</th>
+<th>Date of Birth</th>
+<th>Sex</th>
+<th>Open</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for p in patients %}
+
+<tr>
+
+<td>{{ p.id }}</td>
+
+<td>{{ p.last_name }}</td>
+
+<td>{{ p.first_name }}</td>
+
+<td>{{ p.date_of_birth }}</td>
+
+<td>{{ p.sex }}</td>
+
+<td>
+<a href="/admin/patients/{{ p.id }}">
+open
+</a>
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Patient Detail</h1>
+
+<div class="card">
+
+<h2>Patient</h2>
+
+<p><strong>ID:</strong> {{ patient.id }}</p>
+<p><strong>Name:</strong> {{ patient.first_name }} {{ patient.last_name }}</p>
+<p><strong>Date of Birth:</strong> {{ patient.date_of_birth }}</p>
+<p><strong>Sex:</strong> {{ patient.sex }}</p>
+<p><strong>Marital Status:</strong> {{ patient.marital_status }}</p>
+<p><strong>Employment Status:</strong> {{ patient.employment_status }}</p>
+<p><strong>Student Status:</strong> {{ patient.student_status }}</p>
+
+</div>
+
+
+<div class="card">
+
+<h2>Coverages</h2>
+
+{% if coverages %}
+
+<table class="claims-table">
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Insurer</th>
+<th>Plan</th>
+<th>Policy</th>
+<th>Start Date</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for c in coverages %}
+
+<tr>
+<td>{{ c.id }}</td>
+<td>{{ c.insurer_name }}</td>
+<td>{{ c.plan_name }}</td>
+<td>{{ c.policy_number }}</td>
+<td>{{ c.start_date }}</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+{% else %}
+
+<p>No coverages found.</p>
+
+{% endif %}
+
+</div>
+
+
+<div class="card">
+
+<h2>Claims</h2>
+
+{% if claims %}
+
+<table class="claims-table">
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Claim Number</th>
+<th>Status</th>
+<th>Created</th>
+<th>Open</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for c in claims %}
+
+<tr>
+<td>{{ c.id }}</td>
+<td>{{ c.claim_number }}</td>
+<td>{{ c.status }}</td>
+<td>{{ c.created_at }}</td>
+<td>
+<a href="/admin/claims/{{ c.id }}">open</a>
+</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+{% else %}
+
+<p>No claims found.</p>
+
+{% endif %}
+
+</div>
+
+{% endblock %}
