@@ -1,0 +1,33 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Progress Notes</h1>
+
+<table>
+
+<thead>
+<tr>
+<th>Created</th>
+<th>Status</th>
+<th>Signed</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for n in notes %}
+
+<tr>
+<td>{{ n.created_at }}</td>
+<td>{{ n.status }}</td>
+<td>{{ n.signed }}</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+{% endblock %}
