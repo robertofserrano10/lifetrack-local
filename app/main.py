@@ -37,6 +37,7 @@ from app.routes.admin_services import services_admin_bp
 from app.routes.admin_finances import finances_admin_bp
 from app.routes.admin_reports import reports_admin_bp
 from app.routes.admin_settings import settings_admin_bp
+from app.routes.admin_encounters import encounters_admin_bp
 
 
 app = Flask(__name__)
@@ -164,6 +165,7 @@ app.register_blueprint(services_admin_bp)
 app.register_blueprint(finances_admin_bp)
 app.register_blueprint(reports_admin_bp)
 app.register_blueprint(settings_admin_bp)
+app.register_blueprint(encounters_admin_bp)
 
 
 # =========================
