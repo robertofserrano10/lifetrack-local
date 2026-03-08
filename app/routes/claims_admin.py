@@ -14,7 +14,7 @@ from app.db.cms1500_snapshot import (
     list_snapshots_admin,
 )
 
-from app.db.event_ledger import log_event
+from app.db.event_ledger import log_event, list_events_admin
 
 # H3.3 — lectura directa de servicios
 import sqlite3
@@ -82,6 +82,11 @@ def claim_detail_admin(claim_id: int):
         if s["claim_id"] == claim_id
     ]
 
+    # =========================================================
+    # H3.5 — EVENT LEDGER FOR CLAIM
+    # =========================================================
+    claim_events = list_events_admin(limit=50, offset=0, claim_id=claim_id)
+
     return render_template(
         "admin/claim_detail.html",
         claim=claim,
@@ -91,6 +96,7 @@ def claim_detail_admin(claim_id: int):
         allowed_transitions=allowed_transitions,
         services=services,
         snapshots=claim_snapshots,
+        events=claim_events,
     )
 
 
