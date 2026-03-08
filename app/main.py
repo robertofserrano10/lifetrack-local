@@ -39,7 +39,7 @@ from app.routes.admin_reports import reports_admin_bp
 from app.routes.admin_settings import settings_admin_bp
 from app.routes.admin_encounters import encounters_admin_bp
 from app.routes.admin_progress_notes import progress_notes_admin_bp
-
+from app.routes.admin_notes_editor import notes_editor_admin_bp
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"
@@ -168,7 +168,7 @@ app.register_blueprint(reports_admin_bp)
 app.register_blueprint(settings_admin_bp)
 app.register_blueprint(encounters_admin_bp)
 app.register_blueprint(progress_notes_admin_bp)
-
+app.register_blueprint(notes_editor_admin_bp)
 
 # =========================
 # CMS1500 VIEW
