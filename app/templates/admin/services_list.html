@@ -1,0 +1,62 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Services</h1>
+
+<div class="card">
+
+<table class="claims-table">
+
+<thead>
+
+<tr>
+<th>ID</th>
+<th>Date</th>
+<th>Patient</th>
+<th>Claim</th>
+<th>CPT</th>
+<th>Units</th>
+<th>Charge</th>
+<th>Open Claim</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for s in services %}
+
+<tr>
+
+<td>{{ s.id }}</td>
+
+<td>{{ s.service_date }}</td>
+
+<td>{{ s.last_name }}, {{ s.first_name }}</td>
+
+<td>{{ s.claim_number }}</td>
+
+<td>{{ s.cpt_code }}</td>
+
+<td>{{ s.units_24g }}</td>
+
+<td>{{ s.charge_amount_24f }}</td>
+
+<td>
+<a href="/admin/claims/{{ s.id }}">
+open
+</a>
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}
