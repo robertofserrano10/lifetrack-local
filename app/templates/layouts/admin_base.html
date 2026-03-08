@@ -84,6 +84,13 @@
 </a>
 {% endif %}
 
+{% if current_user and current_user.role in ['ADMIN','DRA'] %}
+<a href="/admin/clinical">
+<i class="fa-solid fa-notes-medical"></i>
+<span>Clinical</span>
+</a>
+{% endif %}
+
 {% if current_user and current_user.role == 'ADMIN' %}
 <a href="/admin/settings">
 <i class="fa-solid fa-gear"></i>
