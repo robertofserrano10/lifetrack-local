@@ -236,3 +236,24 @@ CREATE INDEX IF NOT EXISTS idx_services_claim ON services(claim_id);
 CREATE INDEX IF NOT EXISTS idx_charges_service ON charges(service_id);
 CREATE INDEX IF NOT EXISTS idx_applications_charge ON applications(charge_id);
 CREATE INDEX IF NOT EXISTS idx_adjustments_charge ON adjustments(charge_id);
+
+-- =========================================
+-- ENCOUNTERS
+-- Clinical visit layer
+-- =========================================
+
+CREATE TABLE IF NOT EXISTS encounters (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    patient_id INTEGER NOT NULL,
+    provider_id INTEGER,
+
+    encounter_date TEXT NOT NULL,
+
+    status TEXT NOT NULL DEFAULT 'OPEN',
+
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (patient_id) REFERENCES patients(id)
+);
