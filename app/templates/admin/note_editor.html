@@ -4,15 +4,62 @@
 
 <h1>New Progress Note</h1>
 
-<form method="post">
+<h3>Encounter Information</h3>
 
-<textarea name="note_text" rows="15" style="width:100%" required></textarea>
+<p><strong>Patient:</strong> {{ encounter.first_name }} {{ encounter.last_name }}</p>
+<p><strong>Service Date:</strong> {{ encounter.service_date }}</p>
+<p><strong>CPT Code:</strong> {{ encounter.cpt_code }}</p>
+<p><strong>Claim:</strong> {{ encounter.claim_number }}</p>
 
-<br><br>
+<hr>
 
-<button type="submit">
-Save Note
-</button>
+<form method="POST">
+
+<h3>S — Subjective</h3>
+<textarea name="subjective" rows="4" style="width:100%"></textarea>
+
+<h3>O — Objective</h3>
+<textarea name="objective" rows="4" style="width:100%"></textarea>
+
+<h3>A — Assessment</h3>
+<textarea name="assessment" rows="4" style="width:100%"></textarea>
+
+<h3>P — Plan</h3>
+<textarea name="plan" rows="4" style="width:100%"></textarea>
+
+<h3>Risk Assessment</h3>
+
+Suicidal ideation<br>
+<input type="text" name="suicidal"><br><br>
+
+Homicidal ideation<br>
+<input type="text" name="homicidal"><br><br>
+
+Current risk<br>
+<input type="text" name="risk"><br><br>
+
+<h3>Functioning</h3>
+
+Social<br>
+<input type="text" name="functioning_social"><br><br>
+
+Occupational<br>
+<input type="text" name="functioning_occupational"><br><br>
+
+Family<br>
+<input type="text" name="functioning_family"><br><br>
+
+<h3>Medications</h3>
+
+Current medications<br>
+<input type="text" name="medications"><br><br>
+
+Adherence<br>
+<input type="text" name="adherence"><br><br>
+
+<br>
+
+<button type="submit">Save Note</button>
 
 </form>
 

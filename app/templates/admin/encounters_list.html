@@ -11,6 +11,7 @@
 <th>Date</th>
 <th>Patient</th>
 <th>Status</th>
+<th>Notes</th>
 </tr>
 </thead>
 
@@ -22,6 +23,13 @@
 <td>{{ e.encounter_date }}</td>
 <td>{{ e.first_name }} {{ e.last_name }}</td>
 <td>{{ e.status }}</td>
+
+<td>
+<a href="/admin/notes/{{ e.id }}">
+Open Notes
+</a>
+</td>
+
 </tr>
 
 {% endfor %}

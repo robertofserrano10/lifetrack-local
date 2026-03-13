@@ -1,0 +1,81 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Create Progress Note</h1>
+
+<form method="POST">
+
+<textarea name="note_text" rows="32" style="width:100%;font-family:Courier,monospace;">
+{% if note_text %}
+{{ note_text }}
+{% else %}
+PATIENT:
+DATE:
+START TIME:
+END TIME:
+DURATION:
+
+MODALITY:
+SERVICE TYPE:
+CPT CODE:
+ICD10:
+
+PROVIDER:
+LICENSE:
+POS:
+
+--------------------------------------
+
+S — SUBJECTIVE
+Patient reports:
+
+--------------------------------------
+
+O — OBJECTIVE
+Clinical observations:
+
+--------------------------------------
+
+A — ASSESSMENT
+Clinical interpretation:
+
+--------------------------------------
+
+P — PLAN
+Interventions and next steps:
+
+--------------------------------------
+
+RISK ASSESSMENT
+Suicidal ideation:
+Homicidal ideation:
+Current risk:
+
+--------------------------------------
+
+FUNCTIONING
+Social:
+Occupational:
+Family:
+
+--------------------------------------
+
+MEDICATIONS
+Current medications:
+Adherence:
+
+--------------------------------------
+
+PROVIDER SIGNATURE
+Signature on File
+{% endif %}
+</textarea>
+
+<br><br>
+
+<button type="submit">Save Note</button>
+
+</form>
+
+{% endblock %}

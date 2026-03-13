@@ -17,12 +17,90 @@ notes_editor_admin_bp = Blueprint(
 @role_required("ADMIN", "DRA")
 def create_note(encounter_id):
 
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            p.first_name,
+            p.last_name,
+            e.encounter_date
+        FROM encounters e
+        JOIN patients p ON p.id = e.patient_id
+        WHERE e.id = ?
+        LIMIT 1
+    """, (encounter_id,))
+
+    encounter = cur.fetchone()
+
     if request.method == "POST":
 
-        note_text = request.form.get("note_text")
+        subjective = request.form.get("subjective")
+        objective = request.form.get("objective")
+        assessment = request.form.get("assessment")
+        plan = request.form.get("plan")
 
-        conn = sqlite3.connect(DB_PATH)
-        cur = conn.cursor()
+        suicidal = request.form.get("suicidal")
+        homicidal = request.form.get("homicidal")
+        risk = request.form.get("risk")
+
+        functioning_social = request.form.get("functioning_social")
+        functioning_occupational = request.form.get("functioning_occupational")
+        functioning_family = request.form.get("functioning_family")
+
+        medications = request.form.get("medications")
+        adherence = request.form.get("adherence")
+
+        note_text = f"""
+PATIENT: {encounter['first_name']} {encounter['last_name']}
+SERVICE DATE: {encounter['encounter_date']}
+
+--------------------------------------
+
+S — SUBJECTIVE
+{subjective}
+
+--------------------------------------
+
+O — OBJECTIVE
+{objective}
+
+--------------------------------------
+
+A — ASSESSMENT
+{assessment}
+
+--------------------------------------
+
+P — PLAN
+{plan}
+
+--------------------------------------
+
+RISK ASSESSMENT
+Suicidal ideation: {suicidal}
+Homicidal ideation: {homicidal}
+Current risk: {risk}
+
+--------------------------------------
+
+FUNCTIONING
+Social: {functioning_social}
+Occupational: {functioning_occupational}
+Family: {functioning_family}
+
+--------------------------------------
+
+MEDICATIONS
+Current medications: {medications}
+Adherence: {adherence}
+
+--------------------------------------
+
+PROVIDER SIGNATURE
+Signature on File
+"""
 
         cur.execute("""
             INSERT INTO progress_notes (
@@ -35,10 +113,17 @@ def create_note(encounter_id):
         conn.commit()
         conn.close()
 
-        return redirect(url_for("progress_notes_admin.notes_by_encounter",
-                                encounter_id=encounter_id))
+        return redirect(
+            url_for(
+                "progress_notes_admin.notes_by_encounter",
+                encounter_id=encounter_id
+            )
+        )
+
+    conn.close()
 
     return render_template(
         "admin/note_editor.html",
+        encounter=encounter,
         encounter_id=encounter_id
     )
