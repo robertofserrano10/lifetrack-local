@@ -44,6 +44,13 @@ from app.routes.admin_notes_print import notes_print_bp
 from app.routes.admin_notes_sign import notes_sign_admin_bp
 from app.routes.admin_notes_addendum import notes_addendum_admin_bp
 from app.routes.admin_notes_edit import notes_edit_admin_bp
+from app.routes.admin_coverages import coverages_admin_bp
+from app.routes.admin_claims import claims_admin_bp
+
+
+
+
+
 
 
 app = Flask(__name__)
@@ -178,6 +185,8 @@ app.register_blueprint(notes_print_bp)
 app.register_blueprint(notes_sign_admin_bp)
 app.register_blueprint(notes_addendum_admin_bp)
 app.register_blueprint(notes_edit_admin_bp)
+app.register_blueprint(coverages_admin_bp)
+
 
 # =========================
 # CMS1500 VIEW

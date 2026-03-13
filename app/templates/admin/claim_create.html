@@ -1,0 +1,33 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Create Claim</h1>
+
+<p>
+Patient: {{ coverage.first_name }} {{ coverage.last_name }}
+</p>
+
+<p>
+Insurance: {{ coverage.insurer_name }}
+</p>
+
+<form method="POST">
+
+<label>Claim Number</label><br>
+<input type="text" name="claim_number">
+<br><br>
+
+<button type="submit">
+Create Claim
+</button>
+
+</form>
+
+<br>
+
+<a href="/admin/patients/{{ coverage.patient_id }}">
+Back to Patient
+</a>
+
+{% endblock %}

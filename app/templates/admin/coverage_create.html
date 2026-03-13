@@ -1,0 +1,41 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Create Coverage</h1>
+
+<p>
+Patient: {{ patient.first_name }} {{ patient.last_name }}
+</p>
+
+<form method="POST">
+
+<label>Insurer Name</label><br>
+<input type="text" name="insurer_name" required>
+<br><br>
+
+<label>Plan Name</label><br>
+<input type="text" name="plan_name" required>
+<br><br>
+
+<label>Policy Number</label><br>
+<input type="text" name="policy_number" required>
+<br><br>
+
+<label>Coverage Start Date</label><br>
+<input type="date" name="start_date" required>
+<br><br>
+
+<button type="submit">
+Save Coverage
+</button>
+
+</form>
+
+<br>
+
+<a href="/admin/patients/{{ patient.id }}">
+Back to Patient
+</a>
+
+{% endblock %}
