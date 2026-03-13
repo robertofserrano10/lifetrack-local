@@ -21,6 +21,34 @@ def create_note(encounter_id):
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
+    # =========================
+    # CHECK IF ANY SIGNED NOTE EXISTS
+    # =========================
+
+    cur.execute("""
+        SELECT id
+        FROM progress_notes
+        WHERE encounter_id = ?
+        AND status = 'SIGNED'
+    """, (encounter_id,))
+
+    signed_note = cur.fetchone()
+
+    if signed_note:
+
+        conn.close()
+
+        return redirect(
+            url_for(
+                "progress_notes_admin.notes_by_encounter",
+                encounter_id=encounter_id
+            )
+        )
+
+    # =========================
+    # LOAD ENCOUNTER DATA
+    # =========================
+
     cur.execute("""
         SELECT
             p.first_name,

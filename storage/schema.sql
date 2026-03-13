@@ -241,19 +241,34 @@ CREATE INDEX IF NOT EXISTS idx_adjustments_charge ON adjustments(charge_id);
 -- ENCOUNTERS
 -- Clinical visit layer
 -- =========================================
-
 CREATE TABLE IF NOT EXISTS encounters (
-
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-
     patient_id INTEGER NOT NULL,
     provider_id INTEGER,
-
     encounter_date TEXT NOT NULL,
-
     status TEXT NOT NULL DEFAULT 'OPEN',
-
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-
     FOREIGN KEY (patient_id) REFERENCES patients(id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_encounters_patient ON encounters(patient_id);
+CREATE INDEX IF NOT EXISTS idx_encounters_date ON encounters(encounter_date);
+
+-- =========================================
+-- PROGRESS NOTES
+-- Clinical documentation layer
+-- =========================================
+CREATE TABLE IF NOT EXISTS progress_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    encounter_id INTEGER NOT NULL,
+    note_text TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'DRAFT',
+    signed INTEGER NOT NULL DEFAULT 0,
+    signed_at TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT,
+    FOREIGN KEY (encounter_id) REFERENCES encounters(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_progress_notes_encounter ON progress_notes(encounter_id);
+CREATE INDEX IF NOT EXISTS idx_progress_notes_status ON progress_notes(status);
