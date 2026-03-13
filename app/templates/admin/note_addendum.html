@@ -1,0 +1,22 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Add Addendum</h1>
+
+<form method="POST">
+
+<textarea
+name="addendum_text"
+rows="10"
+style="width:100%"
+placeholder="Addendum text">
+</textarea>
+
+<br><br>
+
+<button type="submit">Save Addendum</button>
+
+</form>
+
+{% endblock %}

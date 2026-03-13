@@ -10,7 +10,7 @@
 
 @page{
     size: Letter;
-    margin: 0.75in;
+    margin: 0.5in;
 }
 
 body{
@@ -23,12 +23,36 @@ body{
 
 .page{
 
-    width:7.5in;
-    margin:auto;
+    width:100%;
 
     font-family:"Courier New", Courier, monospace;
-    font-size:11.5pt;
-    line-height:1.25;
+
+    font-size:10.5pt;
+    line-height:1.12;
+
+}
+
+/* GRID DE IMPRESIÓN */
+
+.layout{
+
+    display:grid;
+
+    grid-template-columns: 2fr 1fr;
+
+    gap:28px;
+
+}
+
+/* COLUMNA IZQUIERDA */
+
+.left{
+
+}
+
+/* COLUMNA DERECHA */
+
+.right{
 
 }
 
@@ -36,8 +60,8 @@ body{
 
 .title{
 
-    font-size:18pt;
-    margin-bottom:16px;
+    font-size:16pt;
+    margin-bottom:8px;
 
 }
 
@@ -50,7 +74,46 @@ body{
 
 }
 
-/* REGLAS DE IMPRESIÓN */
+/* FIRMA */
+
+.signature-block{
+
+    margin-top:12px;
+
+}
+
+.signature-line{
+
+    border-bottom:2px solid black;
+    width:280px;
+    margin-top:20px;
+
+}
+
+.signature-label{
+
+    font-size:9pt;
+    margin-top:4px;
+
+}
+
+/* ADDENDUM */
+
+.addendum-title{
+
+    font-weight:bold;
+    margin-bottom:6px;
+
+}
+
+.addendum-item{
+
+    margin-bottom:10px;
+    white-space:pre-wrap;
+
+}
+
+/* PRINT */
 
 @media print{
 
@@ -58,8 +121,9 @@ body{
         margin:0;
     }
 
-    .page{
+    .layout{
         page-break-inside:avoid;
+        break-inside:avoid;
     }
 
 }
@@ -72,12 +136,58 @@ body{
 
 <div class="page">
 
+<div class="layout">
+
+<div class="left">
+
 <div class="title">
 Progress Note
 </div>
 
 <div class="note">
-{{ note.note_text }}
+
+{{ note.note_text
+    .replace('Signature on File','')
+    .replace('PROVIDER SIGNATURE','') }}
+
+</div>
+
+<div class="signature-block">
+
+<div class="signature-line"></div>
+
+<div class="signature-label">
+Provider Signature
+</div>
+
+</div>
+
+</div>
+
+<div class="right">
+
+{% if addendums and addendums|length > 0 %}
+
+<div class="addendum-title">
+ADDENDUMS
+</div>
+
+{% for a in addendums %}
+
+<div class="addendum-item">
+
+Date: {{ a.created_at }}
+
+{{ a.addendum_text }}
+
+</div>
+
+{% endfor %}
+
+{% endif %}
+
+</div>
+
 </div>
 
 </div>

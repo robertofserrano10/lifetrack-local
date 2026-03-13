@@ -35,15 +35,16 @@ Create Note
 
 <td>
 
-<a href="/admin/notes/print/{{ n.id }}">
-Print
-</a>
+<a href="/admin/notes/print/{{ n.id }}">Print</a>
 
 {% if n.status == "DRAFT" %}
 |
-<a href="/admin/notes/sign/{{ n.id }}">
-Sign
-</a>
+<a href="/admin/notes/sign/{{ n.id }}">Sign</a>
+{% endif %}
+
+{% if n.status == "SIGNED" %}
+|
+<a href="/admin/notes/addendum/{{ n.id }}">Addendum</a>
 {% endif %}
 
 </td>

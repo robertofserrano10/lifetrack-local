@@ -21,6 +21,7 @@ def print_note(note_id):
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
+    # NOTA PRINCIPAL
     cur.execute(
         """
         SELECT
@@ -41,9 +42,26 @@ def print_note(note_id):
 
     note = cur.fetchone()
 
+    # ADDENDUMS
+    cur.execute(
+        """
+        SELECT
+            id,
+            addendum_text,
+            created_at
+        FROM progress_note_addendums
+        WHERE note_id = ?
+        ORDER BY created_at ASC
+        """,
+        (note_id,),
+    )
+
+    addendums = cur.fetchall()
+
     conn.close()
 
     return render_template(
         "admin/note_print.html",
-        note=note
+        note=note,
+        addendums=addendums
     )

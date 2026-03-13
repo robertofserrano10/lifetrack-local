@@ -42,6 +42,9 @@ from app.routes.admin_progress_notes import progress_notes_admin_bp
 from app.routes.admin_notes_editor import notes_editor_admin_bp
 from app.routes.admin_notes_print import notes_print_bp
 from app.routes.admin_notes_sign import notes_sign_admin_bp
+from app.routes.admin_notes_addendum import notes_addendum_admin_bp
+
+
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"
@@ -173,6 +176,7 @@ app.register_blueprint(progress_notes_admin_bp)
 app.register_blueprint(notes_editor_admin_bp)
 app.register_blueprint(notes_print_bp)
 app.register_blueprint(notes_sign_admin_bp)
+app.register_blueprint(notes_addendum_admin_bp)
 
 # =========================
 # CMS1500 VIEW
