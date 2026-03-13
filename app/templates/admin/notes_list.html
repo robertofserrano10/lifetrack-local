@@ -4,11 +4,15 @@
 
 <h1>Progress Notes</h1>
 
+{% if notes|length == 0 %}
+
 <a href="/admin/notes/create/{{ encounter_id }}">
 Create Note
 </a>
 
 <br><br>
+
+{% endif %}
 
 <table>
 
@@ -38,6 +42,8 @@ Create Note
 <a href="/admin/notes/print/{{ n.id }}">Print</a>
 
 {% if n.status == "DRAFT" %}
+|
+<a href="/admin/notes/edit/{{ n.id }}">Edit</a>
 |
 <a href="/admin/notes/sign/{{ n.id }}">Sign</a>
 {% endif %}
