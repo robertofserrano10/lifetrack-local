@@ -1,0 +1,21 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Edit Progress Note</h1>
+
+<form method="POST">
+
+<textarea
+name="note_text"
+rows="30"
+style="width:100%; font-family:Courier,monospace;"
+>{{ note.note_text }}</textarea>
+
+<br><br>
+
+<button type="submit">Save Changes</button>
+
+</form>
+
+{% endblock %}
