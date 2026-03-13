@@ -1,0 +1,42 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Create Patient</h1>
+
+<form method="POST">
+
+<label>First Name</label><br>
+<input type="text" name="first_name" required>
+<br><br>
+
+<label>Last Name</label><br>
+<input type="text" name="last_name" required>
+<br><br>
+
+<label>Date of Birth</label><br>
+<input type="date" name="date_of_birth" required>
+<br><br>
+
+<label>Sex</label><br>
+<select name="sex">
+<option value="M">Male</option>
+<option value="F">Female</option>
+<option value="U">Unknown</option>
+</select>
+
+<br><br>
+
+<button type="submit">
+Save Patient
+</button>
+
+</form>
+
+<br>
+
+<a href="/admin/patients">
+Back to Patients
+</a>
+
+{% endblock %}

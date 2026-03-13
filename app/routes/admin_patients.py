@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, abort
+from flask import Blueprint, render_template, abort, request, redirect, url_for
 import sqlite3
 from app.config import DB_PATH
 
@@ -46,6 +46,45 @@ def patients_list():
         "admin/patients_list.html",
         patients=patients,
     )
+
+
+# =========================================================
+# Create patient
+# =========================================================
+@patients_admin_bp.route("/create", methods=["GET", "POST"])
+@login_required
+@role_required("ADMIN", "RECEPCION")
+def create_patient():
+
+    if request.method == "POST":
+
+        first_name = request.form.get("first_name")
+        last_name = request.form.get("last_name")
+        date_of_birth = request.form.get("date_of_birth")
+        sex = request.form.get("sex")
+
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+
+        cur.execute(
+            """
+            INSERT INTO patients (
+                first_name,
+                last_name,
+                date_of_birth,
+                sex
+            )
+            VALUES (?,?,?,?)
+            """,
+            (first_name, last_name, date_of_birth, sex),
+        )
+
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for("patients_admin.patients_list"))
+
+    return render_template("admin/patient_create.html")
 
 
 # =========================================================
