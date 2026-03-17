@@ -1,0 +1,158 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-file-medical" style="color:var(--accent);"></i> Editar Claim {{ claim.claim_number }}</h1>
+    <p>Información adicional para la CMS-1500 — casillas 10, 14–23, 27</p>
+  </div>
+  <a class="button-secondary" href="/admin/claims/{{ claim.id }}">
+    <i class="fa-solid fa-arrow-left"></i> Volver al Claim
+  </a>
+</div>
+
+{% if error %}
+<div class="form-step" style="border-left-color:#dc2626;background:#fef2f2;color:#991b1b;margin-bottom:1rem;">
+  <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
+</div>
+{% endif %}
+
+<form method="POST">
+
+  <!-- Casilla 10 -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-briefcase-medical" style="color:var(--accent);"></i> Casilla 10 — Is Patient's Condition Related To?</h2>
+    <div class="form-grid">
+      <div style="display:flex;align-items:center;gap:0.75rem;padding-top:1.5rem;">
+        <input type="checkbox" name="related_employment_10a" id="rel_emp"
+          {% if claim.related_employment_10a %}checked{% endif %}
+          style="width:18px;height:18px;cursor:pointer;" />
+        <label for="rel_emp" style="margin:0;cursor:pointer;">a. Employment?</label>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.75rem;padding-top:1.5rem;">
+        <input type="checkbox" name="related_auto_10b" id="rel_auto"
+          {% if claim.related_auto_10b %}checked{% endif %}
+          style="width:18px;height:18px;cursor:pointer;" />
+        <label for="rel_auto" style="margin:0;cursor:pointer;">b. Auto Accident?</label>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.75rem;padding-top:1.5rem;">
+        <input type="checkbox" name="related_other_10c" id="rel_other"
+          {% if claim.related_other_10c %}checked{% endif %}
+          style="width:18px;height:18px;cursor:pointer;" />
+        <label for="rel_other" style="margin:0;cursor:pointer;">c. Other Accident?</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Casillas 14–16 -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-calendar-days" style="color:var(--accent);"></i> Casillas 14–16 — Fechas Clínicas</h2>
+    <div class="form-grid">
+      <div>
+        <label>14. Date of Current Illness / Injury / Pregnancy (LMP)</label>
+        <input type="date" name="date_current_illness_14"
+          value="{{ claim.date_current_illness_14 or '' }}" />
+      </div>
+      <div>
+        <label>15. Other Date</label>
+        <input type="date" name="other_date_15"
+          value="{{ claim.other_date_15 or '' }}" />
+      </div>
+      <div>
+        <label>16. Unable to Work — From</label>
+        <input type="date" name="unable_work_from_16"
+          value="{{ claim.unable_work_from_16 or '' }}" />
+      </div>
+      <div>
+        <label>16. Unable to Work — To</label>
+        <input type="date" name="unable_work_to_16"
+          value="{{ claim.unable_work_to_16 or '' }}" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Casillas 17–19 -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-user-doctor" style="color:var(--accent);"></i> Casillas 17–19 — Proveedor Referidor y Hospitalización</h2>
+    <div class="form-grid">
+      <div>
+        <label>17. Referring Provider Name</label>
+        <input type="text" name="referring_provider_name"
+          value="{{ claim.referring_provider_name or '' }}"
+          placeholder="Nombre del proveedor referidor" />
+      </div>
+      <div>
+        <label>17. Referring Provider NPI</label>
+        <input type="text" name="referring_provider_npi"
+          value="{{ claim.referring_provider_npi or '' }}"
+          placeholder="NPI del referidor" />
+      </div>
+      <div>
+        <label>18. Hospitalization From</label>
+        <input type="date" name="hosp_from_18"
+          value="{{ claim.hosp_from_18 or '' }}" />
+      </div>
+      <div>
+        <label>18. Hospitalization To</label>
+        <input type="date" name="hosp_to_18"
+          value="{{ claim.hosp_to_18 or '' }}" />
+      </div>
+      <div>
+        <label>19. Additional Claim Information</label>
+        <input type="text" name="reserved_local_use_19"
+          value="{{ claim.reserved_local_use_19 or '' }}"
+          placeholder="Información adicional (opcional)" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Casillas 22–23 -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-rotate" style="color:var(--accent);"></i> Casillas 22–23 — Resubmisión y Autorización</h2>
+    <div class="form-grid">
+      <div>
+        <label>22. Resubmission Code</label>
+        <input type="text" name="resubmission_code_22"
+          value="{{ claim.resubmission_code_22 or '' }}"
+          placeholder="Código de resubmisión" />
+      </div>
+      <div>
+        <label>22. Original Reference No.</label>
+        <input type="text" name="original_ref_no_22"
+          value="{{ claim.original_ref_no_22 or '' }}"
+          placeholder="Número de referencia original" />
+      </div>
+      <div>
+        <label>23. Prior Authorization Number</label>
+        <input type="text" name="prior_authorization_23"
+          value="{{ claim.prior_authorization_23 or '' }}"
+          placeholder="Número de autorización previa" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Casilla 27 -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-file-signature" style="color:var(--accent);"></i> Casilla 27 — Accept Assignment</h2>
+    <div class="form-grid">
+      <div>
+        <label>27. Accept Assignment?</label>
+        <select name="accept_assignment_27">
+          <option value="1" {% if claim.accept_assignment_27 %}selected{% endif %}>Yes</option>
+          <option value="0" {% if not claim.accept_assignment_27 %}selected{% endif %}>No</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:0.75rem;">
+    <button class="button-primary" type="submit">
+      <i class="fa-solid fa-floppy-disk"></i> Guardar
+    </button>
+    <a class="button-secondary" href="/admin/claims/{{ claim.id }}">Cancelar</a>
+  </div>
+
+</form>
+
+{% endblock %}

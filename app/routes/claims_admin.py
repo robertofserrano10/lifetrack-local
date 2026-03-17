@@ -5,6 +5,7 @@ from app.db.claims import (
     get_claim_financial_status,
     get_claim_operational_status,
     update_claim_operational_status,
+    update_claim_cms_fields,
     VALID_TRANSITIONS,
 )
 from app.db.financial_lock import is_claim_locked
@@ -224,6 +225,46 @@ def claim_lock(claim_id: int):
         return f"No se pudo bloquear el claim: {str(exc)}", 400
 
     return redirect(url_for("claims_admin.claim_detail_admin", claim_id=claim_id))
+
+
+
+@claims_admin_bp.route("/<int:claim_id>/edit", methods=["GET", "POST"])
+def claim_edit(claim_id: int):
+    claim = get_claim_by_id(claim_id)
+    if not claim:
+        abort(404)
+
+    from app.db.financial_lock import is_claim_locked
+    if is_claim_locked(claim_id):
+        return redirect(url_for("claims_admin.claim_detail_admin", claim_id=claim_id))
+
+    error = None
+    if request.method == "POST":
+        try:
+            update_claim_cms_fields(
+                claim_id=claim_id,
+                related_employment_10a=1 if request.form.get("related_employment_10a") else 0,
+                related_auto_10b=1 if request.form.get("related_auto_10b") else 0,
+                related_other_10c=1 if request.form.get("related_other_10c") else 0,
+                date_current_illness_14=request.form.get("date_current_illness_14") or None,
+                other_date_15=request.form.get("other_date_15") or None,
+                unable_work_from_16=request.form.get("unable_work_from_16") or None,
+                unable_work_to_16=request.form.get("unable_work_to_16") or None,
+                referring_provider_name=request.form.get("referring_provider_name") or None,
+                referring_provider_npi=request.form.get("referring_provider_npi") or None,
+                hosp_from_18=request.form.get("hosp_from_18") or None,
+                hosp_to_18=request.form.get("hosp_to_18") or None,
+                reserved_local_use_19=request.form.get("reserved_local_use_19") or None,
+                resubmission_code_22=request.form.get("resubmission_code_22") or None,
+                original_ref_no_22=request.form.get("original_ref_no_22") or None,
+                prior_authorization_23=request.form.get("prior_authorization_23") or None,
+                accept_assignment_27=int(request.form.get("accept_assignment_27", 1)),
+            )
+            return redirect(url_for("claims_admin.claim_detail_admin", claim_id=claim_id))
+        except Exception as e:
+            error = str(e)
+
+    return render_template("admin/claim_edit.html", claim=claim, error=error)
 
 
 @claims_admin_bp.route("/<int:claim_id>/transition", methods=["POST"])

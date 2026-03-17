@@ -24,6 +24,11 @@
     <a class="button-secondary" href="{{ url_for('claim_payments.claim_payments_view', claim_id=claim.id) }}">
       <i class="fa-solid fa-dollar-sign"></i> Payments
     </a>
+    {% if not locked %}
+    <a class="button-secondary" href="/admin/claims/{{ claim.id }}/edit">
+      <i class="fa-solid fa-pen"></i> Editar Info CMS
+    </a>
+    {% endif %}
     <a class="button-secondary" href="{{ "/cms1500/" ~ claim.id }}">
       <i class="fa-solid fa-file-invoice"></i> CMS-1500
     </a>

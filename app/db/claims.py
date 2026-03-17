@@ -145,12 +145,26 @@ def update_claim_operational_status(claim_id: int, new_status: str) -> bool:
 
 def update_claim_cms_fields(
     claim_id: int,
+    # Casilla 10
+    related_employment_10a: int = 0,
+    related_auto_10b: int = 0,
+    related_other_10c: int = 0,
+    # Casilla 14-19
+    date_current_illness_14: str | None = None,
+    other_date_15: str | None = None,
+    unable_work_from_16: str | None = None,
+    unable_work_to_16: str | None = None,
     referring_provider_name: str | None = None,
     referring_provider_npi: str | None = None,
+    hosp_from_18: str | None = None,
+    hosp_to_18: str | None = None,
     reserved_local_use_19: str | None = None,
+    # Casilla 22-23
     resubmission_code_22: str | None = None,
     original_ref_no_22: str | None = None,
     prior_authorization_23: str | None = None,
+    # Casilla 27
+    accept_assignment_27: int = 1,
 ) -> bool:
 
     if is_claim_locked(claim_id):
@@ -159,35 +173,49 @@ def update_claim_cms_fields(
     now = datetime.now(timezone.utc).isoformat()
 
     sql = """
-    UPDATE claims
-    SET
+    UPDATE claims SET
+        related_employment_10a = ?,
+        related_auto_10b = ?,
+        related_other_10c = ?,
+        date_current_illness_14 = ?,
+        other_date_15 = ?,
+        unable_work_from_16 = ?,
+        unable_work_to_16 = ?,
         referring_provider_name = ?,
         referring_provider_npi = ?,
+        hosp_from_18 = ?,
+        hosp_to_18 = ?,
         reserved_local_use_19 = ?,
         resubmission_code_22 = ?,
         original_ref_no_22 = ?,
         prior_authorization_23 = ?,
+        accept_assignment_27 = ?,
         updated_at = ?
     WHERE id = ?
     """
 
     with get_connection() as conn:
         cur = conn.cursor()
-        cur.execute(
-            sql,
-            (
-                referring_provider_name,
-                referring_provider_npi,
-                reserved_local_use_19,
-                resubmission_code_22,
-                original_ref_no_22,
-                prior_authorization_23,
-                now,
-                claim_id,
-            ),
-        )
+        cur.execute(sql, (
+            related_employment_10a, related_auto_10b, related_other_10c,
+            date_current_illness_14, other_date_15,
+            unable_work_from_16, unable_work_to_16,
+            referring_provider_name, referring_provider_npi,
+            hosp_from_18, hosp_to_18,
+            reserved_local_use_19,
+            resubmission_code_22, original_ref_no_22,
+            prior_authorization_23, accept_assignment_27,
+            now, claim_id,
+        ))
         conn.commit()
-        return cur.rowcount > 0
+
+    from app.db.event_ledger import log_event
+    log_event(
+        entity_type="claim",
+        entity_id=claim_id,
+        event_type="claim_cms_fields_updated",
+    )
+    return True
 
 
 # ============================================================
