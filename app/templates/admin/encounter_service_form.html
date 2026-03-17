@@ -1,0 +1,56 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Agregar Service a Encounter #{{ encounter.id }}</h1>
+<p class="form-info">J12 - UX: asegúrese de que los campos necesarios estén llenos y que el servicio se cree en el claim correcto.</p>
+
+<div class="card">
+
+{% if error %}
+<p class="error">{{ error }}</p>
+{% endif %}
+
+<div class="form-step">Paso 2/2: Vincular service a Claim y registrar CPT/unidades/monto para la factura CMS-1500.</div>
+
+<form method="POST" class="form-grid">
+
+<div>
+<label for="claim_id">Claim</label>
+<select id="claim_id" name="claim_id" required>
+<option value="">Seleccione un Claim</option>
+{% for claim in claims %}
+<option value="{{ claim.id }}">#{{ claim.claim_number }} ({{ claim.status }})</option>
+{% endfor %}
+</select>
+</div>
+
+<div>
+<label for="service_date">Fecha del servicio</label>
+<input id="service_date" name="service_date" type="date" required />
+</div>
+
+<div>
+<label for="cpt_code">CPT</label>
+<input id="cpt_code" name="cpt_code" type="text" required />
+</div>
+
+<div>
+<label for="units">Unidades</label>
+<input id="units" name="units" type="number" min="1" required />
+</div>
+
+<div>
+<label for="charge_amount">Charge amount</label>
+<input id="charge_amount" name="charge_amount" type="number" step="0.01" min="0" required />
+</div>
+
+<div>
+<button class="button-primary" type="submit">Crear Service</button>
+</div>
+
+</form>
+
+</div>
+
+{% endblock %}

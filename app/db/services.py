@@ -1,5 +1,6 @@
 from datetime import datetime
 from app.db.connection import get_connection
+from app.db.event_ledger import log_event
 from app.db.financial_lock import is_claim_locked
 
 
@@ -83,7 +84,23 @@ def create_service(
             ),
         )
         conn.commit()
-        return cur.lastrowid
+        service_id = cur.lastrowid
+
+    # Event audit trail for clinical service creation
+    log_event(
+        entity_type="service",
+        entity_id=service_id,
+        event_type="service_created",
+        event_data={
+            "claim_id": claim_id,
+            "service_date": service_date,
+            "cpt_code": cpt_code,
+            "units": units,
+            "charge_amount_24f": charge_amount_24f,
+        },
+    )
+
+    return service_id
 
 
 def update_service_box20(

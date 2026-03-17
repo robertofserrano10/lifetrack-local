@@ -1,0 +1,84 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<!-- Botones — se ocultan al imprimir -->
+<div class="cms1500-no-print page-header" style="margin-bottom:1rem;">
+  <div>
+    <h1><i class="fa-solid fa-file-invoice" style="color:var(--accent);"></i> CMS-1500 Preview</h1>
+    <p>Claim {{ snapshot.snapshot.claim.claim_number }} — {{ snapshot.snapshot.patient.first_name }} {{ snapshot.snapshot.patient.last_name }}</p>
+  </div>
+  <div style="display:flex; gap:0.5rem;">
+    <button class="button-primary" onclick="window.print()">
+      <i class="fa-solid fa-print"></i> Print CMS-1500
+    </button>
+    <a class="button-secondary" href="{{ url_for('claims_admin.claim_detail_admin', claim_id=snapshot.claim_id) }}">
+      <i class="fa-solid fa-arrow-left"></i> Volver al Claim
+    </a>
+  </div>
+</div>
+
+<!-- Todo este bloque SÍ se imprime -->
+<div class="cms1500-print-area">
+
+  <div class="card">
+    <h2>CMS-1500 — Snapshot v{{ snapshot.snapshot.version_number }}</h2>
+    <p><strong>Claim Status:</strong> {{ snapshot.snapshot.claim.status }}</p>
+    <p><strong>Provider Signature:</strong> {{ snapshot.snapshot.provider.signature }}</p>
+    <p><strong>Billing NPI:</strong> {{ snapshot.snapshot.provider.billing.npi or '-' }}</p>
+  </div>
+
+  <div class="card">
+    <h3>Paciente</h3>
+    <p><strong>Nombre:</strong> {{ snapshot.snapshot.patient.first_name }} {{ snapshot.snapshot.patient.last_name }}</p>
+    <p><strong>Fecha Nacimiento:</strong> {{ snapshot.snapshot.patient.date_of_birth or '-' }}</p>
+  </div>
+
+  <div class="card">
+    <h3>Seguro / Insured</h3>
+    <p><strong>Aseguradora:</strong> {{ snapshot.snapshot.insurance.insurer_name }}</p>
+    <p><strong>Plan:</strong> {{ snapshot.snapshot.insurance.plan_name }}</p>
+    <p><strong>Insured Name:</strong> {{ snapshot.snapshot.insurance.insured_name }}</p>
+    <p><strong>Policy #:</strong> {{ snapshot.snapshot.insurance.policy_number or '-' }}</p>
+    <p><strong>Group #:</strong> {{ snapshot.snapshot.insurance.group_number or '-' }}</p>
+    <p><strong>Relationship:</strong> {{ snapshot.snapshot.insurance.relationship_to_insured or '-' }}</p>
+  </div>
+
+  <div class="card">
+    <h3>Services</h3>
+    {% if snapshot.snapshot.services %}
+    <table class="claims-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>CPT</th>
+          <th>Unidades</th>
+          <th>Monto</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in snapshot.snapshot.services %}
+        <tr>
+          <td>{{ s.service_date }}</td>
+          <td>{{ s.cpt_code }}</td>
+          <td>{{ s.units or s.units_24g or '-' }}</td>
+          <td>${{ '%.2f'|format(s.charge_amount_24f or 0) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No services reportados.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h3>Totales</h3>
+    <p><strong>Total Charge:</strong> ${{ '%.2f'|format(snapshot.snapshot.totals.total_charge if snapshot.snapshot.totals else 0) }}</p>
+    <p><strong>Amount Paid:</strong> ${{ '%.2f'|format(snapshot.snapshot.totals.amount_paid if snapshot.snapshot.totals else 0) }}</p>
+    <p><strong>Balance Due:</strong> ${{ '%.2f'|format(snapshot.snapshot.totals.balance_due if snapshot.snapshot.totals else 0) }}</p>
+  </div>
+
+</div>
+
+{% endblock %}

@@ -21,11 +21,15 @@ def events_index():
     claim_id_raw = request.args.get("claim_id", "").strip()
     claim_id = int(claim_id_raw) if claim_id_raw.isdigit() else None
 
+    entity_type = request.args.get("entity_type", "").strip() or None
+    entity_id_raw = request.args.get("entity_id", "").strip()
+    entity_id = int(entity_id_raw) if entity_id_raw.isdigit() else None
+
     per_page = 25
     offset = (page - 1) * per_page
 
-    total = count_events_admin(claim_id=claim_id)
-    events = list_events_admin(limit=per_page, offset=offset, claim_id=claim_id)
+    total = count_events_admin(entity_type=entity_type, entity_id=entity_id, claim_id=claim_id)
+    events = list_events_admin(limit=per_page, offset=offset, entity_type=entity_type, entity_id=entity_id, claim_id=claim_id)
 
     has_prev = page > 1
     has_next = (offset + per_page) < total
@@ -43,8 +47,11 @@ def events_index():
 def export_events_json():
     claim_id_raw = request.args.get("claim_id", "").strip()
     claim_id = int(claim_id_raw) if claim_id_raw.isdigit() else None
+    entity_type = request.args.get("entity_type", "").strip() or None
+    entity_id_raw = request.args.get("entity_id", "").strip()
+    entity_id = int(entity_id_raw) if entity_id_raw.isdigit() else None
 
-    events = list_events_admin(limit=100000, offset=0, claim_id=claim_id)
+    events = list_events_admin(limit=100000, offset=0, entity_type=entity_type, entity_id=entity_id, claim_id=claim_id)
 
     payload = json.dumps(events, indent=2, ensure_ascii=False)
 
@@ -61,8 +68,11 @@ def export_events_json():
 def export_events_csv():
     claim_id_raw = request.args.get("claim_id", "").strip()
     claim_id = int(claim_id_raw) if claim_id_raw.isdigit() else None
+    entity_type = request.args.get("entity_type", "").strip() or None
+    entity_id_raw = request.args.get("entity_id", "").strip()
+    entity_id = int(entity_id_raw) if entity_id_raw.isdigit() else None
 
-    events = list_events_admin(limit=100000, offset=0, claim_id=claim_id)
+    events = list_events_admin(limit=100000, offset=0, entity_type=entity_type, entity_id=entity_id, claim_id=claim_id)
 
     output = io.StringIO()
     writer = csv.DictWriter(

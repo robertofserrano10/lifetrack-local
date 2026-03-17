@@ -2,17 +2,55 @@
 
 {% block content %}
 
-<h1>New Progress Note</h1>
+<h1>New Progress Note (SOAP)</h1>
 
 <form method="post">
 
-<textarea name="note_text" rows="15" style="width:100%" required></textarea>
+<div class="card">
+  <h2>Administrative Info</h2>
+  <label>Patient Name</label><br>
+  <input name="patient_name" style="width:100%" required><br>
+  <label>Record Number</label><br>
+  <input name="record_number" style="width:100%" required><br>
+  <label>Date of Service</label><br>
+  <input name="date_of_service" type="date" style="width:100%" required><br>
+  <label>Start Time</label><br>
+  <input name="start_time" type="time" style="width:100%"><br>
+  <label>End Time</label><br>
+  <input name="end_time" type="time" style="width:100%"><br>
+  <label>Service Type</label><br>
+  <input name="service_type" style="width:100%"><br>
+  <label>CPT Code</label><br>
+  <input name="cpt_code" style="width:100%"><br>
+  <label>Diagnosis (ICD-10)</label><br>
+  <input name="diagnosis_code" style="width:100%"><br>
+  <label>Provider Name</label><br>
+  <input name="provider_name" style="width:100%" required><br>
+  <label>Provider Credentials</label><br>
+  <input name="provider_credentials" style="width:100%" required><br>
+</div>
 
-<br><br>
+<div class="card">
+  <h2>S — Subjective</h2>
+  <textarea name="subjective" rows="5" style="width:100%" required></textarea>
+</div>
 
-<button type="submit">
-Save Note
-</button>
+<div class="card">
+  <h2>O — Objective</h2>
+  <textarea name="objective" rows="5" style="width:100%" required></textarea>
+</div>
+
+<div class="card">
+  <h2>A — Assessment</h2>
+  <textarea name="assessment" rows="5" style="width:100%" required></textarea>
+</div>
+
+<div class="card">
+  <h2>P — Plan</h2>
+  <textarea name="plan" rows="5" style="width:100%" required></textarea>
+</div>
+
+<button class="button-primary" type="submit">Save SOAP Note</button>
 
 </form>
 

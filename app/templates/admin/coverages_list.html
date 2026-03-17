@@ -1,0 +1,51 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>Coverages</h1>
+    <p>Lista de coberturas de pacientes</p>
+  </div>
+  <a class="button-primary" href="{{ url_for('coverages.coverage_create') }}">Nueva Cobertura</a>
+</div>
+
+<div class="card">
+  {% if coverages %}
+  <table class="claims-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Paciente</th>
+        <th>Insurer</th>
+        <th>Plan</th>
+        <th>Policy</th>
+        <th>Start</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in coverages %}
+      <tr>
+        <td>{{ c.id }}</td>
+        <td>{{ c.patient_name }}</td>
+        <td>{{ c.insurer_name }}</td>
+        <td>{{ c.plan_name }}</td>
+        <td>{{ c.policy_number }}</td>
+        <td>{{ c.start_date }}</td>
+        <td>
+          <a class="button-secondary" href="{{ url_for('coverages.edit_coverage', coverage_id=c.id) }}">Editar</a>
+          <form method="POST" action="{{ url_for('coverages.delete_coverage_route', coverage_id=c.id) }}" style="display:inline;margin-left:0.5rem;" onsubmit="return confirm('Eliminar coverage?');">
+            <button class="button-danger" type="submit">Borrar</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p>No hay coberturas.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

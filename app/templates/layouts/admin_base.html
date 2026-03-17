@@ -1,147 +1,166 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="es" data-theme="light">
 
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LifeTrack Admin</title>
 
-<meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<title>LifeTrack Admin</title>
+  <link rel="stylesheet" href="/static/css/admin_layout.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-<link rel="stylesheet" href="/static/css/admin_layout.css">
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-<script src="/static/js/theme_toggle.js" defer></script>
-
+  <script src="/static/js/theme_toggle.js" defer></script>
 </head>
 
 <body>
+  <div class="admin-container">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <i class="fa-solid fa-heart-pulse"></i>
+        <span>LifeTrack</span>
+      </div>
 
-<div class="admin-container">
+      <nav class="sidebar-nav">
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
+        {% set path = request.path %}
 
-<div class="sidebar-logo">
-<i class="fa-solid fa-heart-pulse"></i> LifeTrack
-</div>
+        {% if current_user %}
+        <a href="/admin/dashboard" class="{{ 'active' if path == '/admin/dashboard' else '' }}">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Dashboard</span>
+        </a>
+        {% endif %}
 
-<nav class="sidebar-nav">
+        {% if current_user and current_user.role in ['ADMIN','FACTURADOR','RECEPCION'] %}
+        <a href="/admin/patients" class="{{ 'active' if path.startswith('/admin/patients') else '' }}">
+          <i class="fa-solid fa-user"></i>
+          <span>Patients</span>
+        </a>
+        {% endif %}
 
-{% if current_user %}
-<a href="/admin/dashboard">
-<i class="fa-solid fa-chart-line"></i>
-<span>Dashboard</span>
-</a>
-{% endif %}
+        {% if current_user and current_user.role in ['ADMIN','FACTURADOR','RECEPCION'] %}
+        <a href="/admin/services" class="{{ 'active' if path.startswith('/admin/services') else '' }}">
+          <i class="fa-solid fa-stethoscope"></i>
+          <span>Services</span>
+        </a>
+        {% endif %}
 
-{% if current_user and current_user.role in ['ADMIN','FACTURADOR','RECEPCION'] %}
-<a href="/admin/patients">
-<i class="fa-solid fa-user"></i>
-<span>Patients</span>
-</a>
-{% endif %}
+        {% if current_user %}
+        <a href="/admin/claims" class="{{ 'active' if path.startswith('/admin/claims') else '' }}">
+          <i class="fa-solid fa-file-medical"></i>
+          <span>Claims</span>
+        </a>
+        {% endif %}
 
-{% if current_user and current_user.role in ['ADMIN','FACTURADOR','RECEPCION'] %}
-<a href="/admin/services">
-<i class="fa-solid fa-stethoscope"></i>
-<span>Services</span>
-</a>
-{% endif %}
+        {% if current_user and current_user.role in ['ADMIN','FACTURADOR','DRA'] %}
+        <a href="/admin/snapshots" class="{{ 'active' if path.startswith('/admin/snapshots') else '' }}">
+          <i class="fa-solid fa-snowflake"></i>
+          <span>Snapshots</span>
+        </a>
+        {% endif %}
 
-{% if current_user %}
-<a href="/admin/claims">
-<i class="fa-solid fa-file-medical"></i>
-<span>Claims</span>
-</a>
-{% endif %}
+        {% if current_user and current_user.role in ['ADMIN','FACTURADOR','RECEPCION'] %}
+        <a href="/admin/coverages" class="{{ 'active' if path.startswith('/admin/coverages') else '' }}">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Coverages</span>
+        </a>
+        {% endif %}
 
-{% if current_user and current_user.role in ['ADMIN','FACTURADOR','DRA'] %}
-<a href="/admin/snapshots">
-<i class="fa-solid fa-snowflake"></i>
-<span>Snapshots</span>
-</a>
-{% endif %}
+        {% if current_user and current_user.role in ['ADMIN','FACTURADOR'] %}
+        <a href="/admin/finances" class="{{ 'active' if path.startswith('/admin/finances') else '' }}">
+          <i class="fa-solid fa-dollar-sign"></i>
+          <span>Finances</span>
+        </a>
+        {% endif %}
 
-{% if current_user and current_user.role in ['ADMIN','FACTURADOR'] %}
-<a href="/admin/finances">
-<i class="fa-solid fa-dollar-sign"></i>
-<span>Finances</span>
-</a>
-{% endif %}
+        {% if current_user and current_user.role in ['ADMIN','FACTURADOR'] %}
+        <a href="/admin/events" class="{{ 'active' if path.startswith('/admin/events') else '' }}">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>Event Ledger</span>
+        </a>
+        {% endif %}
 
-{% if current_user and current_user.role in ['ADMIN','FACTURADOR'] %}
-<a href="/admin/events">
-<i class="fa-solid fa-clock-rotate-left"></i>
-<span>Event Ledger</span>
-</a>
-{% endif %}
+        {% if current_user and current_user.role in ['ADMIN','FACTURADOR'] %}
+        <a href="/admin/reports" class="{{ 'active' if path.startswith('/admin/reports') else '' }}">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Reports</span>
+        </a>
+        {% endif %}
 
-{% if current_user and current_user.role in ['ADMIN','FACTURADOR'] %}
-<a href="/admin/reports">
-<i class="fa-solid fa-chart-pie"></i>
-<span>Reports</span>
-</a>
-{% endif %}
+        {% if current_user and current_user.role in ['ADMIN','DRA'] %}
 
-{% if current_user and current_user.role in ['ADMIN','DRA'] %}
-<a href="/admin/clinical">
-<i class="fa-solid fa-notes-medical"></i>
-<span>Clinical</span>
-</a>
+        <div class="sidebar-section-label">Clínico</div>
 
-<a href="/admin/encounters">
-<i class="fa-solid fa-calendar-check"></i>
-<span>Encounters</span>
-</a>
-{% endif %}
+        <a href="/admin/clinical" class="{{ 'active' if path == '/admin/clinical' else '' }}">
+          <i class="fa-solid fa-notes-medical"></i>
+          <span>Clinical</span>
+        </a>
 
-{% if current_user and current_user.role == 'ADMIN' %}
-<a href="/admin/settings">
-<i class="fa-solid fa-gear"></i>
-<span>Settings</span>
-</a>
-{% endif %}
+        <a href="/admin/clinical/notes" class="{{ 'active' if path == '/admin/clinical/notes' else '' }}">
+          <i class="fa-solid fa-file-alt"></i>
+          <span>Clinical Notes</span>
+        </a>
 
-</nav>
+        <a href="/admin/encounters" class="{{ 'active' if path.startswith('/admin/encounters') else '' }}">
+          <i class="fa-solid fa-calendar-check"></i>
+          <span>Encounters</span>
+        </a>
 
-</aside>
+        <a href="/admin/doctor-dashboard" class="{{ 'active' if path == '/admin/doctor-dashboard' else '' }}">
+          <i class="fa-solid fa-user-doctor"></i>
+          <span>Doctor Dashboard</span>
+        </a>
 
+        {% endif %}
 
-<!-- MAIN -->
-<div class="main-area">
+        {% if current_user and current_user.role == 'ADMIN' %}
+        <a href="/admin/settings" class="{{ 'active' if path.startswith('/admin/settings') else '' }}">
+          <i class="fa-solid fa-gear"></i>
+          <span>Settings</span>
+        </a>
+        {% endif %}
 
-<header class="admin-header">
+      </nav>
+    </aside>
 
-<div class="header-left">
+    <!-- MAIN -->
+    <div class="main-area">
 
-<span class="system-title">
-LifeTrack Clearinghouse
-</span>
+      <header class="admin-header">
+        <div class="header-left">
+          <span class="system-title">LifeTrack Clearinghouse</span>
+        </div>
 
-</div>
+        <div class="header-right">
+          <button id="theme-toggle" title="Cambiar tema">
+            <i class="fa-solid fa-moon"></i>
+          </button>
 
-<div class="header-right">
+          {% if current_user %}
+          <div class="header-user">
+            <i class="fa-solid fa-circle-user"></i>
+            <span>{{ current_user.username }}</span>
+            <span class="header-role-badge">{{ current_user.role }}</span>
+          </div>
+          <a href="/logout" class="btn-logout" title="Cerrar sesión">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Salir</span>
+          </a>
+          {% endif %}
+        </div>
+      </header>
 
-<button id="theme-toggle">
-<i class="fa-solid fa-moon"></i>
-</button>
+      <main class="admin-content">
+        {% block content %}
+        {% endblock %}
+      </main>
 
-</div>
-
-</header>
-
-
-<main class="admin-content">
-
-{% block content %}
-{% endblock %}
-
-</main>
-
-</div>
-
-</div>
-
+    </div>
+  </div>
 </body>
 </html>

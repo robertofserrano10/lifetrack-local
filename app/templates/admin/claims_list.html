@@ -2,9 +2,20 @@
 
 {% block content %}
 
-<h1>Claims</h1>
+<div class="page-header">
+  <div>
+    <h1>Reclamos</h1>
+    <p>Gestión de reclamos clínicos y financieros</p>
+  </div>
+  <a class="button-primary" href="/admin/new">
+    <i class="fa-solid fa-plus"></i>
+    Nuevo Reclamo
+  </a>
+</div>
 
-<table class="claims-table">
+<div class="card">
+{% if claims %}
+  <table class="claims-table">
 
 <thead>
 <tr>
@@ -59,5 +70,9 @@ open
 </tbody>
 
 </table>
+{% else %}
+<p>No hay reclamos registrados.</p>
+{% endif %}
+</div>
 
 {% endblock %}

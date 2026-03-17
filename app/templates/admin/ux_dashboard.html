@@ -1,0 +1,26 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>UX Professionalization (J12)</h1>
+
+<p>Este panel muestra el progreso de las mejoras de experiencia de usuario aplicadas:</p>
+
+<ul>
+  {% for todo in ux_todos %}
+  <li>{{ todo }}</li>
+  {% endfor %}
+</ul>
+
+<div class="card" style="margin-top: 16px;">
+  <h2>Prácticas aplicadas</h2>
+  <ul>
+    <li>Formulario de encounter con feedback y pasos</li>
+    <li>Formulario de service con ayuda contextual</li>
+    <li>Tablas con hover, zebra rows y foco visual</li>
+    <li>Página de eventos con filtros por entidad</li>
+    <li>Indicadores en layout base para estandarización</li>
+  </ul>
+</div>
+
+{% endblock %}

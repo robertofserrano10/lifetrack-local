@@ -2,55 +2,52 @@
 
 {% block content %}
 
-<h1>Patients</h1>
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-users" style="color:var(--accent);"></i> Pacientes</h1>
+    <p>Lista de pacientes registrados</p>
+  </div>
+  <a class="button-primary" href="/admin/patients/new">
+    <i class="fa-solid fa-plus"></i> Nuevo Paciente
+  </a>
+</div>
 
 <div class="card">
-
+{% if patients %}
 <table class="claims-table">
-
 <thead>
-
 <tr>
-<th>ID</th>
-<th>Last Name</th>
-<th>First Name</th>
-<th>Date of Birth</th>
-<th>Sex</th>
-<th>Open</th>
+  <th>Nombre</th>
+  <th>Fecha de Nacimiento</th>
+  <th>Sexo</th>
+  <th>Acciones</th>
 </tr>
-
 </thead>
-
 <tbody>
-
 {% for p in patients %}
-
 <tr>
-
-<td>{{ p.id }}</td>
-
-<td>{{ p.last_name }}</td>
-
-<td>{{ p.first_name }}</td>
-
-<td>{{ p.date_of_birth }}</td>
-
-<td>{{ p.sex }}</td>
-
-<td>
-<a href="/admin/patients/{{ p.id }}">
-open
-</a>
-</td>
-
+  <td><strong>{{ p.last_name }}, {{ p.first_name }}</strong></td>
+  <td>{{ p.date_of_birth }}</td>
+  <td>{{ p.sex or '-' }}</td>
+  <td style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+    <a class="button-secondary" style="padding:5px 10px; font-size:0.82rem;" href="/admin/patients/{{ p.id }}">
+      <i class="fa-solid fa-folder-open"></i> Ver
+    </a>
+    <a class="button-primary" style="padding:5px 10px; font-size:0.82rem;" href="/admin/encounters/new?patient_id={{ p.id }}">
+      <i class="fa-solid fa-calendar-plus"></i> Nueva Visita
+    </a>
+  </td>
 </tr>
-
 {% endfor %}
-
 </tbody>
-
 </table>
-
+{% else %}
+<div style="text-align:center; padding:2rem; color:var(--sidebar-text);">
+  <i class="fa-solid fa-users" style="font-size:2rem; opacity:0.3; margin-bottom:0.75rem;"></i>
+  <p>No hay pacientes registrados.</p>
+  <a class="button-primary" href="/admin/patients/new">Registrar primer paciente</a>
+</div>
+{% endif %}
 </div>
 
 {% endblock %}

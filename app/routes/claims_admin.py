@@ -7,6 +7,8 @@ from app.db.claims import (
     update_claim_operational_status,
     VALID_TRANSITIONS,
 )
+from app.db.financial_lock import is_claim_locked
+from app.db.cms1500_snapshot import generate_cms1500_snapshot
 
 from app.db.cms1500_snapshot import (
     get_latest_snapshot_by_claim,
@@ -15,6 +17,9 @@ from app.db.cms1500_snapshot import (
 )
 
 from app.db.event_ledger import log_event, list_events_admin
+from app.db.services import create_service
+from app.db.charges import create_charge
+from app.db.connection import get_connection
 
 # H3.3 — lectura directa de servicios
 import sqlite3
@@ -46,9 +51,9 @@ def claim_detail_admin(claim_id: int):
         allowed_transitions = sorted(list(VALID_TRANSITIONS.get(current, set())))
 
     # =========================================================
-    # H3.3 — SERVICES LIST FOR CLAIM
+    # H3.3 — SERVICES, CHARGES, PAYMENTS, APPLICATIONS
     # =========================================================
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     conn.row_factory = sqlite3.Row
 
     cur = conn.cursor()
@@ -67,8 +72,47 @@ def claim_detail_admin(claim_id: int):
         """,
         (claim_id,),
     )
-
     services = cur.fetchall()
+
+    cur.execute(
+        """
+        SELECT ch.*
+        FROM charges ch
+        JOIN services s ON ch.service_id = s.id
+        WHERE s.claim_id = ?
+        ORDER BY ch.id DESC
+        """,
+        (claim_id,),
+    )
+    charges = cur.fetchall()
+
+    cur.execute(
+        """
+        SELECT p.*
+        FROM payments p
+        JOIN applications a ON a.payment_id = p.id
+        JOIN charges c ON c.id = a.charge_id
+        JOIN services s ON s.id = c.service_id
+        WHERE s.claim_id = ?
+        GROUP BY p.id
+        ORDER BY p.id DESC
+        """,
+        (claim_id,),
+    )
+    payments = cur.fetchall()
+
+    cur.execute(
+        """
+        SELECT a.*
+        FROM applications a
+        JOIN charges c ON c.id = a.charge_id
+        JOIN services s ON s.id = c.service_id
+        WHERE s.claim_id = ?
+        ORDER BY a.id DESC
+        """,
+        (claim_id,),
+    )
+    applications = cur.fetchall()
 
     conn.close()
 
@@ -86,6 +130,7 @@ def claim_detail_admin(claim_id: int):
     # H3.5 — EVENT LEDGER FOR CLAIM
     # =========================================================
     claim_events = list_events_admin(limit=50, offset=0, claim_id=claim_id)
+    locked = is_claim_locked(claim_id)
 
     return render_template(
         "admin/claim_detail.html",
@@ -95,9 +140,90 @@ def claim_detail_admin(claim_id: int):
         latest_snapshot=latest_snapshot,
         allowed_transitions=allowed_transitions,
         services=services,
+        charges=charges,
+        payments=payments,
+        applications=applications,
         snapshots=claim_snapshots,
         events=claim_events,
+        locked=locked,
     )
+
+
+@claims_admin_bp.route("/<int:claim_id>/cms1500")
+def claim_cms1500(claim_id: int):
+    claim = get_claim_by_id(claim_id)
+    if not claim:
+        abort(404)
+
+    latest_snapshot = get_latest_snapshot_by_claim(claim_id)
+    if not latest_snapshot:
+        return "No hay snapshot CMS1500 disponible. Bloquee el claim primero.", 400
+
+    return render_template(
+        "admin/cms1500_form.html",
+        snapshot=latest_snapshot,
+    )
+
+
+@claims_admin_bp.route("/<int:claim_id>/service/new", methods=["GET", "POST"])
+def claim_add_service(claim_id: int):
+    claim = get_claim_by_id(claim_id)
+    if not claim:
+        abort(404)
+
+    error = None
+    if request.method == "POST":
+        service_date = request.form.get("service_date")
+        cpt_code = request.form.get("cpt_code")
+        units = request.form.get("units")
+        charge_amount = request.form.get("charge_amount")
+
+        if not service_date or not cpt_code or not units or not charge_amount:
+            error = "Todos los campos son requeridos"
+        else:
+            try:
+                service_id = create_service(
+                    claim_id=int(claim_id),
+                    service_date=service_date,
+                    cpt_code=cpt_code,
+                    units=int(units),
+                    diagnosis_code="",
+                    description="",
+                    charge_amount_24f=float(charge_amount),
+                )
+                create_charge(service_id=service_id, amount=float(charge_amount))
+                return redirect(url_for("claims_admin.claim_detail_admin", claim_id=claim_id))
+            except Exception as exc:
+                error = str(exc)
+
+    return render_template(
+        "admin/claim_add_service.html",
+        claim=claim,
+        error=error,
+    )
+
+
+@claims_admin_bp.route("/<int:claim_id>/lock", methods=["POST"])
+def claim_lock(claim_id: int):
+    claim = get_claim_by_id(claim_id)
+    if not claim:
+        abort(404)
+
+    if is_claim_locked(claim_id):
+        return redirect(url_for("claims_admin.claim_detail_admin", claim_id=claim_id))
+
+    try:
+        generate_cms1500_snapshot(claim_id)
+        log_event(
+            entity_type="claim",
+            entity_id=claim_id,
+            event_type="claim_manual_lock",
+            event_data={"by": "admin", "claim_status": claim["status"]},
+        )
+    except Exception as exc:
+        return f"No se pudo bloquear el claim: {str(exc)}", 400
+
+    return redirect(url_for("claims_admin.claim_detail_admin", claim_id=claim_id))
 
 
 @claims_admin_bp.route("/<int:claim_id>/transition", methods=["POST"])

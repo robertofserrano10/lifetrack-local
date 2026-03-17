@@ -1,0 +1,60 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-calendar-plus" style="color:var(--accent);"></i> Nueva Visita</h1>
+    <p>Registra un nuevo encounter clínico</p>
+  </div>
+  <a class="button-secondary" href="/admin/patients">
+    <i class="fa-solid fa-arrow-left"></i> Volver a Pacientes
+  </a>
+</div>
+
+<div class="card">
+
+  {% if error %}
+  <p class="error">{{ error }}</p>
+  {% endif %}
+
+  <form method="POST" class="form-grid">
+
+    <div>
+      <label for="patient_id">Paciente</label>
+      <select id="patient_id" name="patient_id" required>
+        <option value="">Selecciona un paciente</option>
+        {% for p in patients %}
+        <option value="{{ p.id }}" {% if request.args.get('patient_id') == p.id|string %}selected{% endif %}>
+          {{ p.last_name }}, {{ p.first_name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label for="encounter_date">Fecha de la visita</label>
+      <input id="encounter_date" name="encounter_date" type="date" required />
+    </div>
+
+    <div>
+      <label for="provider_id">Proveedor</label>
+      <select id="provider_id" name="provider_id">
+        <option value="">Sin asignar</option>
+        {% for prov in providers %}
+        <option value="{{ prov.id }}">{{ prov.username }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div style="display:flex; gap:0.75rem; align-items:center; margin-top:0.5rem;">
+      <button class="button-primary" type="submit">
+        <i class="fa-solid fa-calendar-check"></i> Crear Visita
+      </button>
+      <a class="button-secondary" href="/admin/patients">Cancelar</a>
+    </div>
+
+  </form>
+</div>
+
+{% endblock %}

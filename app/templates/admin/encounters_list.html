@@ -2,26 +2,40 @@
 
 {% block content %}
 
-<h1>Encounters</h1>
+<div class="page-header">
+  <div>
+    <h1>Encounters</h1>
+    <p>Lista de encuentros clínicos</p>
+  </div>
+  <a class="button-primary" href="/admin/encounters/new">
+    <i class="fa-solid fa-plus"></i>
+    Nuevo Encounter
+  </a>
+</div>
 
-<table>
+<div class="card">
+
+<table class="claims-table">
 
 <thead>
 <tr>
 <th>Date</th>
 <th>Patient</th>
 <th>Status</th>
+<th>Acciones</th>
 </tr>
 </thead>
 
+{% if encounters %}
 <tbody>
 
 {% for e in encounters %}
 
 <tr>
-<td>{{ e.encounter_date }}</td>
+<td><a href="{{ url_for('encounters_admin.encounter_detail', encounter_id=e.id) }}">{{ e.encounter_date }}</a></td>
 <td>{{ e.first_name }} {{ e.last_name }}</td>
 <td>{{ e.status }}</td>
+<td><a class="button-secondary" href="{{ url_for('encounters_admin.encounter_detail', encounter_id=e.id) }}">Ver</a></td>
 </tr>
 
 {% endfor %}
@@ -29,5 +43,8 @@
 </tbody>
 
 </table>
+{% else %}
+<p>No hay encounters registrados.</p>
+{% endif %}
 
 {% endblock %}

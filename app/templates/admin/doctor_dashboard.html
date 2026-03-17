@@ -1,0 +1,44 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Doctor Dashboard</h1>
+
+<div class="dashboard-grid">
+  <div class="dashboard-card">
+    <h3>Total Encounters</h3>
+    <p>{{ total_encounters }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Total Services</h3>
+    <p>{{ total_services }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Submitted Claims (all)</h3>
+    <p>{{ submitted_claims }}</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Providers / Doctors</h2>
+  <table class="claims-table">
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Encuentros</th>
+        <th>Services</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in provider_rows %}
+      <tr>
+        <td>{{ p.username }}</td>
+        <td>{{ p.encounter_count }}</td>
+        <td>{{ p.service_count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

@@ -39,3 +39,12 @@ def update_patient(patient_id: int, first_name: str, last_name: str, date_of_bir
         )
         conn.commit()
         return cur.rowcount > 0
+
+
+def get_all_patients():
+    with get_connection() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT id, first_name, last_name FROM patients ORDER BY last_name, first_name")
+        rows = cur.fetchall()
+        return [dict(r) for r in rows]
+

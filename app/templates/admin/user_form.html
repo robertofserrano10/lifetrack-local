@@ -1,0 +1,53 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-user-plus" style="color:var(--accent);"></i> Nuevo Usuario</h1>
+  </div>
+  <a class="button-secondary" href="/admin/settings">
+    <i class="fa-solid fa-arrow-left"></i> Volver a Settings
+  </a>
+</div>
+
+<div class="card">
+
+  {% if error %}
+  <p class="error">{{ error }}</p>
+  {% endif %}
+
+  <form method="POST" class="form-grid">
+
+    <div>
+      <label>Username</label>
+      <input type="text" name="username" placeholder="ej: dra_maria" required />
+    </div>
+
+    <div>
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Contraseña segura" required />
+    </div>
+
+    <div>
+      <label>Rol</label>
+      <select name="role" required>
+        <option value="">Selecciona un rol</option>
+        <option value="ADMIN">ADMIN — Acceso total</option>
+        <option value="DRA">DRA — Módulo clínico</option>
+        <option value="FACTURADOR">FACTURADOR — Finanzas y claims</option>
+        <option value="RECEPCION">RECEPCION — Pacientes y citas</option>
+      </select>
+    </div>
+
+    <div style="display:flex; gap:0.75rem; align-items:center; margin-top:0.5rem;">
+      <button class="button-primary" type="submit">
+        <i class="fa-solid fa-user-plus"></i> Crear Usuario
+      </button>
+      <a class="button-secondary" href="/admin/settings">Cancelar</a>
+    </div>
+
+  </form>
+</div>
+
+{% endblock %}

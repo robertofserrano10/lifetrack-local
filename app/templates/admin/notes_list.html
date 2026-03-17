@@ -4,36 +4,41 @@
 
 <h1>Progress Notes</h1>
 
-<a href="/admin/notes/create/{{ encounter_id }}">
-Create Note
+<a class="button-primary" href="{{ url_for('notes_editor_admin.create_note', encounter_id=encounter_id) }}">
+  + New Note
 </a>
 
 <br><br>
 
-<table>
-
+<table class="claims-table">
 <thead>
 <tr>
 <th>Created</th>
 <th>Status</th>
 <th>Signed</th>
+<th>Actions</th>
 </tr>
 </thead>
-
 <tbody>
 
 {% for n in notes %}
-
 <tr>
 <td>{{ n.created_at }}</td>
 <td>{{ n.status }}</td>
-<td>{{ n.signed }}</td>
+<td>{{ 'Yes' if n.signed else 'No' }}</td>
+<td>
+  <a class="button-secondary" href="{{ url_for('progress_notes_admin.note_detail', note_id=n.id) }}">View</a>
+  {% if not n.signed %}
+    <form style="display:inline" method="post" action="{{ url_for('progress_notes_admin.note_sign', note_id=n.id) }}">
+      <button class="button-primary" type="submit">Sign</button>
+    </form>
+  {% endif %}
+</td>
 </tr>
-
 {% endfor %}
 
 </tbody>
-
 </table>
+
 
 {% endblock %}

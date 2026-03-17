@@ -202,6 +202,38 @@ CREATE TABLE IF NOT EXISTS adjustments (
 );
 
 -- =========================
+-- Progress Notes (Clinical J15)
+-- =========================
+CREATE TABLE IF NOT EXISTS progress_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    encounter_id INTEGER NOT NULL,
+
+    patient_name TEXT,
+    record_number TEXT,
+    date_of_service TEXT,
+    start_time TEXT,
+    end_time TEXT,
+    service_type TEXT,
+    cpt_code TEXT,
+    diagnosis_code TEXT,
+    provider_name TEXT,
+    provider_credentials TEXT,
+
+    subjective TEXT,
+    objective TEXT,
+    assessment TEXT,
+    plan TEXT,
+
+    note_text TEXT,
+    status TEXT NOT NULL DEFAULT 'draft',
+    signed INTEGER NOT NULL DEFAULT 0,
+    signed_at TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (encounter_id) REFERENCES encounters(id)
+);
+
+-- =========================
 -- Event Ledger
 -- =========================
 CREATE TABLE IF NOT EXISTS event_ledger (

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app.db.connection import get_connection
 from app.db.financial_lock import is_claim_locked
 from app.db.event_ledger import log_event
@@ -30,7 +30,7 @@ VALID_TRANSITIONS = {
 # ============================================================
 
 def create_claim(patient_id: int, coverage_id: int) -> int:
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).isoformat()
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute(
@@ -43,8 +43,17 @@ def create_claim(patient_id: int, coverage_id: int) -> int:
             """,
             (patient_id, coverage_id, now, now),
         )
+        claim_id = cur.lastrowid
+
+        # Se asigna claim_number automático para evitar valor None en interfaces
+        claim_number = f"CLM{claim_id:06d}"
+        cur.execute(
+            "UPDATE claims SET claim_number = ? WHERE id = ?",
+            (claim_number, claim_id),
+        )
+
         conn.commit()
-        return cur.lastrowid
+        return claim_id
 
 
 def get_claim_by_id(claim_id: int):
@@ -112,24 +121,11 @@ def update_claim_operational_status(claim_id: int, new_status: str) -> bool:
             SET status = ?, updated_at = ?
             WHERE id = ?
             """,
-            (new_status, datetime.utcnow().isoformat(), claim_id),
+            (new_status, datetime.now(timezone.utc).isoformat(), claim_id),
         )
         conn.commit()
         from app.db.event_ledger import log_event
 
-        log_event(
-            entity_type="claim",
-            entity_id=claim_id,
-            event_type="operational_transition",
-            event_data={
-                 "from": current_status,
-                 "to": new_status,
-            },
-       )
-
-        # =========================================================
-        # G43 — EVENT LEDGER AUTOMÁTICO (NUEVO)
-        # =========================================================
         log_event(
             entity_type="claim",
             entity_id=claim_id,
@@ -160,7 +156,7 @@ def update_claim_cms_fields(
     if is_claim_locked(claim_id):
         raise ValueError("Claim está congelado por snapshot")
 
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).isoformat()
 
     sql = """
     UPDATE claims

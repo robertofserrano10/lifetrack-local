@@ -1,0 +1,245 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-timeline" style="color:var(--accent);"></i> Clinical Timeline</h1>
+    <p>{{ patient.first_name }} {{ patient.last_name }} &nbsp;·&nbsp; DOB: {{ patient.date_of_birth }}</p>
+  </div>
+  <a class="button-secondary" href="/admin/patients/{{ patient.id }}">
+    <i class="fa-solid fa-arrow-left"></i> Volver al Paciente
+  </a>
+</div>
+
+{% if not timeline %}
+<div class="card" style="text-align:center; padding:3rem; color:var(--sidebar-text);">
+  <i class="fa-solid fa-calendar-xmark" style="font-size:2.5rem; margin-bottom:1rem; opacity:0.4;"></i>
+  <p style="font-size:1.1rem; margin:0;">No hay actividad clínica registrada para este paciente.</p>
+  <a class="button-primary" style="margin-top:1.5rem; display:inline-flex;" href="/admin/encounters/new">
+    <i class="fa-solid fa-plus"></i> Crear Primer Encounter
+  </a>
+</div>
+{% else %}
+
+<div class="timeline-container">
+  {% for encounter in timeline %}
+
+  <div class="timeline-item">
+
+    <!-- Línea y punto -->
+    <div class="timeline-spine">
+      <div class="timeline-dot
+        {% if encounter.notes %} dot-has-notes {% endif %}
+        {% if encounter.claim %} dot-has-claim {% endif %}
+      "></div>
+      <div class="timeline-line"></div>
+    </div>
+
+    <!-- Contenido del encounter -->
+    <div class="timeline-content">
+
+      <!-- Header del encounter -->
+      <div class="card timeline-card-encounter">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+          <div>
+            <span class="timeline-label-encounter"><i class="fa-solid fa-calendar-check"></i> Encounter</span>
+            <strong style="font-size:1.05rem; margin-left:0.5rem;">{{ encounter.encounter_date }}</strong>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+            <span class="badge-status-{{ encounter.status | lower }}">{{ encounter.status }}</span>
+            <a class="button-secondary" style="padding:6px 12px; font-size:0.82rem;" href="/admin/encounters/{{ encounter.id }}">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver
+            </a>
+            <a class="button-primary" style="padding:6px 12px; font-size:0.82rem;" href="/admin/notes/create/{{ encounter.id }}">
+              <i class="fa-solid fa-plus"></i> Nueva Nota
+            </a>
+          </div>
+        </div>
+        {% if encounter.provider_username %}
+        <p style="margin:0.5rem 0 0; font-size:0.85rem; color:var(--sidebar-text);">
+          <i class="fa-solid fa-user-doctor"></i> {{ encounter.provider_username }}
+        </p>
+        {% endif %}
+      </div>
+
+      <!-- Notas del encounter -->
+      {% if encounter.notes %}
+      <div class="timeline-notes">
+        {% for note in encounter.notes %}
+        <div class="card timeline-card-note">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <div>
+              <span class="timeline-label-note"><i class="fa-solid fa-file-medical"></i> SOAP Note</span>
+              <span style="font-size:0.85rem; color:var(--sidebar-text); margin-left:0.5rem;">{{ note.created_at }}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              {% if note.signed %}
+              <span style="background:#dcfce7;color:#166534;font-weight:700;border-radius:999px;padding:3px 10px;font-size:0.75rem;">
+                <i class="fa-solid fa-lock"></i> FIRMADA
+              </span>
+              {% else %}
+              <span style="background:#fef9c3;color:#854d0e;font-weight:700;border-radius:999px;padding:3px 10px;font-size:0.75rem;">
+                <i class="fa-solid fa-pen"></i> BORRADOR
+              </span>
+              {% endif %}
+              <a class="button-secondary" style="padding:5px 10px; font-size:0.8rem;" href="/admin/notes/view/{{ note.id }}">Ver</a>
+            </div>
+          </div>
+          {% if note.cpt_code or note.diagnosis_code %}
+          <p style="margin:0.5rem 0 0; font-size:0.83rem; color:var(--sidebar-text);">
+            {% if note.cpt_code %}<strong>CPT:</strong> {{ note.cpt_code }} &nbsp;{% endif %}
+            {% if note.diagnosis_code %}<strong>Dx:</strong> {{ note.diagnosis_code }}{% endif %}
+          </p>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="timeline-empty-notes">
+        <i class="fa-solid fa-file-circle-question"></i> Sin notas clínicas
+      </div>
+      {% endif %}
+
+      <!-- Claim asociado -->
+      {% if encounter.claim %}
+      <div class="card timeline-card-claim">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+          <div>
+            <span class="timeline-label-claim"><i class="fa-solid fa-file-invoice-dollar"></i> Claim</span>
+            <strong style="margin-left:0.5rem;">{{ encounter.claim.claim_number }}</strong>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <span class="badge-status-{{ encounter.claim.status | lower }}">{{ encounter.claim.status }}</span>
+            <a class="button-secondary" style="padding:5px 10px; font-size:0.8rem;" href="/admin/claims/{{ encounter.claim.id }}">Ver Claim</a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  {% endfor %}
+</div>
+
+{% endif %}
+
+<style>
+.timeline-container {
+  position: relative;
+  padding: 0.5rem 0;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.timeline-spine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 24px;
+  padding-top: 0.9rem;
+}
+
+.timeline-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--border);
+  border: 3px solid var(--accent);
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.dot-has-notes {
+  background: var(--accent);
+}
+
+.dot-has-claim {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+
+.timeline-line {
+  width: 2px;
+  flex: 1;
+  background: var(--border);
+  margin-top: 4px;
+}
+
+.timeline-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.timeline-card-encounter {
+  border-left: 4px solid var(--accent);
+  margin-bottom: 0.6rem;
+}
+
+.timeline-notes {
+  margin-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.timeline-card-note {
+  border-left: 4px solid #f59e0b;
+  padding: 0.75rem 1rem;
+}
+
+.timeline-card-claim {
+  margin-left: 1.25rem;
+  border-left: 4px solid #16a34a;
+  padding: 0.75rem 1rem;
+}
+
+.timeline-empty-notes {
+  margin-left: 1.25rem;
+  margin-bottom: 0.6rem;
+  color: var(--sidebar-text);
+  font-size: 0.85rem;
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.timeline-label-encounter {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+
+.timeline-label-note {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #b45309;
+}
+
+.timeline-label-claim {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #16a34a;
+}
+
+.badge-status-open    { background:#dbeafe; color:#1d4ed8; font-weight:700; border-radius:999px; padding:3px 10px; font-size:0.75rem; }
+.badge-status-closed  { background:#f1f5f9; color:#475569; font-weight:700; border-radius:999px; padding:3px 10px; font-size:0.75rem; }
+.badge-status-draft   { background:#fef9c3; color:#854d0e; font-weight:700; border-radius:999px; padding:3px 10px; font-size:0.75rem; }
+.badge-status-signed  { background:#dcfce7; color:#166534; font-weight:700; border-radius:999px; padding:3px 10px; font-size:0.75rem; }
+.badge-status-submitted { background:#ede9fe; color:#6d28d9; font-weight:700; border-radius:999px; padding:3px 10px; font-size:0.75rem; }
+.badge-status-paid    { background:#dcfce7; color:#166534; font-weight:700; border-radius:999px; padding:3px 10px; font-size:0.75rem; }
+</style>
+
+{% endblock %}

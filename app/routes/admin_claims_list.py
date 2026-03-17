@@ -1,9 +1,9 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request, redirect, url_for
 import sqlite3
 
 from app.config import DB_PATH
 from app.db.cms1500_snapshot import get_latest_snapshot_by_claim
-from app.db.claims import get_claim_financial_status
+from app.db.claims import get_claim_financial_status, create_claim
 
 from app.security.auth import login_required, role_required
 
@@ -62,4 +62,59 @@ def claims_list():
     return render_template(
         "admin/claims_list.html",
         claims=claims
+    )
+
+
+# =========================================================
+# Claim create
+# =========================================================
+@claims_list_bp.route("/new", methods=["GET", "POST"])
+def claim_create():
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    # Cargar datos para form
+    cur.execute("SELECT id, first_name, last_name FROM patients ORDER BY last_name, first_name")
+    patients = cur.fetchall()
+
+    cur.execute("SELECT id, patient_id, insurer_name, plan_name, policy_number FROM coverages ORDER BY id")
+    coverages = cur.fetchall()
+
+    selected_patient_id = request.args.get("patient_id")
+
+    if request.method == "POST":
+        patient_id = request.form.get("patient_id")
+        coverage_id = request.form.get("coverage_id")
+
+        if not patient_id or not coverage_id:
+            return render_template(
+                "admin/claim_form.html",
+                patients=patients,
+                coverages=coverages,
+                selected_patient_id=selected_patient_id,
+                error="Patient and coverage are required."
+            )
+
+        try:
+            claim_id = create_claim(int(patient_id), int(coverage_id))
+        except Exception as e:
+            return render_template(
+                "admin/claim_form.html",
+                patients=patients,
+                coverages=coverages,
+                selected_patient_id=selected_patient_id,
+                error=f"Error creando claim: {e}"
+            )
+
+        conn.close()
+        return redirect(url_for("claims_admin.claim_detail_admin", claim_id=claim_id))
+
+    conn.close()
+    return render_template(
+        "admin/claim_form.html",
+        patients=patients,
+        coverages=coverages,
+        selected_patient_id=selected_patient_id,
     )

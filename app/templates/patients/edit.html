@@ -1,27 +1,100 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>Editar Paciente</title>
-</head>
-<body>
+{% extends "layouts/admin_base.html" %}
 
-<h1>Editar Paciente</h1>
+{% block content %}
 
-<p><strong>ID:</strong> {{ patient.id }}</p>
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-hospital" style="color:var(--accent);"></i> Provider Settings</h1>
+    <p>Información del proveedor que aparece en la CMS-1500 (casillas 25, 31, 32, 33)</p>
+  </div>
+</div>
 
-<form method="POST">
-  <label>Nombre:</label><br>
-  <input type="text" name="first_name" value="{{ patient.first_name }}"><br><br>
+<form method="POST" action="/provider/edit">
 
-  <label>Apellido:</label><br>
-  <input type="text" name="last_name" value="{{ patient.last_name }}"><br><br>
+  <!-- Firma -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-signature" style="color:var(--accent);"></i> Firma — Casillas 12 / 13 / 31</h2>
+    <div class="form-grid">
+      <div>
+        <label>Signature</label>
+        <input type="text" name="signature" value="{{ ps.signature or '' }}" placeholder="Signature on File" />
+      </div>
+      <div>
+        <label>Signature Date</label>
+        <input type="date" name="signature_date" value="{{ ps.signature_date or '' }}" />
+      </div>
+    </div>
+  </div>
 
-  <label>Fecha de nacimiento:</label><br>
-  <input type="date" name="date_of_birth" value="{{ patient.date_of_birth }}"><br><br>
+  <!-- Facility -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-building" style="color:var(--accent);"></i> Facility — Casilla 32</h2>
+    <div class="form-grid">
+      <div>
+        <label>Facility Name</label>
+        <input type="text" name="facility_name" value="{{ ps.facility_name or '' }}" placeholder="Nombre de la oficina" />
+      </div>
+      <div>
+        <label>Address</label>
+        <input type="text" name="facility_address" value="{{ ps.facility_address or '' }}" placeholder="Dirección" />
+      </div>
+      <div>
+        <label>City</label>
+        <input type="text" name="facility_city" value="{{ ps.facility_city or '' }}" placeholder="Ciudad" />
+      </div>
+      <div>
+        <label>State</label>
+        <input type="text" name="facility_state" value="{{ ps.facility_state or '' }}" placeholder="PR" />
+      </div>
+      <div>
+        <label>ZIP</label>
+        <input type="text" name="facility_zip" value="{{ ps.facility_zip or '' }}" placeholder="00000" />
+      </div>
+    </div>
+  </div>
 
-  <button type="submit">Guardar</button>
+  <!-- Billing -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-file-invoice-dollar" style="color:var(--accent);"></i> Billing Provider — Casillas 25 / 33</h2>
+    <div class="form-grid">
+      <div>
+        <label>Billing Name</label>
+        <input type="text" name="billing_name" value="{{ ps.billing_name or '' }}" placeholder="Nombre del billing provider" />
+      </div>
+      <div>
+        <label>NPI</label>
+        <input type="text" name="billing_npi" value="{{ ps.billing_npi or '' }}" placeholder="1234567890" />
+      </div>
+      <div>
+        <label>Tax ID (Casilla 25)</label>
+        <input type="text" name="billing_tax_id" value="{{ ps.billing_tax_id or '' }}" placeholder="XX-XXXXXXX" />
+      </div>
+      <div>
+        <label>Address</label>
+        <input type="text" name="billing_address" value="{{ ps.billing_address or '' }}" placeholder="Dirección de facturación" />
+      </div>
+      <div>
+        <label>City</label>
+        <input type="text" name="billing_city" value="{{ ps.billing_city or '' }}" placeholder="Ciudad" />
+      </div>
+      <div>
+        <label>State</label>
+        <input type="text" name="billing_state" value="{{ ps.billing_state or '' }}" placeholder="PR" />
+      </div>
+      <div>
+        <label>ZIP</label>
+        <input type="text" name="billing_zip" value="{{ ps.billing_zip or '' }}" placeholder="00000" />
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:0.75rem;">
+    <button class="button-primary" type="submit">
+      <i class="fa-solid fa-floppy-disk"></i> Guardar Settings
+    </button>
+    <a class="button-secondary" href="/admin/settings">Cancelar</a>
+  </div>
+
 </form>
 
-</body>
-</html>
+{% endblock %}

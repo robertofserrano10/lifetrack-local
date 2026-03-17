@@ -1,0 +1,62 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-file-circle-plus"></i> Addendum</h1>
+    <p>Nota original #{{ original.id }} — {{ original.patient_name }} — {{ original.date_of_service }}</p>
+  </div>
+  <a class="button-secondary" href="{{ url_for('progress_notes_admin.note_detail', note_id=original.id) }}">
+    <i class="fa-solid fa-arrow-left"></i> Volver a la Nota
+  </a>
+</div>
+
+<!-- Resumen de nota original -->
+<div class="card" style="border-left: 4px solid var(--accent); margin-bottom: 1.5rem;">
+  <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;">
+    <i class="fa-solid fa-lock" style="color:var(--accent);"></i>
+    <strong>Nota Original (Firmada — Solo Lectura)</strong>
+    <span class="badge-signed" style="margin-left:auto;">SIGNED</span>
+  </div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem 1.5rem; font-size:0.92rem; color:var(--sidebar-text);">
+    <p><strong>Provider:</strong> {{ original.provider_name }} ({{ original.provider_credentials }})</p>
+    <p><strong>CPT:</strong> {{ original.cpt_code }} &nbsp;|&nbsp; <strong>Dx:</strong> {{ original.diagnosis_code }}</p>
+    <p><strong>Firmada el:</strong> {{ original.signed_at }}</p>
+    <p><strong>Encounter:</strong> <a href="{{ url_for('encounters_admin.encounter_detail', encounter_id=original.encounter_id) }}">#{{ original.encounter_id }}</a></p>
+  </div>
+</div>
+
+<!-- Formulario del addendum -->
+{% if error %}
+<div class="form-step" style="border-left-color:#dc2626; background:#fef2f2; color:#991b1b; margin-bottom:1rem;">
+  <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
+</div>
+{% endif %}
+
+<form method="POST">
+  <div class="card">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-pen-to-square" style="color:var(--accent);"></i> Texto del Addendum</h2>
+    <p class="form-info" style="margin-bottom:0.75rem;">
+      Este addendum quedará vinculado a la nota original. No modifica la nota firmada — crea un nuevo registro clínico adjunto.
+    </p>
+    <textarea
+      name="addendum_text"
+      rows="8"
+      style="width:100%; padding:12px; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text); font-size:1rem; resize:vertical;"
+      placeholder="Escriba aquí la corrección o aclaración clínica..."
+      required
+    ></textarea>
+  </div>
+
+  <div style="display:flex; gap:0.75rem; margin-top:0.5rem;">
+    <button class="button-primary" type="submit">
+      <i class="fa-solid fa-file-circle-plus"></i> Guardar Addendum
+    </button>
+    <a class="button-secondary" href="{{ url_for('progress_notes_admin.note_detail', note_id=original.id) }}">
+      Cancelar
+    </a>
+  </div>
+</form>
+
+{% endblock %}

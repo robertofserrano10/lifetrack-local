@@ -1,0 +1,48 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Aplicar Pago a Charge</h1>
+
+<div class="card">
+
+{% if error %}
+<p class="error">{{ error }}</p>
+{% endif %}
+
+<form method="POST" class="form-grid">
+
+<div>
+<label for="payment_id">Payment</label>
+<select id="payment_id" name="payment_id" required>
+<option value="">Selecciona el payment</option>
+{% for p in payments %}
+<option value="{{ p.id }}">ID {{ p.id }} - {{ p.amount }} - {{ p.method }}</option>
+{% endfor %}
+</select>
+</div>
+
+<div>
+<label for="charge_id">Charge</label>
+<select id="charge_id" name="charge_id" required>
+<option value="">Selecciona el charge</option>
+{% for c in charges %}
+<option value="{{ c.id }}">ID {{ c.id }} - {{ c.claim_number }} - {{ c.amount }}</option>
+{% endfor %}
+</select>
+</div>
+
+<div>
+<label for="amount_applied">Monto aplicado</label>
+<input id="amount_applied" name="amount_applied" type="number" step="0.01" required />
+</div>
+
+<div>
+<button class="button-primary" type="submit">Aplicar Pago</button>
+</div>
+
+</form>
+
+</div>
+
+{% endblock %}

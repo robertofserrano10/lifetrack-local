@@ -4,6 +4,18 @@
 
 <h1>Finances</h1>
 
+<div class="page-header">
+  <div>
+    <h2>Operaciones financieras</h2>
+    <p>Creación de charges, payments y aplicaciones (EOB)</p>
+  </div>
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+    <a class="button-primary" href="{{ url_for('finances_admin.charge_create') }}">Nuevo Charge</a>
+    <a class="button-primary" href="{{ url_for('finances_admin.payment_create') }}">Nuevo Payment</a>
+    <a class="button-secondary" href="{{ url_for('finances_admin.application_create') }}">Aplicar Pago</a>
+  </div>
+</div>
+
 <div class="card">
 
 <h2>Charges</h2>
@@ -53,6 +65,8 @@
 <th>Claim</th>
 <th>Date</th>
 <th>Amount</th>
+<th>Method</th>
+<th>Reference</th>
 </tr>
 </thead>
 
@@ -62,9 +76,11 @@
 
 <tr>
 <td>{{ p.id }}</td>
-<td>{{ p.claim_number }}</td>
+<td>{{ p.claim_number or '-' }}</td>
 <td>{{ p.payment_date }}</td>
 <td>{{ p.amount }}</td>
+<td>{{ p.method }}</td>
+<td>{{ p.reference or '-' }}</td>
 </tr>
 
 {% endfor %}

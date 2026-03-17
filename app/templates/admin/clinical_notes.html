@@ -1,0 +1,37 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+<h1>Clinical Notes (All)</h1>
+
+<div class="card">
+  <a class="button-primary" href="/admin/encounters">Volver a Encounters</a>
+</div>
+
+<table class="claims-table" style="margin-top:1rem;">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Encounter</th>
+      <th>Paciente</th>
+      <th>Created</th>
+      <th>Status</th>
+      <th>Signed</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for n in notes %}
+    <tr>
+      <td>{{ n.id }}</td>
+      <td><a href="{{ url_for('encounters_admin.encounter_detail', encounter_id=n.encounter_id) }}">#{{ n.encounter_id }}</a></td>
+      <td>{{ n.patient_name }}</td>
+      <td>{{ n.created_at }}</td>
+      <td>{{ n.status }}</td>
+      <td>{{ 'Yes' if n.signed else 'No' }}</td>
+      <td><a class="button-secondary" href="{{ url_for('progress_notes_admin.note_detail', note_id=n.id) }}">View</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

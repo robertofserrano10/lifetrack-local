@@ -1,0 +1,112 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<div class="page-header" style="margin-bottom:1.25rem;">
+  <div>
+    <h1><i class="fa-solid fa-notes-medical" style="color:var(--accent);"></i> Clinical Note</h1>
+  </div>
+  <a class="button-secondary" href="{{ url_for('progress_notes_admin.notes_by_encounter', encounter_id=note.encounter_id) }}">
+    <i class="fa-solid fa-arrow-left"></i> Volver a Notas
+  </a>
+</div>
+
+<!-- Status bar -->
+<div class="card note-print-meta" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+  <div style="display:flex; gap:1.5rem; flex-wrap:wrap; font-size:0.92rem;">
+    <p style="margin:0;"><strong>Nota #{{ note.id }}</strong></p>
+    <p style="margin:0;"><strong>Encounter:</strong> <a href="{{ url_for('encounters_admin.encounter_detail', encounter_id=note.encounter_id) }}">#{{ note.encounter_id }}</a></p>
+    <p style="margin:0;"><strong>Creada:</strong> {{ note.created_at }}</p>
+    {% if note.signed_at %}<p style="margin:0;"><strong>Firmada:</strong> {{ note.signed_at }}</p>{% endif %}
+  </div>
+  <div>
+    {% if note.signed %}
+      <span style="background:#dcfce7;color:#166534;font-weight:700;border-radius:999px;padding:5px 14px;font-size:0.82rem;">
+        <i class="fa-solid fa-lock"></i> FIRMADA
+      </span>
+    {% else %}
+      <span style="background:#fef9c3;color:#854d0e;font-weight:700;border-radius:999px;padding:5px 14px;font-size:0.82rem;">
+        <i class="fa-solid fa-pen"></i> BORRADOR
+      </span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- SOAP Content -->
+<div class="card note-print-area">
+  <h2 style="margin-bottom:1rem;">SOAP Note</h2>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.4rem 2rem; font-size:0.92rem; margin-bottom:1rem;">
+    <p><strong>Patient Name:</strong> {{ note.patient_name }}</p>
+    <p><strong>Record Number:</strong> {{ note.record_number }}</p>
+    <p><strong>Date of Service:</strong> {{ note.date_of_service }}</p>
+    <p><strong>Start / End:</strong> {{ note.start_time }} — {{ note.end_time }}</p>
+    <p><strong>Service Type:</strong> {{ note.service_type }}</p>
+    <p><strong>CPT Code:</strong> {{ note.cpt_code }}</p>
+    <p><strong>Diagnosis (ICD-10):</strong> {{ note.diagnosis_code }}</p>
+    <p><strong>Provider:</strong> {{ note.provider_name }} ({{ note.provider_credentials }})</p>
+  </div>
+
+  <h3 style="margin-top:1rem;">S — Subjective</h3>
+  <pre class="note-print-text">{{ note.subjective }}</pre>
+
+  <h3 style="margin-top:1rem;">O — Objective</h3>
+  <pre class="note-print-text">{{ note.objective }}</pre>
+
+  <h3 style="margin-top:1rem;">A — Assessment</h3>
+  <pre class="note-print-text">{{ note.assessment }}</pre>
+
+  <h3 style="margin-top:1rem;">P — Plan</h3>
+  <pre class="note-print-text">{{ note.plan }}</pre>
+
+  <!-- Firma del proveedor -->
+  <div class="manual-sign-block" style="margin-top:2rem; padding-top:1rem; border-top:1px solid var(--border);">
+    <h3>Provider Signature</h3>
+    <p>______________________________</p>
+    <p>{{ note.provider_name }} ({{ note.provider_credentials }})</p>
+    <p>Fecha: ______________________</p>
+  </div>
+
+  <!-- ADDENDUMS — aparecen al final de la nota, debajo de la firma -->
+  {% if addendums %}
+  <div style="margin-top:2rem; padding-top:1rem; border-top: 2px dashed var(--border);">
+    <h3 style="color:var(--accent); margin-bottom:1rem;">
+      <i class="fa-solid fa-file-circle-plus"></i> Addendums
+    </h3>
+    {% for a in addendums %}
+    <div style="background:var(--accent-soft); border-left:4px solid var(--accent); border-radius:8px; padding:1rem; margin-bottom:1rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+        <strong style="font-size:0.9rem;">Addendum — {{ a.created_at }}</strong>
+        <span style="font-size:0.8rem; color:var(--sidebar-text);">{{ a.provider_name }}</span>
+      </div>
+      <pre class="note-print-text" style="margin:0;">{{ a.subjective }}</pre>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Actions -->
+<div class="card" style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
+  {% if not note.signed %}
+  <form method="POST" action="{{ url_for('progress_notes_admin.note_sign', note_id=note.id) }}" onsubmit="return confirm('¿Firmar esta nota? Esta acción no se puede deshacer.')">
+    <button class="button-primary" type="submit">
+      <i class="fa-solid fa-signature"></i> Firmar Nota
+    </button>
+  </form>
+  {% else %}
+  <a class="button-primary" href="{{ url_for('progress_notes_admin.note_addendum', note_id=note.id) }}">
+    <i class="fa-solid fa-file-circle-plus"></i> Agregar Addendum
+  </a>
+  {% endif %}
+
+  <button class="button-secondary" onclick="window.print()">
+    <i class="fa-solid fa-print"></i> Imprimir
+  </button>
+  <a class="button-secondary" href="{{ url_for('progress_notes_admin.notes_by_encounter', encounter_id=note.encounter_id) }}">
+    <i class="fa-solid fa-arrow-left"></i> Volver a Notas
+  </a>
+</div>
+
+{% endblock %}

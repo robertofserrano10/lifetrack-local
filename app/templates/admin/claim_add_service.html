@@ -1,0 +1,44 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Agregar Service al Claim {{ claim.claim_number }}</h1>
+
+<div class="card">
+
+{% if error %}
+<p class="error">{{ error }}</p>
+{% endif %}
+
+<form method="POST" class="form-grid">
+
+<div>
+<label for="service_date">Fecha</label>
+<input id="service_date" name="service_date" type="date" required />
+</div>
+
+<div>
+<label for="cpt_code">CPT</label>
+<input id="cpt_code" name="cpt_code" type="text" required />
+</div>
+
+<div>
+<label for="units">Unidades</label>
+<input id="units" name="units" type="number" min="1" required />
+</div>
+
+<div>
+<label for="charge_amount">Monto de Charge</label>
+<input id="charge_amount" name="charge_amount" type="number" step="0.01" required />
+</div>
+
+<div>
+<button class="button-primary" type="submit">Guardar Service + Charge</button>
+<a class="button-secondary" href="{{ url_for('claims_admin.claim_detail_admin', claim_id=claim.id) }}">Cancelar</a>
+</div>
+
+</form>
+
+</div>
+
+{% endblock %}

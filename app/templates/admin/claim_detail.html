@@ -2,198 +2,172 @@
 
 {% block content %}
 
-<h1>Claim Detail</h1>
-
-<div class="card">
-
-<h2>Claim</h2>
-
-<p><strong>Claim Number:</strong> {{ claim.claim_number }}</p>
-<p><strong>Status:</strong> {{ claim.status }}</p>
-
-{% if latest_snapshot %}
-<p><strong>Snapshot:</strong> v{{ latest_snapshot.version_number }}</p>
-<span class="badge-locked">LOCKED</span>
-{% endif %}
-
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-file-medical" style="color:var(--accent);"></i> Claim {{ claim.claim_number }}</h1>
+    <p>
+      {% if claim.status == 'DRAFT' %}<span style="background:#fef9c3;color:#854d0e;font-weight:700;border-radius:999px;padding:3px 12px;font-size:0.82rem;">DRAFT</span>
+      {% elif claim.status == 'SUBMITTED' %}<span style="background:#ede9fe;color:#6d28d9;font-weight:700;border-radius:999px;padding:3px 12px;font-size:0.82rem;">SUBMITTED</span>
+      {% elif claim.status == 'PAID' %}<span style="background:#dcfce7;color:#166534;font-weight:700;border-radius:999px;padding:3px 12px;font-size:0.82rem;">PAID</span>
+      {% else %}<span style="background:#f1f5f9;color:#475569;font-weight:700;border-radius:999px;padding:3px 12px;font-size:0.82rem;">{{ claim.status }}</span>
+      {% endif %}
+      &nbsp;·&nbsp;
+      {% if locked %}<span style="background:#fde68a;color:#92400e;font-weight:700;border-radius:999px;padding:3px 12px;font-size:0.82rem;"><i class="fa-solid fa-lock"></i> LOCKED</span>{% endif %}
+    </p>
+  </div>
+  <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+    {% if not locked %}
+    <a class="button-primary" href="{{ url_for('claims_admin.claim_add_service', claim_id=claim.id) }}">
+      <i class="fa-solid fa-plus"></i> Agregar Service
+    </a>
+    {% endif %}
+    <a class="button-secondary" href="{{ url_for('claim_payments.claim_payments_view', claim_id=claim.id) }}">
+      <i class="fa-solid fa-dollar-sign"></i> Payments
+    </a>
+    <a class="button-secondary" href="{{ "/cms1500/" ~ claim.id }}">
+      <i class="fa-solid fa-file-invoice"></i> CMS-1500
+    </a>
+    <a class="button-secondary" href="{{ url_for('claim_financial_summary.claim_financial_summary', claim_id=claim.id) }}">
+      <i class="fa-solid fa-chart-pie"></i> Resumen
+    </a>
+  </div>
 </div>
 
-
-<div class="card">
-
-<h2>Financial Status</h2>
-
-<p>Status: {{ financial.status }}</p>
-
-<p>Total Charge: {{ financial.total_charge }}</p>
-
-<p>Total Paid: {{ financial.total_charge - financial.balance_due }}</p>
-
-<p>Balance: {{ financial.balance_due }}</p>
-
+<!-- Resumen financiero -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+  <div class="dashboard-card">
+    <h3>Total Facturado</h3>
+    <p>${{ '%.2f'|format(financial.total_charge) }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Total Pagado</h3>
+    <p>${{ '%.2f'|format(financial.total_charge - financial.balance_due) }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Balance</h3>
+    <p style="color:{% if financial.balance_due > 0 %}#dc2626{% else %}#16a34a{% endif %}">
+      ${{ '%.2f'|format(financial.balance_due) }}
+    </p>
+  </div>
 </div>
 
-
-<div class="card">
-
-<h2>Services</h2>
-
-<table class="claims-table">
-
-<thead>
-<tr>
-<th>Date</th>
-<th>CPT</th>
-<th>Units</th>
-<th>Charge</th>
-</tr>
-</thead>
-
-<tbody>
-
-{% for s in services %}
-
-<tr>
-<td>{{ s.service_date }}</td>
-<td>{{ s.cpt_code }}</td>
-<td>{{ s.units_24g }}</td>
-<td>{{ s.charge_amount_24f }}</td>
-</tr>
-
-{% endfor %}
-
-</tbody>
-</table>
-
+<!-- Lock / Snapshot -->
+<div class="card" style="margin-bottom:1rem;">
+  {% if locked %}
+  <div style="display:flex; align-items:center; gap:0.75rem;">
+    <i class="fa-solid fa-lock" style="color:#92400e; font-size:1.2rem;"></i>
+    <div>
+      <strong>Claim bloqueado</strong>
+      <p style="margin:0; font-size:0.85rem; color:var(--sidebar-text);">Snapshot v{{ latest_snapshot.version_number }} generado. No se pueden agregar más services.</p>
+    </div>
+    <a class="button-secondary" style="margin-left:auto;" href="{{ "/cms1500/" ~ claim.id }}">
+      <i class="fa-solid fa-print"></i> Ver CMS-1500
+    </a>
+  </div>
+  {% else %}
+  <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+    <i class="fa-solid fa-lock-open" style="color:var(--accent); font-size:1.2rem;"></i>
+    <div>
+      <strong>Claim abierto</strong>
+      <p style="margin:0; font-size:0.85rem; color:var(--sidebar-text);">Cuando todo esté listo, bloquea el claim para generar el CMS-1500.</p>
+    </div>
+    <form method="POST" action="{{ url_for('claims_admin.claim_lock', claim_id=claim.id) }}" style="margin-left:auto;" onsubmit="return confirm('¿Bloquear este claim? Se generará el snapshot CMS-1500.')">
+      <button class="button-primary" type="submit">
+        <i class="fa-solid fa-lock"></i> Bloquear y Generar CMS-1500
+      </button>
+    </form>
+  </div>
+  {% endif %}
 </div>
 
-
+<!-- Services -->
 <div class="card">
-
-<h2>Snapshots</h2>
-
-{% if snapshots %}
-
-<table class="claims-table">
-
-<thead>
-<tr>
-<th>ID</th>
-<th>Version</th>
-<th>Created</th>
-<th>Hash</th>
-<th>Open</th>
-</tr>
-</thead>
-
-<tbody>
-
-{% for s in snapshots %}
-
-<tr>
-
-<td>{{ s.snapshot_id }}</td>
-<td>v{{ s.version_number }}</td>
-<td>{{ s.created_at }}</td>
-<td style="font-family:monospace">{{ s.snapshot_hash }}</td>
-
-<td>
-<a href="/admin/snapshots/{{ s.snapshot_id }}">
-view
-</a>
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-{% else %}
-
-<p>No snapshots available.</p>
-
-{% endif %}
-
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <h2 style="margin:0;"><i class="fa-solid fa-stethoscope" style="color:var(--accent);"></i> Services</h2>
+    {% if not locked %}
+    <a class="button-primary" style="font-size:0.82rem;" href="{{ url_for('claims_admin.claim_add_service', claim_id=claim.id) }}">
+      <i class="fa-solid fa-plus"></i> Agregar Service
+    </a>
+    {% endif %}
+  </div>
+  {% if services %}
+  <table class="claims-table">
+    <thead><tr><th>Fecha</th><th>CPT</th><th>Unidades</th><th>Monto</th></tr></thead>
+    <tbody>
+    {% for s in services %}
+    <tr>
+      <td>{{ s.service_date }}</td>
+      <td>{{ s.cpt_code }}</td>
+      <td>{{ s.units_24g }}</td>
+      <td>${{ '%.2f'|format(s.charge_amount_24f) }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:var(--sidebar-text); font-style:italic;">Sin services. <a href="{{ url_for('claims_admin.claim_add_service', claim_id=claim.id) }}">Agregar ahora →</a></p>
+  {% endif %}
 </div>
 
-
+<!-- Payments -->
 <div class="card">
-
-<h2>Event Ledger</h2>
-
-{% if events %}
-
-<table class="claims-table">
-
-<thead>
-<tr>
-<th>ID</th>
-<th>Created</th>
-<th>Event Type</th>
-<th>Event Data</th>
-</tr>
-</thead>
-
-<tbody>
-
-{% for e in events %}
-
-<tr>
-
-<td>{{ e.id }}</td>
-
-<td>{{ e.created_at }}</td>
-
-<td>
-<strong>{{ e.event_type }}</strong>
-</td>
-
-<td style="font-family:monospace">
-{{ e.event_data }}
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-{% else %}
-
-<p>No events recorded.</p>
-
-{% endif %}
-
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <h2 style="margin:0;"><i class="fa-solid fa-dollar-sign" style="color:var(--accent);"></i> Payments</h2>
+    <a class="button-secondary" style="font-size:0.82rem;" href="{{ url_for('claim_payments.claim_payments_view', claim_id=claim.id) }}">
+      Ver detalle completo
+    </a>
+  </div>
+  {% if payments %}
+  <table class="claims-table">
+    <thead><tr><th>Monto</th><th>Método</th><th>Referencia</th><th>Fecha</th></tr></thead>
+    <tbody>
+    {% for p in payments %}
+    <tr>
+      <td>${{ '%.2f'|format(p.amount) }}</td>
+      <td>{{ p.method }}</td>
+      <td>{{ p.reference or '-' }}</td>
+      <td>{{ p.received_date }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:var(--sidebar-text); font-style:italic;">Sin payments registrados.</p>
+  {% endif %}
 </div>
 
-
+<!-- Transición de status -->
 {% if allowed_transitions %}
-
 <div class="card">
-
-<h2>Operational Transition</h2>
-
-<form method="POST" action="/admin/claims/{{ claim.id }}/transition">
-
-<select name="new_status">
-
-{% for s in allowed_transitions %}
-<option value="{{ s }}">{{ s }}</option>
-{% endfor %}
-
-</select>
-
-<button type="submit">Apply</button>
-
-</form>
-
+  <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-arrow-right-arrow-left" style="color:var(--accent);"></i> Cambiar Status</h2>
+  <form method="POST" action="/admin/claims/{{ claim.id }}/transition" style="display:flex; gap:0.75rem; align-items:center;">
+    <select name="new_status" style="padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text);">
+      {% for s in allowed_transitions %}
+      <option value="{{ s }}">{{ s }}</option>
+      {% endfor %}
+    </select>
+    <button class="button-primary" type="submit">Aplicar</button>
+  </form>
 </div>
-
 {% endif %}
+
+<!-- Event Ledger (colapsado) -->
+<details class="card">
+  <summary style="cursor:pointer; font-weight:700; padding:0.25rem 0;">
+    <i class="fa-solid fa-clock-rotate-left" style="color:var(--accent);"></i> Event Ledger ({{ events|length }})
+  </summary>
+  <table class="claims-table" style="margin-top:1rem;">
+    <thead><tr><th>Fecha</th><th>Evento</th><th>Data</th></tr></thead>
+    <tbody>
+    {% for e in events %}
+    <tr>
+      <td style="font-size:0.82rem;">{{ e.created_at }}</td>
+      <td><strong>{{ e.event_type }}</strong></td>
+      <td style="font-family:monospace; font-size:0.78rem;">{{ e.event_data }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</details>
 
 {% endblock %}

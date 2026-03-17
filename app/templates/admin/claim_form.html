@@ -1,0 +1,43 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>Nuevo Reclamo</h1>
+
+<div class="card">
+
+{% if error %}
+<p class="error">{{ error }}</p>
+{% endif %}
+
+<form method="POST" class="form-grid">
+
+<div>
+<label for="patient_id">Paciente</label>
+<select id="patient_id" name="patient_id" required>
+<option value="">Selecciona un paciente</option>
+{% for p in patients %}
+<option value="{{ p.id }}" {% if selected_patient_id and selected_patient_id|int == p.id %}selected{% endif %}>{{ p.first_name }} {{ p.last_name }} (ID {{ p.id }})</option>
+{% endfor %}
+</select>
+</div>
+
+<div>
+<label for="coverage_id">Cobertura</label>
+<select id="coverage_id" name="coverage_id" required>
+<option value="">Selecciona una cobertura</option>
+{% for c in coverages %}
+<option value="{{ c.id }}">{{ c.insurer_name }} / {{ c.plan_name }} - {{ c.policy_number }}</option>
+{% endfor %}
+</select>
+</div>
+
+<div>
+<button class="button-primary" type="submit">Crear reclamo</button>
+</div>
+
+</form>
+
+</div>
+
+{% endblock %}

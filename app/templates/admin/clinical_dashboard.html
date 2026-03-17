@@ -1,0 +1,30 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+<h1>Clinical Dashboard</h1>
+
+<div class="card">
+  <p>Encounters recientes totales: {{ encounters|length }}</p>
+  <p><a class="button-primary" href="{{ url_for('clinical_admin.clinical_notes') }}">Ver Clinical Notes</a></p>
+</div>
+
+<div class="card">
+  <h2>Últimos Encounters</h2>
+  <table class="claims-table">
+    <thead>
+      <tr><th>ID</th><th>Fecha</th><th>Paciente</th><th>Estado</th><th>Acción</th></tr>
+    </thead>
+    <tbody>
+      {% for e in encounters %}
+      <tr>
+        <td>{{ e.id }}</td>
+        <td>{{ e.encounter_date }}</td>
+        <td>{{ e.first_name }} {{ e.last_name }}</td>
+        <td>{{ e.status }}</td>
+        <td><a class="button-secondary" href="{{ url_for('encounters_admin.encounter_detail', encounter_id=e.id) }}">Ver</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

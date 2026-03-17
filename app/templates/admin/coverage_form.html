@@ -1,0 +1,59 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<h1>{% if coverage %}Editar Coverage{% else %}Nueva Coverage{% endif %}</h1>
+
+<div class="card">
+
+{% if error %}
+<p class="error">{{ error }}</p>
+{% endif %}
+
+<form method="POST" class="form-grid">
+
+<div>
+<label for="patient_id">Paciente</label>
+<select id="patient_id" name="patient_id" required {% if coverage %}disabled{% endif %}>
+<option value="">Selecciona paciente</option>
+{% for p in patients %}
+<option value="{{ p.id }}" {% if coverage and coverage.patient_id == p.id %}selected{% endif %}>{{ p.first_name }} {{ p.last_name }}</option>
+{% endfor %}
+</select>
+</div>
+
+<div>
+<label for="insurer_name">Insurer</label>
+<input id="insurer_name" name="insurer_name" type="text" value="{{ coverage.insurer_name if coverage else '' }}" required />
+</div>
+
+<div>
+<label for="plan_name">Plan</label>
+<input id="plan_name" name="plan_name" type="text" value="{{ coverage.plan_name if coverage else '' }}" required />
+</div>
+
+<div>
+<label for="policy_number">Policy Number</label>
+<input id="policy_number" name="policy_number" type="text" value="{{ coverage.policy_number if coverage else '' }}" required />
+</div>
+
+<div>
+<label for="start_date">Start Date</label>
+<input id="start_date" name="start_date" type="date" value="{{ coverage.start_date if coverage else '' }}" required />
+</div>
+
+<div>
+<label for="end_date">End Date</label>
+<input id="end_date" name="end_date" type="date" value="{{ coverage.end_date if coverage else '' }}" />
+</div>
+
+<div>
+<button class="button-primary" type="submit">Guardar</button>
+<a class="button-secondary" href="{{ url_for('coverages.coverages_list') }}">Cancelar</a>
+</div>
+
+</form>
+
+</div>
+
+{% endblock %}
