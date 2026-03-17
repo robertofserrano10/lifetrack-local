@@ -2,37 +2,99 @@
 
 {% block content %}
 
-<h1>Nuevo Paciente</h1>
-
-<div class="card">
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-user-plus" style="color:var(--accent);"></i>
+      {% if patient %}Editar Paciente{% else %}Nuevo Paciente{% endif %}
+    </h1>
+    <p>Información demográfica — campos 2, 3, 5, 8 de la CMS-1500</p>
+  </div>
+  <a class="button-secondary" href="/admin/patients">
+    <i class="fa-solid fa-arrow-left"></i> Volver
+  </a>
+</div>
 
 {% if error %}
-<p class="error">{{ error }}</p>
+<div class="form-step" style="border-left-color:#dc2626; background:#fef2f2; color:#991b1b; margin-bottom:1rem;">
+  <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
+</div>
 {% endif %}
 
-<form method="POST" class="form-grid">
+<form method="POST">
 
-<div>
-<label for="first_name">Nombre</label>
-<input id="first_name" name="first_name" required>
-</div>
+  <!-- Nombre -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-id-card" style="color:var(--accent);"></i> Identificación — Casillas 2 / 3</h2>
+    <div class="form-grid">
+      <div>
+        <label>Nombre <span style="color:#dc2626;">*</span></label>
+        <input type="text" name="first_name" value="{{ patient.first_name if patient else '' }}" placeholder="Primer nombre" required />
+      </div>
+      <div>
+        <label>Apellido <span style="color:#dc2626;">*</span></label>
+        <input type="text" name="last_name" value="{{ patient.last_name if patient else '' }}" placeholder="Apellido" required />
+      </div>
+      <div>
+        <label>Fecha de Nacimiento <span style="color:#dc2626;">*</span></label>
+        <input type="date" name="date_of_birth" value="{{ patient.date_of_birth if patient else '' }}" required />
+      </div>
+      <div>
+        <label>Sexo (Casilla 3)</label>
+        <select name="sex">
+          {% set sex = patient.sex if patient else 'U' %}
+          <option value="U" {% if sex == 'U' %}selected{% endif %}>No especificado</option>
+          <option value="M" {% if sex == 'M' %}selected{% endif %}>Male</option>
+          <option value="F" {% if sex == 'F' %}selected{% endif %}>Female</option>
+        </select>
+      </div>
+    </div>
+  </div>
 
-<div>
-<label for="last_name">Apellido</label>
-<input id="last_name" name="last_name" required>
-</div>
+  <!-- Status (Casilla 8) -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-clipboard-list" style="color:var(--accent);"></i> Patient Status — Casilla 8</h2>
+    <div class="form-grid">
+      <div>
+        <label>Marital Status</label>
+        <select name="marital_status">
+          {% set ms = patient.marital_status if patient else '' %}
+          <option value="">No especificado</option>
+          <option value="single"  {% if ms == 'single'  %}selected{% endif %}>Single</option>
+          <option value="married" {% if ms == 'married' %}selected{% endif %}>Married</option>
+          <option value="other"   {% if ms == 'other'   %}selected{% endif %}>Other</option>
+        </select>
+      </div>
+      <div>
+        <label>Employment Status</label>
+        <select name="employment_status">
+          {% set es = patient.employment_status if patient else '' %}
+          <option value="">No especificado</option>
+          <option value="employed"          {% if es == 'employed'          %}selected{% endif %}>Employed</option>
+          <option value="self_employed"     {% if es == 'self_employed'     %}selected{% endif %}>Self-Employed</option>
+          <option value="unemployed"        {% if es == 'unemployed'        %}selected{% endif %}>Unemployed</option>
+          <option value="retired"           {% if es == 'retired'           %}selected{% endif %}>Retired</option>
+        </select>
+      </div>
+      <div>
+        <label>Student Status</label>
+        <select name="student_status">
+          {% set ss = patient.student_status if patient else '' %}
+          <option value="">No especificado</option>
+          <option value="full_time"  {% if ss == 'full_time'  %}selected{% endif %}>Full-Time Student</option>
+          <option value="part_time"  {% if ss == 'part_time'  %}selected{% endif %}>Part-Time Student</option>
+        </select>
+      </div>
+    </div>
+  </div>
 
-<div>
-<label for="date_of_birth">Fecha de Nacimiento</label>
-<input id="date_of_birth" name="date_of_birth" type="date" required>
-</div>
-
-<div>
-<button class="button-primary" type="submit">Crear paciente</button>
-</div>
+  <div style="display:flex; gap:0.75rem;">
+    <button class="button-primary" type="submit">
+      <i class="fa-solid fa-floppy-disk"></i>
+      {% if patient %}Guardar Cambios{% else %}Crear Paciente{% endif %}
+    </button>
+    <a class="button-secondary" href="/admin/patients">Cancelar</a>
+  </div>
 
 </form>
-
-</div>
 
 {% endblock %}

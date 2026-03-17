@@ -2,58 +2,148 @@
 
 {% block content %}
 
-<h1>{% if coverage %}Editar Coverage{% else %}Nueva Coverage{% endif %}</h1>
-
-<div class="card">
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-shield-halved" style="color:var(--accent);"></i>
+      {% if coverage %}Editar Coverage{% else %}Nueva Coverage{% endif %}
+    </h1>
+    <p>Información del seguro médico — campos 1, 4, 6, 7, 9, 11 de la CMS-1500</p>
+  </div>
+  <a class="button-secondary" href="{{ url_for('coverages.coverages_list') }}">
+    <i class="fa-solid fa-arrow-left"></i> Volver
+  </a>
+</div>
 
 {% if error %}
-<p class="error">{{ error }}</p>
+<div class="form-step" style="border-left-color:#dc2626; background:#fef2f2; color:#991b1b; margin-bottom:1rem;">
+  <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
+</div>
 {% endif %}
 
-<form method="POST" class="form-grid">
+<form method="POST">
 
-<div>
-<label for="patient_id">Paciente</label>
-<select id="patient_id" name="patient_id" required {% if coverage %}disabled{% endif %}>
-<option value="">Selecciona paciente</option>
-{% for p in patients %}
-<option value="{{ p.id }}" {% if coverage and coverage.patient_id == p.id %}selected{% endif %}>{{ p.first_name }} {{ p.last_name }}</option>
-{% endfor %}
-</select>
-</div>
+  <!-- Paciente -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-user" style="color:var(--accent);"></i> Paciente</h2>
+    <div class="form-grid">
+      <div>
+        <label>Paciente</label>
+        <select name="patient_id" required {% if coverage %}disabled{% endif %}>
+          <option value="">Selecciona paciente</option>
+          {% for p in patients %}
+          <option value="{{ p.id }}"
+            {% if coverage and coverage.patient_id == p.id %}selected
+            {% elif preselect_patient_id and preselect_patient_id == p.id|string %}selected
+            {% endif %}>
+            {{ p.last_name }}, {{ p.first_name }}
+          </option>
+          {% endfor %}
+        </select>
+        {% if coverage %}
+        <input type="hidden" name="patient_id" value="{{ coverage.patient_id }}" />
+        {% endif %}
+      </div>
+    </div>
+  </div>
 
-<div>
-<label for="insurer_name">Insurer</label>
-<input id="insurer_name" name="insurer_name" type="text" value="{{ coverage.insurer_name if coverage else '' }}" required />
-</div>
+  <!-- Plan del seguro -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-building-columns" style="color:var(--accent);"></i> Plan del Seguro — Casillas 1 / 11</h2>
+    <div class="form-grid">
+      <div>
+        <label>Aseguradora <span style="color:#dc2626;">*</span></label>
+        <input type="text" name="insurer_name" value="{{ coverage.insurer_name if coverage else '' }}" placeholder="Ej: Triple-S, MCS, Humana" required />
+      </div>
+      <div>
+        <label>Plan <span style="color:#dc2626;">*</span></label>
+        <input type="text" name="plan_name" value="{{ coverage.plan_name if coverage else '' }}" placeholder="Ej: Salud Plan, Medicare" required />
+      </div>
+      <div>
+        <label>Policy Number <span style="color:#dc2626;">*</span></label>
+        <input type="text" name="policy_number" value="{{ coverage.policy_number if coverage else '' }}" placeholder="Número de póliza" required />
+      </div>
+      <div>
+        <label>Group Number</label>
+        <input type="text" name="group_number" value="{{ coverage.group_number if coverage else '' }}" placeholder="Número de grupo (opcional)" />
+      </div>
+      <div>
+        <label>Insured ID (1a)</label>
+        <input type="text" name="insured_id" value="{{ coverage.insured_id if coverage else '' }}" placeholder="ID del asegurado" />
+      </div>
+      <div>
+        <label>Start Date <span style="color:#dc2626;">*</span></label>
+        <input type="date" name="start_date" value="{{ coverage.start_date if coverage else '' }}" required />
+      </div>
+      <div>
+        <label>End Date</label>
+        <input type="date" name="end_date" value="{{ coverage.end_date if coverage else '' }}" />
+      </div>
+    </div>
+  </div>
 
-<div>
-<label for="plan_name">Plan</label>
-<input id="plan_name" name="plan_name" type="text" value="{{ coverage.plan_name if coverage else '' }}" required />
-</div>
+  <!-- Insured / Asegurado principal -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-id-card" style="color:var(--accent);"></i> Asegurado Principal — Casillas 4 / 6 / 7</h2>
+    <div class="form-grid">
+      <div>
+        <label>First Name del Asegurado</label>
+        <input type="text" name="insured_first_name" value="{{ coverage.insured_first_name if coverage else '' }}" placeholder="Nombre" />
+      </div>
+      <div>
+        <label>Last Name del Asegurado</label>
+        <input type="text" name="insured_last_name" value="{{ coverage.insured_last_name if coverage else '' }}" placeholder="Apellido" />
+      </div>
+      <div>
+        <label>Relationship to Insured (Casilla 6)</label>
+        <select name="relationship_to_insured">
+          {% set rel = coverage.relationship_to_insured if coverage else 'self' %}
+          <option value="self"   {% if rel == 'self'   %}selected{% endif %}>Self</option>
+          <option value="spouse" {% if rel == 'spouse' %}selected{% endif %}>Spouse</option>
+          <option value="child"  {% if rel == 'child'  %}selected{% endif %}>Child</option>
+          <option value="other"  {% if rel == 'other'  %}selected{% endif %}>Other</option>
+        </select>
+      </div>
+      <div>
+        <label>Address del Asegurado (Casilla 7)</label>
+        <input type="text" name="insured_address" value="{{ coverage.insured_address if coverage else '' }}" placeholder="Dirección" />
+      </div>
+      <div>
+        <label>City</label>
+        <input type="text" name="insured_city" value="{{ coverage.insured_city if coverage else '' }}" placeholder="Ciudad" />
+      </div>
+      <div>
+        <label>State</label>
+        <input type="text" name="insured_state" value="{{ coverage.insured_state if coverage else '' }}" placeholder="PR" />
+      </div>
+      <div>
+        <label>ZIP</label>
+        <input type="text" name="insured_zip" value="{{ coverage.insured_zip if coverage else '' }}" placeholder="00000" />
+      </div>
+    </div>
+  </div>
 
-<div>
-<label for="policy_number">Policy Number</label>
-<input id="policy_number" name="policy_number" type="text" value="{{ coverage.policy_number if coverage else '' }}" required />
-</div>
+  <!-- Otro seguro -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-shield-halved" style="color:#f59e0b;"></i> Otro Seguro — Casilla 11d</h2>
+    <div class="form-grid">
+      <div style="display:flex; align-items:center; gap:0.75rem; padding-top:1.5rem;">
+        <input type="checkbox" name="other_health_plan_11d" id="other_health_plan_11d"
+          {% if coverage and coverage.other_health_plan_11d %}checked{% endif %}
+          style="width:18px; height:18px; cursor:pointer;" />
+        <label for="other_health_plan_11d" style="margin:0; cursor:pointer;">
+          ¿Existe otro plan de salud? (Casilla 11d)
+        </label>
+      </div>
+    </div>
+  </div>
 
-<div>
-<label for="start_date">Start Date</label>
-<input id="start_date" name="start_date" type="date" value="{{ coverage.start_date if coverage else '' }}" required />
-</div>
-
-<div>
-<label for="end_date">End Date</label>
-<input id="end_date" name="end_date" type="date" value="{{ coverage.end_date if coverage else '' }}" />
-</div>
-
-<div>
-<button class="button-primary" type="submit">Guardar</button>
-<a class="button-secondary" href="{{ url_for('coverages.coverages_list') }}">Cancelar</a>
-</div>
+  <div style="display:flex; gap:0.75rem;">
+    <button class="button-primary" type="submit">
+      <i class="fa-solid fa-floppy-disk"></i> Guardar Coverage
+    </button>
+    <a class="button-secondary" href="{{ url_for('coverages.coverages_list') }}">Cancelar</a>
+  </div>
 
 </form>
-
-</div>
 
 {% endblock %}

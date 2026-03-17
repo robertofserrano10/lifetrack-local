@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, abort, request, redirect, url_for
 import sqlite3
 from app.config import DB_PATH
 
-from app.db.patients import create_patient
+from app.db.patients import create_patient, get_patient_by_id, update_patient
 from app.security.auth import login_required, role_required
 
 
@@ -63,13 +63,56 @@ def patient_create():
         date_of_birth = request.form.get("date_of_birth", "").strip()
 
         if not first_name or not last_name or not date_of_birth:
-            return render_template("admin/patient_form.html", error="Todos los campos son requeridos.")
+            return render_template("admin/patient_form.html", error="Nombre, apellido y fecha de nacimiento son requeridos.")
 
-        patient_id = create_patient(first_name, last_name, date_of_birth)
+        patient_id = create_patient(
+            first_name=first_name,
+            last_name=last_name,
+            date_of_birth=date_of_birth,
+            sex=request.form.get("sex", "U"),
+            marital_status=request.form.get("marital_status") or None,
+            employment_status=request.form.get("employment_status") or None,
+            student_status=request.form.get("student_status") or None,
+        )
 
         return redirect(url_for("patients_admin.patient_detail", patient_id=patient_id))
 
     return render_template("admin/patient_form.html")
+
+
+# =========================================================
+# Patient edit
+# =========================================================
+@patients_admin_bp.route("/<int:patient_id>/edit", methods=["GET", "POST"])
+@login_required
+@role_required("ADMIN", "FACTURADOR", "RECEPCION")
+def patient_edit(patient_id: int):
+    patient = get_patient_by_id(patient_id)
+    if not patient:
+        abort(404)
+
+    if request.method == "POST":
+        first_name = request.form.get("first_name", "").strip()
+        last_name = request.form.get("last_name", "").strip()
+        date_of_birth = request.form.get("date_of_birth", "").strip()
+
+        if not first_name or not last_name or not date_of_birth:
+            return render_template("admin/patient_form.html", patient=patient,
+                                   error="Nombre, apellido y fecha de nacimiento son requeridos.")
+
+        update_patient(
+            patient_id=patient_id,
+            first_name=first_name,
+            last_name=last_name,
+            date_of_birth=date_of_birth,
+            sex=request.form.get("sex", "U"),
+            marital_status=request.form.get("marital_status") or None,
+            employment_status=request.form.get("employment_status") or None,
+            student_status=request.form.get("student_status") or None,
+        )
+        return redirect(url_for("patients_admin.patient_detail", patient_id=patient_id))
+
+    return render_template("admin/patient_form.html", patient=patient)
 
 
 # =========================================================
