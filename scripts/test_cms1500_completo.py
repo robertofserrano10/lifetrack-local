@@ -87,6 +87,19 @@ with get_connection() as conn:
 print(f"    ✅ Claim ID: {claim_id}")
 
 # ─────────────────────────────────────────
+# 3b. DIAGNÓSTICOS en el claim
+# ─────────────────────────────────────────
+print("\n[3b] Agregando diagnósticos al claim...")
+from app.db.claims import update_claim_cms_fields
+update_claim_cms_fields(
+    claim_id=claim_id,
+    diagnosis_1="F41.1",
+    diagnosis_2="F32.9",
+    diagnosis_3="Z63.0",
+)
+print("    ✅ Diagnósticos A=F41.1, B=F32.9, C=Z63.0")
+
+# ─────────────────────────────────────────
 # 4. SERVICE con diagnosis_code
 # ─────────────────────────────────────────
 print("\n[4] Creando service con CPT y diagnóstico...")
@@ -187,7 +200,7 @@ for letter in 'ABCDEFGHIJKL':
     if val:
         print(f"  ✅ Casilla 21{letter}: {val}")
     else:
-        print(f"  ⬜ Casilla 21{letter}: vacío")
+        print(f"  ⬜ Casilla 21{letter}: (vacío — normal si no aplica)")
 
 print("\n--- SERVICES ---")
 services = s.get('services', [])

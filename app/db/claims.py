@@ -143,6 +143,19 @@ def update_claim_operational_status(claim_id: int, new_status: str) -> bool:
 # CMS UPDATE (RESPETA BLOQUEO)
 # ============================================================
 
+def _ensure_diagnosis_columns():
+    """Migración automática — agrega columnas diagnosis_1..12 si no existen."""
+    with get_connection() as conn:
+        cur = conn.cursor()
+        cur.execute("PRAGMA table_info(claims)")
+        cols = [r["name"] for r in cur.fetchall()]
+        for i in range(1, 13):
+            col = f"diagnosis_{i}"
+            if col not in cols:
+                conn.execute(f"ALTER TABLE claims ADD COLUMN {col} TEXT")
+        conn.commit()
+
+
 def update_claim_cms_fields(
     claim_id: int,
     # Casilla 10
@@ -165,7 +178,22 @@ def update_claim_cms_fields(
     prior_authorization_23: str | None = None,
     # Casilla 27
     accept_assignment_27: int = 1,
+    # Casilla 21 — diagnósticos A-L
+    diagnosis_1: str | None = None,
+    diagnosis_2: str | None = None,
+    diagnosis_3: str | None = None,
+    diagnosis_4: str | None = None,
+    diagnosis_5: str | None = None,
+    diagnosis_6: str | None = None,
+    diagnosis_7: str | None = None,
+    diagnosis_8: str | None = None,
+    diagnosis_9: str | None = None,
+    diagnosis_10: str | None = None,
+    diagnosis_11: str | None = None,
+    diagnosis_12: str | None = None,
 ) -> bool:
+
+    _ensure_diagnosis_columns()
 
     if is_claim_locked(claim_id):
         raise ValueError("Claim está congelado por snapshot")
@@ -190,6 +218,10 @@ def update_claim_cms_fields(
         original_ref_no_22 = ?,
         prior_authorization_23 = ?,
         accept_assignment_27 = ?,
+        diagnosis_1 = ?, diagnosis_2 = ?, diagnosis_3 = ?,
+        diagnosis_4 = ?, diagnosis_5 = ?, diagnosis_6 = ?,
+        diagnosis_7 = ?, diagnosis_8 = ?, diagnosis_9 = ?,
+        diagnosis_10 = ?, diagnosis_11 = ?, diagnosis_12 = ?,
         updated_at = ?
     WHERE id = ?
     """
@@ -205,6 +237,10 @@ def update_claim_cms_fields(
             reserved_local_use_19,
             resubmission_code_22, original_ref_no_22,
             prior_authorization_23, accept_assignment_27,
+            diagnosis_1, diagnosis_2, diagnosis_3,
+            diagnosis_4, diagnosis_5, diagnosis_6,
+            diagnosis_7, diagnosis_8, diagnosis_9,
+            diagnosis_10, diagnosis_11, diagnosis_12,
             now, claim_id,
         ))
         conn.commit()

@@ -259,6 +259,18 @@ def claim_edit(claim_id: int):
                 original_ref_no_22=request.form.get("original_ref_no_22") or None,
                 prior_authorization_23=request.form.get("prior_authorization_23") or None,
                 accept_assignment_27=int(request.form.get("accept_assignment_27", 1)),
+                diagnosis_1=request.form.get("diagnosis_1") or None,
+                diagnosis_2=request.form.get("diagnosis_2") or None,
+                diagnosis_3=request.form.get("diagnosis_3") or None,
+                diagnosis_4=request.form.get("diagnosis_4") or None,
+                diagnosis_5=request.form.get("diagnosis_5") or None,
+                diagnosis_6=request.form.get("diagnosis_6") or None,
+                diagnosis_7=request.form.get("diagnosis_7") or None,
+                diagnosis_8=request.form.get("diagnosis_8") or None,
+                diagnosis_9=request.form.get("diagnosis_9") or None,
+                diagnosis_10=request.form.get("diagnosis_10") or None,
+                diagnosis_11=request.form.get("diagnosis_11") or None,
+                diagnosis_12=request.form.get("diagnosis_12") or None,
             )
             return redirect(url_for("claims_admin.claim_detail_admin", claim_id=claim_id))
         except Exception as e:

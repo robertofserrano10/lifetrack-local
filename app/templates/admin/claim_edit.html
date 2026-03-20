@@ -146,6 +146,24 @@
     </div>
   </div>
 
+  <!-- Casilla 21 — Diagnósticos A-L -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:0.5rem;"><i class="fa-solid fa-stethoscope" style="color:var(--accent);"></i> Casilla 21 — Diagnósticos ICD-10 (A–L)</h2>
+    <p class="form-info" style="margin-bottom:1rem;">Al menos el diagnóstico A es requerido. Los demás son opcionales.</p>
+    <div class="form-grid">
+      {% set letters = ['A','B','C','D','E','F','G','H','I','J','K','L'] %}
+      {% for i in range(1, 13) %}
+      <div>
+        <label>{{ letters[i-1] }}. ICD-10</label>
+        <input type="text" name="diagnosis_{{ i }}"
+          value="{{ claim['diagnosis_' ~ i] or '' }}"
+          placeholder="Ej: F41.1"
+          style="text-transform:uppercase;" />
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
   <div style="display:flex;gap:0.75rem;">
     <button class="button-primary" type="submit">
       <i class="fa-solid fa-floppy-disk"></i> Guardar
