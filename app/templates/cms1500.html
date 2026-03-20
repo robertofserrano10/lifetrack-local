@@ -140,7 +140,11 @@ th.th-24 .desc {
 
       <div class="cell" style="grid-column: span 3;">
         <span class="label">5. Patient’s Address (No., Street) / City / State / Zip / Telephone</span>
-        <div class="val">—</div>
+        <div class="val">
+          {{ snapshot.patient.address or "—" }}<br>
+          {% if snapshot.patient.city %}{{ snapshot.patient.city }}, {{ snapshot.patient.state or "" }} {{ snapshot.patient.zip_code or "" }}<br>{% endif %}
+          {% if snapshot.patient.phone %}{{ snapshot.patient.phone }}{% endif %}
+        </div>
       </div>
 
       <div class="cell" style="grid-column: span 3;">

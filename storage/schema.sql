@@ -55,6 +55,11 @@ CREATE TABLE IF NOT EXISTS patients (
     marital_status TEXT,
     employment_status TEXT,
     student_status TEXT,
+    address TEXT,
+    city TEXT,
+    state TEXT,
+    zip_code TEXT,
+    phone TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

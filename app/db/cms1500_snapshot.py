@@ -150,6 +150,11 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
                 p.marital_status AS p_marital_status,
                 p.employment_status AS p_employment_status,
                 p.student_status AS p_student_status,
+                p.address AS p_address,
+                p.city AS p_city,
+                p.state AS p_state,
+                p.zip_code AS p_zip_code,
+                p.phone AS p_phone,
 
                 cov.insurer_name AS cov_insurer_name,
                 cov.plan_name AS cov_plan_name,
@@ -401,6 +406,11 @@ def generate_cms1500_snapshot(claim_id: int) -> Dict[str, Any]:
                 "marital_status": base["p_marital_status"],
                 "employment_status": base["p_employment_status"],
                 "student_status": base["p_student_status"],
+                "address": base["p_address"] if "p_address" in base.keys() else None,
+                "city": base["p_city"] if "p_city" in base.keys() else None,
+                "state": base["p_state"] if "p_state" in base.keys() else None,
+                "zip_code": base["p_zip_code"] if "p_zip_code" in base.keys() else None,
+                "phone": base["p_phone"] if "p_phone" in base.keys() else None,
             },
             "insurance": {
                 "insurer_name": base["cov_insurer_name"],

@@ -73,6 +73,11 @@ def patient_create():
             marital_status=request.form.get("marital_status") or None,
             employment_status=request.form.get("employment_status") or None,
             student_status=request.form.get("student_status") or None,
+            address=request.form.get("address") or None,
+            city=request.form.get("city") or None,
+            state=request.form.get("state") or None,
+            zip_code=request.form.get("zip_code") or None,
+            phone=request.form.get("phone") or None,
         )
 
         return redirect(url_for("patients_admin.patient_detail", patient_id=patient_id))
@@ -109,6 +114,11 @@ def patient_edit(patient_id: int):
             marital_status=request.form.get("marital_status") or None,
             employment_status=request.form.get("employment_status") or None,
             student_status=request.form.get("student_status") or None,
+            address=request.form.get("address") or None,
+            city=request.form.get("city") or None,
+            state=request.form.get("state") or None,
+            zip_code=request.form.get("zip_code") or None,
+            phone=request.form.get("phone") or None,
         )
         return redirect(url_for("patients_admin.patient_detail", patient_id=patient_id))
 

@@ -15,14 +15,14 @@
 </div>
 
 {% if error %}
-<div class="form-step" style="border-left-color:#dc2626; background:#fef2f2; color:#991b1b; margin-bottom:1rem;">
+<div class="form-step" style="border-left-color:#dc2626;background:#fef2f2;color:#991b1b;margin-bottom:1rem;">
   <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
 </div>
 {% endif %}
 
 <form method="POST">
 
-  <!-- Nombre -->
+  <!-- Identificación -->
   <div class="card" style="margin-bottom:1rem;">
     <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-id-card" style="color:var(--accent);"></i> Identificación — Casillas 2 / 3</h2>
     <div class="form-grid">
@@ -39,7 +39,7 @@
         <input type="date" name="date_of_birth" value="{{ patient.date_of_birth if patient else '' }}" required />
       </div>
       <div>
-        <label>Sexo (Casilla 3)</label>
+        <label>Sexo — Casilla 3</label>
         <select name="sex">
           {% set sex = patient.sex if patient else 'U' %}
           <option value="U" {% if sex == 'U' %}selected{% endif %}>No especificado</option>
@@ -50,7 +50,34 @@
     </div>
   </div>
 
-  <!-- Status (Casilla 8) -->
+  <!-- Dirección — Casilla 5 -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-location-dot" style="color:var(--accent);"></i> Dirección — Casilla 5</h2>
+    <div class="form-grid">
+      <div>
+        <label>Address (No., Street)</label>
+        <input type="text" name="address" value="{{ patient.address if patient else '' }}" placeholder="Ej: 100 Calle Principal" />
+      </div>
+      <div>
+        <label>City</label>
+        <input type="text" name="city" value="{{ patient.city if patient else '' }}" placeholder="San Juan" />
+      </div>
+      <div>
+        <label>State</label>
+        <input type="text" name="state" value="{{ patient.state if patient else '' }}" placeholder="PR" />
+      </div>
+      <div>
+        <label>ZIP</label>
+        <input type="text" name="zip_code" value="{{ patient.zip_code if patient else '' }}" placeholder="00901" />
+      </div>
+      <div>
+        <label>Teléfono</label>
+        <input type="text" name="phone" value="{{ patient.phone if patient else '' }}" placeholder="787-000-0000" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Patient Status — Casilla 8 -->
   <div class="card" style="margin-bottom:1rem;">
     <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-clipboard-list" style="color:var(--accent);"></i> Patient Status — Casilla 8</h2>
     <div class="form-grid">
@@ -69,10 +96,10 @@
         <select name="employment_status">
           {% set es = patient.employment_status if patient else '' %}
           <option value="">No especificado</option>
-          <option value="employed"          {% if es == 'employed'          %}selected{% endif %}>Employed</option>
-          <option value="self_employed"     {% if es == 'self_employed'     %}selected{% endif %}>Self-Employed</option>
-          <option value="unemployed"        {% if es == 'unemployed'        %}selected{% endif %}>Unemployed</option>
-          <option value="retired"           {% if es == 'retired'           %}selected{% endif %}>Retired</option>
+          <option value="employed"      {% if es == 'employed'      %}selected{% endif %}>Employed</option>
+          <option value="self_employed" {% if es == 'self_employed' %}selected{% endif %}>Self-Employed</option>
+          <option value="unemployed"    {% if es == 'unemployed'    %}selected{% endif %}>Unemployed</option>
+          <option value="retired"       {% if es == 'retired'       %}selected{% endif %}>Retired</option>
         </select>
       </div>
       <div>
@@ -80,14 +107,14 @@
         <select name="student_status">
           {% set ss = patient.student_status if patient else '' %}
           <option value="">No especificado</option>
-          <option value="full_time"  {% if ss == 'full_time'  %}selected{% endif %}>Full-Time Student</option>
-          <option value="part_time"  {% if ss == 'part_time'  %}selected{% endif %}>Part-Time Student</option>
+          <option value="full_time" {% if ss == 'full_time' %}selected{% endif %}>Full-Time Student</option>
+          <option value="part_time" {% if ss == 'part_time' %}selected{% endif %}>Part-Time Student</option>
         </select>
       </div>
     </div>
   </div>
 
-  <div style="display:flex; gap:0.75rem;">
+  <div style="display:flex;gap:0.75rem;">
     <button class="button-primary" type="submit">
       <i class="fa-solid fa-floppy-disk"></i>
       {% if patient %}Guardar Cambios{% else %}Crear Paciente{% endif %}

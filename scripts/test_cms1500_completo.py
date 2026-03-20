@@ -39,6 +39,11 @@ patient_id = create_patient(
     marital_status="married",
     employment_status="employed",
     student_status=None,
+    address="200 Calle Roble",
+    city="San Juan",
+    state="PR",
+    zip_code="00901",
+    phone="787-555-1234",
 )
 print(f"    ✅ Paciente ID: {patient_id}")
 
@@ -158,6 +163,10 @@ print("\n--- PACIENTE ---")
 check("2",   "Patient Name",       f"{s.get('patient',{}).get('last_name')} {s.get('patient',{}).get('first_name')}")
 check("3a",  "Date of Birth",      s.get('patient',{}).get('date_of_birth'))
 check("3b",  "Sex",                s.get('patient',{}).get('sex'))
+check("5a",  "Patient Address",    s.get('patient',{}).get('address'))
+check("5b",  "Patient City",       s.get('patient',{}).get('city'))
+check("5c",  "Patient ZIP",        s.get('patient',{}).get('zip_code'))
+check("5d",  "Patient Phone",      s.get('patient',{}).get('phone'))
 check("8a",  "Marital Status",     s.get('patient',{}).get('marital_status'))
 check("8b",  "Employment Status",  s.get('patient',{}).get('employment_status'))
 
