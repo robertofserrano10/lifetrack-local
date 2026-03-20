@@ -91,6 +91,10 @@
           <i class="fa-solid fa-dollar-sign"></i>
           <span>Finances</span>
         </a>
+        <a href="/admin/eob" class="{{ 'active' if path.startswith('/admin/eob') else '' }}">
+          <i class="fa-solid fa-receipt"></i>
+          <span>EOB</span>
+        </a>
         {% endif %}
 
         {% if current_user and current_user.role in ['ADMIN','FACTURADOR'] %}

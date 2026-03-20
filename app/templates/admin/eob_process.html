@@ -1,0 +1,183 @@
+{% extends "layouts/admin_base.html" %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-receipt" style="color:var(--accent);"></i> Procesar EOB</h1>
+    <p>Claim {{ claim.claim_number }} — {{ info.last_name }}, {{ info.first_name }}</p>
+  </div>
+  <a class="button-secondary" href="/admin/eob">
+    <i class="fa-solid fa-arrow-left"></i> Volver
+  </a>
+</div>
+
+{% if error %}
+<div class="form-step" style="border-left-color:#dc2626;background:#fef2f2;color:#991b1b;margin-bottom:1rem;">
+  <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
+</div>
+{% endif %}
+
+<!-- Info del claim -->
+<div class="card" style="margin-bottom:1rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:0.5rem 2rem; font-size:0.9rem;">
+  <p><strong>Aseguradora:</strong> {{ info.insurer_name or '—' }}</p>
+  <p><strong>Plan:</strong> {{ info.plan_name or '—' }}</p>
+  <p><strong>Póliza:</strong> {{ info.policy_number or '—' }}</p>
+  <p><strong>Status:</strong> {{ claim.status }}</p>
+</div>
+
+<!-- Resumen financiero -->
+<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem;">
+  <div class="dashboard-card">
+    <h3>Total Facturado</h3>
+    <p>${{ '%.2f'|format(total_charge) }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Ya Pagado</h3>
+    <p style="color:#16a34a;">${{ '%.2f'|format(total_paid) }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Ajustes</h3>
+    <p style="color:#f59e0b;">${{ '%.2f'|format(total_adjusted) }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Balance Pendiente</h3>
+    <p style="color:{% if total_balance > 0 %}#dc2626{% else %}#16a34a{% endif %};">
+      ${{ '%.2f'|format(total_balance) }}
+    </p>
+  </div>
+</div>
+
+{% if total_balance <= 0 %}
+<div class="card" style="text-align:center; padding:2rem; border-left:4px solid #16a34a;">
+  <i class="fa-solid fa-circle-check" style="font-size:2rem; color:#16a34a; display:block; margin-bottom:0.5rem;"></i>
+  <strong style="color:#16a34a;">Este claim ya está pagado en su totalidad.</strong>
+</div>
+{% else %}
+
+<form method="POST">
+  <input type="hidden" name="action" value="process_eob">
+
+  <!-- Datos del EOB -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-file-invoice" style="color:var(--accent);"></i> Datos del EOB</h2>
+    <div class="form-grid">
+      <div>
+        <label>Número de EOB / Referencia</label>
+        <input type="text" name="eob_number" placeholder="Ej: EOB-2026-001" />
+      </div>
+      <div>
+        <label>Fecha de Recibo <span style="color:#dc2626;">*</span></label>
+        <input type="date" name="received_date" value="{{ today }}" required />
+      </div>
+      <div>
+        <label>Método de Pago <span style="color:#dc2626;">*</span></label>
+        <select name="method" required>
+          <option value="eft">EFT — Transferencia Electrónica</option>
+          <option value="check">Check</option>
+          <option value="cash">Cash</option>
+          <option value="other">Otro</option>
+        </select>
+      </div>
+      <div>
+        <label>Referencia del Pago</label>
+        <input type="text" name="reference" placeholder="Número de check o confirmación" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Líneas de servicio -->
+  <div class="card" style="margin-bottom:1rem;">
+    <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-list" style="color:var(--accent);"></i> Líneas del EOB</h2>
+    <p class="form-info" style="margin-bottom:1rem;">
+      Para cada servicio, ingresa el monto que pagó el seguro y el ajuste contractual (diferencia entre lo facturado y lo permitido).
+    </p>
+
+    <table class="claims-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>CPT</th>
+          <th>Facturado</th>
+          <th>Ya Pagado</th>
+          <th>Balance</th>
+          <th>Pago Seguro ($)</th>
+          <th>Ajuste Contractual ($)</th>
+          <th>Razón Ajuste</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for svc in service_lines %}
+      <tr>
+        <td>{{ svc.service_date }}</td>
+        <td><strong>{{ svc.cpt_code }}</strong></td>
+        <td>${{ '%.2f'|format(svc.charge_amount) }}</td>
+        <td style="color:#16a34a;">${{ '%.2f'|format(svc.paid_so_far) }}</td>
+        <td style="color:{% if svc.balance > 0 %}#dc2626{% else %}#16a34a{% endif %}; font-weight:700;">
+          ${{ '%.2f'|format(svc.balance) }}
+        </td>
+        <td>
+          <input type="number" name="paid_{{ svc.charge_id }}"
+            step="0.01" min="0" max="{{ svc.balance }}"
+            value="{{ '%.2f'|format(svc.balance) }}"
+            style="width:100px; padding:6px; border:1px solid var(--border); border-radius:6px; background:var(--card-bg); color:var(--text);"
+            oninput="updateTotal()" />
+        </td>
+        <td>
+          <input type="number" name="adjustment_{{ svc.charge_id }}"
+            step="0.01" min="0"
+            value="0.00"
+            style="width:100px; padding:6px; border:1px solid var(--border); border-radius:6px; background:var(--card-bg); color:var(--text);"
+            oninput="updateTotal()" />
+        </td>
+        <td>
+          <select name="adj_reason_{{ svc.charge_id }}"
+            style="padding:6px; border:1px solid var(--border); border-radius:6px; background:var(--card-bg); color:var(--text); font-size:0.82rem;">
+            <option value="Ajuste contractual">Ajuste contractual</option>
+            <option value="Deducible">Deducible</option>
+            <option value="Coinsurance">Coinsurance</option>
+            <option value="Copago">Copago</option>
+            <option value="No cubierto">No cubierto</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr style="background:var(--accent-soft);">
+          <td colspan="5" style="font-weight:700; padding:8px 14px;">Total a Registrar:</td>
+          <td style="font-weight:700; padding:8px 14px;" id="total-paid-display">${{ '%.2f'|format(total_balance) }}</td>
+          <td style="font-weight:700; padding:8px 14px;" id="total-adj-display">$0.00</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div style="display:flex; gap:0.75rem;">
+    <button class="button-primary" type="submit">
+      <i class="fa-solid fa-receipt"></i> Registrar EOB y Aplicar Pago
+    </button>
+    <a class="button-secondary" href="/admin/claims/{{ claim.id }}">Cancelar</a>
+  </div>
+
+</form>
+
+<script>
+function updateTotal() {
+  let totalPaid = 0;
+  let totalAdj = 0;
+  document.querySelectorAll('[name^="paid_"]').forEach(el => {
+    totalPaid += parseFloat(el.value || 0);
+  });
+  document.querySelectorAll('[name^="adjustment_"]').forEach(el => {
+    totalAdj += parseFloat(el.value || 0);
+  });
+  document.getElementById('total-paid-display').textContent = '$' + totalPaid.toFixed(2);
+  document.getElementById('total-adj-display').textContent = '$' + totalAdj.toFixed(2);
+}
+</script>
+
+{% endif %}
+
+{% endblock %}

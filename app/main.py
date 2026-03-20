@@ -42,6 +42,7 @@ from app.routes.admin_clinical import clinical_admin_bp
 from app.routes.admin_progress_notes import progress_notes_admin_bp
 from app.routes.admin_notes_editor import notes_editor_admin_bp
 from app.routes.admin_checkin import checkin_bp
+from app.routes.admin_eob import eob_bp
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"
@@ -173,6 +174,7 @@ app.register_blueprint(clinical_admin_bp)
 app.register_blueprint(progress_notes_admin_bp)
 app.register_blueprint(notes_editor_admin_bp)
 app.register_blueprint(checkin_bp)
+app.register_blueprint(eob_bp)
 
 # =========================
 # CMS1500 VIEW
