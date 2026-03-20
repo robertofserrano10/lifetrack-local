@@ -690,6 +690,94 @@ border-radius: 6px;
 }
 
 /* =====================
+   SIDEBAR: PATIENT SEARCH
+   ===================== */
+.sidebar-search {
+  position: relative;
+  margin: 12px 0 8px;
+}
+
+.sidebar-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  transition: border-color 0.15s;
+}
+
+.sidebar-search-wrap:focus-within {
+  border-color: var(--accent);
+}
+
+.sidebar-search-wrap i {
+  color: var(--sidebar-text);
+  opacity: 0.5;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.sidebar-search-wrap input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 13px;
+  width: 100%;
+  font-family: inherit;
+}
+
+.sidebar-search-wrap input::placeholder {
+  color: var(--sidebar-text);
+  opacity: 0.5;
+}
+
+.patient-search-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  z-index: 200;
+  overflow: hidden;
+}
+
+.psr-item {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.psr-item:last-child {
+  border-bottom: none;
+}
+
+.psr-item:hover {
+  background: var(--accent-soft);
+}
+
+.psr-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.psr-dob {
+  font-size: 11px;
+  color: var(--sidebar-text);
+  opacity: 0.75;
+  margin-top: 1px;
+}
+
+/* =====================
    SIDEBAR: SECTION LABEL
    ===================== */
 .sidebar-section-label {

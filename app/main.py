@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 
 from flask import (
     Flask,
+    jsonify,
     render_template,
     request,
     redirect,
@@ -175,6 +176,33 @@ app.register_blueprint(progress_notes_admin_bp)
 app.register_blueprint(notes_editor_admin_bp)
 app.register_blueprint(checkin_bp)
 app.register_blueprint(eob_bp)
+
+# =========================
+# PATIENT SEARCH (global)
+# =========================
+@app.route("/admin/patient-search")
+def patient_search():
+    if not session.get("user_id"):
+        return jsonify([]), 401
+    q = request.args.get("q", "").strip()
+    if len(q) < 2:
+        return jsonify([])
+    like = f"%{q}%"
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    try:
+        rows = conn.execute(
+            """SELECT id, first_name, last_name, date_of_birth
+               FROM patients
+               WHERE first_name LIKE ? OR last_name LIKE ? OR date_of_birth LIKE ?
+               ORDER BY last_name, first_name
+               LIMIT 8""",
+            (like, like, like),
+        ).fetchall()
+        return jsonify([dict(r) for r in rows])
+    finally:
+        conn.close()
+
 
 # =========================
 # CMS1500 VIEW

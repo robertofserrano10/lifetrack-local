@@ -25,6 +25,16 @@
         <span>LifeTrack</span>
       </div>
 
+      {% if current_user %}
+      <div class="sidebar-search">
+        <div class="sidebar-search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="patient-search-input" placeholder="Search patient…" autocomplete="off" spellcheck="false">
+        </div>
+        <div id="patient-search-results" class="patient-search-dropdown" hidden></div>
+      </div>
+      {% endif %}
+
       <nav class="sidebar-nav">
 
         {% set path = request.path %}
@@ -181,5 +191,45 @@
 
     </div>
   </div>
+  <script>
+  (function () {
+    var input = document.getElementById('patient-search-input');
+    if (!input) return;
+    var results = document.getElementById('patient-search-results');
+    var timer;
+
+    function escHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    input.addEventListener('input', function () {
+      clearTimeout(timer);
+      var q = input.value.trim();
+      if (q.length < 2) { results.hidden = true; return; }
+      timer = setTimeout(function () {
+        fetch('/admin/patient-search?q=' + encodeURIComponent(q))
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (!data.length) { results.hidden = true; return; }
+            results.innerHTML = data.map(function (p) {
+              return '<a href="/admin/patients/' + p.id + '/edit" class="psr-item">' +
+                '<span class="psr-name">' + escHtml(p.last_name) + ', ' + escHtml(p.first_name) + '</span>' +
+                '<span class="psr-dob">' + escHtml(p.date_of_birth || '') + '</span>' +
+                '</a>';
+            }).join('');
+            results.hidden = false;
+          });
+      }, 250);
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.sidebar-search')) results.hidden = true;
+    });
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { results.hidden = true; input.blur(); }
+    });
+  })();
+  </script>
 </body>
 </html>
