@@ -1,0 +1,232 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-user-plus" style="color:var(--accent);"></i> Registrar Llegada</h1>
+    <p>Registra la llegada de un paciente sin crear claims ni cargos.</p>
+  </div>
+  <a class="button-secondary" href="/admin/checkin">
+    <i class="fa-solid fa-arrow-left"></i> Volver a Recepción
+  </a>
+</div>
+
+{% if error %}
+<div class="form-step" style="border-left-color:#dc2626;background:#fef2f2;color:#991b1b;margin-bottom:1rem;">
+  <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
+</div>
+{% endif %}
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; align-items:start;">
+
+  <!-- FORMULARIO -->
+  <div>
+    <form method="POST" id="checkin-form">
+      <input type="hidden" name="action" value="checkin">
+
+      <div class="card" style="margin-bottom:1rem;">
+        <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-user" style="color:var(--accent);"></i> Paciente</h2>
+        <div class="form-grid">
+          <div style="grid-column:span 2;">
+            <label>Buscar Paciente <span style="color:#dc2626;">*</span></label>
+            <select name="patient_id" id="patient_select" required onchange="loadPatientInfo(this.value)">
+              <option value="">Selecciona un paciente...</option>
+              {% for p in patients %}
+              <option value="{{ p.id }}"
+                {% if preselect and preselect == p.id|string %}selected{% endif %}>
+                {{ p.last_name }}, {{ p.first_name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label>Fecha de la Visita</label>
+            <input type="date" name="appointment_date" value="{{ today }}" required />
+          </div>
+          <div>
+            <label>Notas de recepción (opcional)</label>
+            <input type="text" name="notes" placeholder="Ej: Trae documentos, copago pendiente..." />
+          </div>
+        </div>
+      </div>
+
+      <button class="button-primary" type="submit" style="width:100%; padding:14px; font-size:1rem;">
+        <i class="fa-solid fa-door-open"></i> Registrar Llegada y Pasar a Espera
+      </button>
+    </form>
+  </div>
+
+  <!-- PANEL DE INFORMACIÓN DEL PACIENTE -->
+  <div id="patient-panel" style="display:{% if patient_info %}block{% else %}none{% endif %};">
+
+    <!-- Info del paciente -->
+    <div class="card" style="margin-bottom:1rem;" id="patient-info-card">
+      {% if patient_info %}
+      <h2 style="margin-bottom:0.75rem;"><i class="fa-solid fa-id-card" style="color:var(--accent);"></i> {{ patient_info.last_name }}, {{ patient_info.first_name }}</h2>
+      <div style="font-size:0.9rem; display:grid; gap:0.3rem;">
+        <p style="margin:0;"><strong>DOB:</strong> {{ patient_info.date_of_birth or '—' }}</p>
+        <p style="margin:0;"><strong>Teléfono:</strong> {{ patient_info.phone or '—' }}</p>
+        <p style="margin:0;"><strong>Dirección:</strong> {{ patient_info.address or '—' }}{% if patient_info.city %}, {{ patient_info.city }}{% endif %}</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Coverage status -->
+    <div class="card" style="margin-bottom:1rem;" id="coverage-card">
+      {% if coverage_info %}
+        {% if coverage_info.has_coverage %}
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <i class="fa-solid fa-shield-halved" style="color:#16a34a; font-size:1.3rem;"></i>
+          <div>
+            <strong style="color:#16a34a;">Seguro activo</strong>
+            <p style="margin:0; font-size:0.85rem; color:var(--sidebar-text);">
+              {{ coverage_info.coverage.insurer_name }} — {{ coverage_info.coverage.plan_name }}<br>
+              Póliza: {{ coverage_info.coverage.policy_number }}
+            </p>
+          </div>
+        </div>
+        {% elif coverage_info.expired %}
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <i class="fa-solid fa-shield-halved" style="color:#f59e0b; font-size:1.3rem;"></i>
+          <div>
+            <strong style="color:#f59e0b;">⚠️ Seguro vencido</strong>
+            <p style="margin:0; font-size:0.85rem; color:var(--sidebar-text);">
+              Último seguro: {{ coverage_info.coverage.insurer_name }}<br>
+              <a href="/admin/coverages/new?patient_id={{ patient_info.id }}">Registrar nueva cobertura →</a>
+            </p>
+          </div>
+        </div>
+        {% else %}
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <i class="fa-solid fa-shield-halved" style="color:#dc2626; font-size:1.3rem;"></i>
+          <div>
+            <strong style="color:#dc2626;">Sin seguro registrado</strong>
+            <p style="margin:0; font-size:0.85rem; color:var(--sidebar-text);">
+              Paciente self-pay o falta registrar cobertura.<br>
+              <a href="/admin/coverages/new?patient_id={{ patient_info.id }}">Registrar cobertura →</a>
+            </p>
+          </div>
+        </div>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <!-- Recordatorios -->
+    <div class="card" style="border-left:4px solid #f59e0b;">
+      <h3 style="margin-bottom:0.75rem; color:#b45309;"><i class="fa-solid fa-clipboard-list"></i> Recordatorios de Recepción</h3>
+      <div style="font-size:0.88rem; display:flex; flex-direction:column; gap:0.4rem;">
+        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+          <input type="checkbox" style="width:16px;height:16px;"> Solicitar copia de tarjeta del plan médico
+        </label>
+        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+          <input type="checkbox" style="width:16px;height:16px;"> Verificar que el plan esté activo
+        </label>
+        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+          <input type="checkbox" style="width:16px;height:16px;"> Confirmar dirección y teléfono
+        </label>
+        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+          <input type="checkbox" style="width:16px;height:16px;"> Consentimiento informado firmado
+        </label>
+        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+          <input type="checkbox" style="width:16px;height:16px;"> Autorización HIPAA firmada
+        </label>
+        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+          <input type="checkbox" style="width:16px;height:16px;"> Signature on file para facturación
+        </label>
+        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+          <input type="checkbox" style="width:16px;height:16px;"> Cobrar copago si aplica
+        </label>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Panel vacío cuando no hay paciente seleccionado -->
+  <div id="empty-panel" style="display:{% if patient_info %}none{% else %}flex{% endif %}; align-items:center; justify-content:center; height:300px; color:var(--sidebar-text); flex-direction:column; gap:1rem;">
+    <i class="fa-solid fa-user-circle" style="font-size:3rem; opacity:0.2;"></i>
+    <p>Selecciona un paciente para ver su información</p>
+  </div>
+
+</div>
+
+<script>
+function loadPatientInfo(patientId) {
+  if (!patientId) {
+    document.getElementById('patient-panel').style.display = 'none';
+    document.getElementById('empty-panel').style.display = 'flex';
+    return;
+  }
+
+  fetch('/admin/checkin/patient-info?patient_id=' + patientId)
+    .then(r => r.json())
+    .then(data => {
+      const panel = document.getElementById('patient-panel');
+      const empty = document.getElementById('empty-panel');
+      panel.style.display = 'block';
+      empty.style.display = 'none';
+
+      // Update patient info
+      const infoCard = document.getElementById('patient-info-card');
+      infoCard.innerHTML = `
+        <h2 style="margin-bottom:0.75rem;"><i class="fa-solid fa-id-card" style="color:var(--accent);"></i> ${data.patient.name}</h2>
+        <div style="font-size:0.9rem; display:grid; gap:0.3rem;">
+          <p style="margin:0;"><strong>DOB:</strong> ${data.patient.dob}</p>
+          <p style="margin:0;"><strong>Teléfono:</strong> ${data.patient.phone}</p>
+          <p style="margin:0;"><strong>Dirección:</strong> ${data.patient.address}</p>
+        </div>
+        ${data.warnings.length > 0 ? `
+          <div style="margin-top:0.75rem; padding:0.5rem; background:#fef9c3; border-radius:6px; font-size:0.82rem; color:#854d0e;">
+            <strong>⚠️ Datos incompletos:</strong> ${data.warnings.join(', ')}
+            <br><a href="/admin/patients/${data.patient.id}/edit" style="color:#854d0e;">Actualizar datos →</a>
+          </div>
+        ` : ''}
+      `;
+
+      // Update coverage
+      const covCard = document.getElementById('coverage-card');
+      const cov = data.coverage;
+      if (cov.has_coverage) {
+        covCard.innerHTML = `
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <i class="fa-solid fa-shield-halved" style="color:#16a34a; font-size:1.3rem;"></i>
+            <div>
+              <strong style="color:#16a34a;">Seguro activo</strong>
+              <p style="margin:0; font-size:0.85rem; color:var(--sidebar-text);">
+                ${cov.insurer} — ${cov.plan}<br>Póliza: ${cov.policy}
+              </p>
+            </div>
+          </div>`;
+      } else if (cov.expired) {
+        covCard.innerHTML = `
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <i class="fa-solid fa-shield-halved" style="color:#f59e0b; font-size:1.3rem;"></i>
+            <div>
+              <strong style="color:#f59e0b;">⚠️ Seguro vencido</strong>
+              <p style="margin:0; font-size:0.85rem;">Último: ${cov.insurer || '—'}<br>
+              <a href="/admin/coverages/new?patient_id=${patientId}">Registrar nueva cobertura →</a></p>
+            </div>
+          </div>`;
+      } else {
+        covCard.innerHTML = `
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <i class="fa-solid fa-shield-halved" style="color:#dc2626; font-size:1.3rem;"></i>
+            <div>
+              <strong style="color:#dc2626;">Sin seguro registrado</strong>
+              <p style="margin:0; font-size:0.85rem;">
+                <a href="/admin/coverages/new?patient_id=${patientId}">Registrar cobertura →</a>
+              </p>
+            </div>
+          </div>`;
+      }
+    })
+    .catch(err => console.error('Error loading patient info:', err));
+}
+
+// Load on page load if patient preselected
+{% if preselect %}
+loadPatientInfo('{{ preselect }}');
+{% endif %}
+</script>
+
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "layouts/admin_base.html" %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-file-invoice-dollar" style="color:var(--accent);"></i> Panel de Facturación</h1>
+    <p>{{ today }} — Puerto Rico</p>
+  </div>
+  <a class="button-primary" href="/admin/claims">
+    <i class="fa-solid fa-file-medical"></i> Ver Todos los Claims
+  </a>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+  <div class="dashboard-card">
+    <h3>Pendientes Envío</h3>
+    <p style="color:#f59e0b;">{{ draft }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Sometidos</h3>
+    <p style="color:var(--accent);">{{ submitted }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Pagados</h3>
+    <p style="color:#16a34a;">{{ paid }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Pendiente Cobro</h3>
+    <p style="color:#dc2626;">${{ '%.2f'|format(pendiente_cobro) }}</p>
+  </div>
+</div>
+
+{% if claims_draft %}
+<div class="card" style="margin-bottom:1rem; border-left:4px solid #f59e0b;">
+  <h2 style="margin-bottom:0.75rem;"><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i> Claims Pendientes de Envío</h2>
+  <table class="claims-table">
+    <thead>
+      <tr><th>Claim</th><th>Paciente</th><th>Status</th><th>Acción</th></tr>
+    </thead>
+    <tbody>
+    {% for c in claims_draft %}
+    <tr>
+      <td><strong>{{ c.claim_number }}</strong></td>
+      <td>{{ c.last_name }}, {{ c.first_name }}</td>
+      <td><span style="background:#fef9c3;color:#854d0e;border-radius:999px;padding:3px 8px;font-size:0.78rem;">{{ c.status }}</span></td>
+      <td>
+        <a class="button-secondary" style="font-size:0.8rem;padding:4px 10px;" href="/admin/claims/{{ c.id }}">Revisar</a>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card" style="text-align:center; padding:2rem; color:var(--sidebar-text); border-left:4px solid #16a34a;">
+  <i class="fa-solid fa-circle-check" style="font-size:2rem; color:#16a34a; margin-bottom:0.5rem; display:block;"></i>
+  <strong style="color:#16a34a;">¡Todo al día!</strong>
+  <p>No hay claims pendientes de envío.</p>
+</div>
+{% endif %}
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+  <a class="card" href="/admin/finances" style="text-decoration:none; display:block; transition:box-shadow 0.2s;">
+    <h3 style="margin:0 0 0.5rem;"><i class="fa-solid fa-dollar-sign" style="color:var(--accent);"></i> Registrar Payment</h3>
+    <p style="margin:0; color:var(--sidebar-text); font-size:0.88rem;">Registrar pago recibido del seguro o paciente</p>
+  </a>
+  <a class="card" href="/admin/finances" style="text-decoration:none; display:block; transition:box-shadow 0.2s;">
+    <h3 style="margin:0 0 0.5rem;"><i class="fa-solid fa-receipt" style="color:var(--accent);"></i> Aplicar EOB</h3>
+    <p style="margin:0; color:var(--sidebar-text); font-size:0.88rem;">Aplicar Explanation of Benefits al claim</p>
+  </a>
+</div>
+
+{% endblock %}

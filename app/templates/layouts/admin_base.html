@@ -36,6 +36,21 @@
         </a>
         {% endif %}
 
+        {% if current_user and current_user.role in ['ADMIN','RECEPCION'] %}
+        <a href="/admin/checkin" class="{{ 'active' if path.startswith('/admin/checkin') else '' }}">
+          <i class="fa-solid fa-door-open"></i>
+          <span>Check-in</span>
+        </a>
+        {% endif %}
+
+        {% if current_user and current_user.role in ['ADMIN','RECEPCION','FACTURADOR'] %}
+        <a href="/admin/checkin" class="{{ 'active' if path.startswith('/admin/checkin') else '' }}"
+           style="background:{% if path.startswith('/admin/checkin') %}var(--accent-soft){% endif %};">
+          <i class="fa-solid fa-door-open"></i>
+          <span>Check-in</span>
+        </a>
+        {% endif %}
+
         {% if current_user and current_user.role in ['ADMIN','FACTURADOR','RECEPCION'] %}
         <a href="/admin/patients" class="{{ 'active' if path.startswith('/admin/patients') else '' }}">
           <i class="fa-solid fa-user"></i>

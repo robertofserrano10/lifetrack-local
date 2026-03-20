@@ -1,0 +1,79 @@
+{% extends "layouts/admin_base.html" %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-chart-line" style="color:var(--accent);"></i> Dashboard Administrativo</h1>
+    <p>{{ today }} — LifeTrack Clearinghouse · Puerto Rico</p>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+  <div class="dashboard-card">
+    <h3>Total Claims</h3>
+    <p>{{ total_claims }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Sometidos</h3>
+    <p style="color:var(--accent);">{{ submitted }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Pagados</h3>
+    <p style="color:#16a34a;">{{ paid }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Snapshots</h3>
+    <p>{{ snapshots }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Pacientes</h3>
+    <p>{{ total_patients }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Usuarios Activos</h3>
+    <p>{{ total_users }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Pendiente Cobro</h3>
+    <p style="color:#dc2626;">${{ '%.2f'|format(pendiente_cobro) }}</p>
+  </div>
+</div>
+
+{% if claims_draft %}
+<div class="card" style="margin-bottom:1rem;">
+  <h2 style="margin-bottom:0.75rem;"><i class="fa-solid fa-file-medical" style="color:#f59e0b;"></i> Claims Pendientes de Envío</h2>
+  <table class="claims-table">
+    <thead><tr><th>Claim</th><th>Paciente</th><th>Acción</th></tr></thead>
+    <tbody>
+    {% for c in claims_draft %}
+    <tr>
+      <td><strong>{{ c.claim_number }}</strong></td>
+      <td>{{ c.last_name }}, {{ c.first_name }}</td>
+      <td><a class="button-secondary" style="font-size:0.8rem;padding:4px 10px;" href="/admin/claims/{{ c.id }}">Revisar</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem;">
+  <a class="card" href="/admin/checkin" style="text-decoration:none;">
+    <h3 style="margin:0 0 0.5rem;"><i class="fa-solid fa-door-open" style="color:var(--accent);"></i> Check-in</h3>
+    <p style="margin:0; color:var(--sidebar-text); font-size:0.88rem;">Ver sala de espera del día</p>
+  </a>
+  <a class="card" href="/admin/patients" style="text-decoration:none;">
+    <h3 style="margin:0 0 0.5rem;"><i class="fa-solid fa-users" style="color:var(--accent);"></i> Pacientes</h3>
+    <p style="margin:0; color:var(--sidebar-text); font-size:0.88rem;">Gestionar expedientes</p>
+  </a>
+  <a class="card" href="/admin/claims" style="text-decoration:none;">
+    <h3 style="margin:0 0 0.5rem;"><i class="fa-solid fa-file-invoice" style="color:var(--accent);"></i> Claims</h3>
+    <p style="margin:0; color:var(--sidebar-text); font-size:0.88rem;">Revisar y enviar claims</p>
+  </a>
+  <a class="card" href="/admin/settings" style="text-decoration:none;">
+    <h3 style="margin:0 0 0.5rem;"><i class="fa-solid fa-gear" style="color:var(--accent);"></i> Settings</h3>
+    <p style="margin:0; color:var(--sidebar-text); font-size:0.88rem;">Usuarios y provider</p>
+  </a>
+</div>
+
+{% endblock %}

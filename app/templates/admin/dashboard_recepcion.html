@@ -1,0 +1,62 @@
+{% extends "layouts/admin_base.html" %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-door-open" style="color:var(--accent);"></i> Recepción</h1>
+    <p>{{ today }} — Puerto Rico</p>
+  </div>
+  <a class="button-primary" href="/admin/checkin/new">
+    <i class="fa-solid fa-user-plus"></i> Registrar Llegada
+  </a>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+  <div class="dashboard-card">
+    <h3>En Espera</h3>
+    <p style="color:#f59e0b;">{{ waiting|length }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>En Sesión</h3>
+    <p style="color:#16a34a;">{{ in_session|length }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Completadas Hoy</h3>
+    <p>{{ completed|length }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Total Pacientes</h3>
+    <p>{{ total_patients }}</p>
+  </div>
+</div>
+
+{% if in_session %}
+<div class="card" style="margin-bottom:1rem; border-left:4px solid #16a34a;">
+  <h2 style="margin-bottom:0.75rem; color:#16a34a;"><i class="fa-solid fa-stethoscope"></i> En Sesión Ahora</h2>
+  {% for s in in_session %}
+  <div style="padding:0.6rem; background:var(--bg); border-radius:8px; margin-bottom:0.4rem;">
+    <strong>{{ s.last_name }}, {{ s.first_name }}</strong>
+    <span style="font-size:0.82rem; color:var(--sidebar-text); margin-left:0.75rem;">Desde: {{ s.in_session_time[:16] if s.in_session_time else '—' }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="card" style="margin-bottom:1rem;">
+  <h2 style="margin-bottom:0.75rem;"><i class="fa-solid fa-clock" style="color:#f59e0b;"></i> Sala de Espera</h2>
+  {% if waiting %}
+  {% for s in waiting %}
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem; background:var(--bg); border-radius:8px; margin-bottom:0.4rem; border-left:3px solid #f59e0b;">
+    <div>
+      <strong>{{ s.last_name }}, {{ s.first_name }}</strong>
+      {% if s.notes %}<div style="font-size:0.8rem; color:var(--sidebar-text);">{{ s.notes }}</div>{% endif %}
+    </div>
+    <a class="button-secondary" style="font-size:0.8rem; padding:4px 10px;" href="/admin/patients/{{ s.patient_id }}">Ver Paciente</a>
+  </div>
+  {% endfor %}
+  {% else %}
+  <p style="color:var(--sidebar-text); font-style:italic; text-align:center; padding:1.5rem 0;">Sala de espera vacía — <a href="/admin/checkin/new">Registrar llegada</a></p>
+  {% endif %}
+</div>
+
+{% endblock %}

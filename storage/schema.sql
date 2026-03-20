@@ -306,3 +306,27 @@ CREATE TABLE IF NOT EXISTS encounters (
 
     FOREIGN KEY (patient_id) REFERENCES patients(id)
 );
+
+-- =========================================
+-- VISIT SESSIONS (BC — Check-in Flow)
+-- Operational layer only — no financials
+-- =========================================
+
+CREATE TABLE IF NOT EXISTS visit_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    patient_id INTEGER NOT NULL,
+    appointment_date TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'ARRIVED'
+        CHECK (status IN ('ARRIVED','CHECKED_IN','WAITING','IN_SESSION','COMPLETED','CANCELLED')),
+    check_in_time TEXT,
+    in_session_time TEXT,
+    completed_time TEXT,
+    notes TEXT,
+    created_by TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (patient_id) REFERENCES patients(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_visit_sessions_patient ON visit_sessions(patient_id);
+CREATE INDEX IF NOT EXISTS idx_visit_sessions_date ON visit_sessions(appointment_date);

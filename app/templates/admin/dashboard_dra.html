@@ -1,0 +1,74 @@
+{% extends "layouts/admin_base.html" %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-user-doctor" style="color:var(--accent);"></i> Panel Clínico</h1>
+    <p>{{ today }} — Puerto Rico</p>
+  </div>
+  <a class="button-primary" href="/admin/encounters/new">
+    <i class="fa-solid fa-calendar-plus"></i> Nuevo Encounter
+  </a>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+  <div class="dashboard-card">
+    <h3>Pacientes Hoy</h3>
+    <p style="color:var(--accent);">{{ pacientes_hoy|length }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Notas Sin Firmar</h3>
+    <p style="color:{% if notas_sin_firmar|length > 0 %}#dc2626{% else %}#16a34a{% endif %};">{{ notas_sin_firmar|length }}</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Encounters Hoy</h3>
+    <p>{{ encounters_hoy|length }}</p>
+  </div>
+</div>
+
+{% if pacientes_hoy %}
+<div class="card" style="margin-bottom:1rem; border-left:4px solid var(--accent);">
+  <h2 style="margin-bottom:0.75rem;"><i class="fa-solid fa-clock" style="color:#f59e0b;"></i> Pacientes Esperando</h2>
+  {% for s in pacientes_hoy %}
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem; background:var(--bg); border-radius:8px; margin-bottom:0.4rem;">
+    <div>
+      <strong>{{ s.last_name }}, {{ s.first_name }}</strong>
+      <span style="font-size:0.78rem; background:{% if s.status=='IN_SESSION' %}#dcfce7; color:#166534{% else %}#fef9c3; color:#854d0e{% endif %}; border-radius:999px; padding:2px 8px; margin-left:0.5rem;">{{ s.status }}</span>
+    </div>
+    <div style="display:flex; gap:0.5rem;">
+      <a class="button-secondary" style="font-size:0.8rem; padding:4px 10px;" href="/admin/patients/{{ s.patient_id }}">Ver Paciente</a>
+      <a class="button-primary" style="font-size:0.8rem; padding:4px 10px;" href="/admin/encounters/new?patient_id={{ s.patient_id }}">+ Encounter</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if notas_sin_firmar %}
+<div class="card" style="margin-bottom:1rem; border-left:4px solid #dc2626;">
+  <h2 style="margin-bottom:0.75rem; color:#dc2626;"><i class="fa-solid fa-pen"></i> Notas Pendientes de Firma</h2>
+  {% for n in notas_sin_firmar %}
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem; background:var(--bg); border-radius:8px; margin-bottom:0.4rem;">
+    <div>
+      <strong>{{ n.last_name }}, {{ n.first_name }}</strong>
+      <span style="font-size:0.82rem; color:var(--sidebar-text); margin-left:0.5rem;">{{ n.date_of_service or n.created_at[:10] }}</span>
+    </div>
+    <a class="button-primary" style="font-size:0.8rem; padding:4px 10px;" href="/admin/notes/view/{{ n.id }}">Firmar Nota</a>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if encounters_hoy %}
+<div class="card">
+  <h2 style="margin-bottom:0.75rem;"><i class="fa-solid fa-calendar-check" style="color:var(--accent);"></i> Encounters de Hoy</h2>
+  {% for e in encounters_hoy %}
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem; background:var(--bg); border-radius:8px; margin-bottom:0.4rem;">
+    <strong>{{ e.last_name }}, {{ e.first_name }}</strong>
+    <a class="button-secondary" style="font-size:0.8rem; padding:4px 10px;" href="/admin/encounters/{{ e.id }}">Ver</a>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

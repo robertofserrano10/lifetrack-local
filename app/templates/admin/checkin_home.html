@@ -1,0 +1,114 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-door-open" style="color:var(--accent);"></i> Recepción — Check-in</h1>
+    <p>{{ today }} &nbsp;·&nbsp; {{ total }} visita{{ 's' if total != 1 else '' }} hoy</p>
+  </div>
+  <a class="button-primary" href="/admin/checkin/new">
+    <i class="fa-solid fa-user-plus"></i> Registrar Llegada
+  </a>
+</div>
+
+<!-- EN SESIÓN -->
+{% if in_session %}
+<div class="card" style="margin-bottom:1rem; border-left:4px solid #16a34a;">
+  <h2 style="margin-bottom:1rem; color:#16a34a;">
+    <i class="fa-solid fa-stethoscope"></i> En Sesión ({{ in_session|length }})
+  </h2>
+  {% for s in in_session %}
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem; background:var(--bg); border-radius:8px; margin-bottom:0.5rem;">
+    <div>
+      <strong>{{ s.last_name }}, {{ s.first_name }}</strong>
+      <span style="font-size:0.82rem; color:var(--sidebar-text); margin-left:0.75rem;">
+        DOB: {{ s.date_of_birth }} &nbsp;·&nbsp; Llegó: {{ s.check_in_time[:16] if s.check_in_time else '—' }}
+      </span>
+    </div>
+    <div style="display:flex; gap:0.5rem;">
+      <form method="POST" action="/admin/checkin/{{ s.id }}/status">
+        <input type="hidden" name="status" value="COMPLETED">
+        <button class="button-secondary" style="padding:5px 12px; font-size:0.82rem;" type="submit">
+          <i class="fa-solid fa-check"></i> Completar Visita
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- EN ESPERA -->
+<div class="card" style="margin-bottom:1rem;">
+  <h2 style="margin-bottom:1rem;">
+    <i class="fa-solid fa-clock" style="color:#f59e0b;"></i> En Espera ({{ waiting|length }})
+  </h2>
+  {% if waiting %}
+  {% for s in waiting %}
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem; background:var(--bg); border-radius:8px; margin-bottom:0.5rem; border-left:3px solid #f59e0b;">
+    <div>
+      <strong>{{ s.last_name }}, {{ s.first_name }}</strong>
+      <span style="font-size:0.82rem; color:var(--sidebar-text); margin-left:0.75rem;">
+        DOB: {{ s.date_of_birth }}
+      </span>
+      {% if s.insurer_name %}
+      <span style="font-size:0.78rem; background:var(--accent-soft); color:var(--accent); border-radius:999px; padding:2px 8px; margin-left:0.5rem;">
+        {{ s.insurer_name }}
+      </span>
+      {% else %}
+      <span style="font-size:0.78rem; background:#fef9c3; color:#854d0e; border-radius:999px; padding:2px 8px; margin-left:0.5rem;">
+        Sin seguro
+      </span>
+      {% endif %}
+      {% if s.notes %}
+      <div style="font-size:0.8rem; color:var(--sidebar-text); margin-top:0.25rem;">
+        <i class="fa-solid fa-note-sticky"></i> {{ s.notes }}
+      </div>
+      {% endif %}
+    </div>
+    <div style="display:flex; gap:0.5rem;">
+      <form method="POST" action="/admin/checkin/{{ s.id }}/status">
+        <input type="hidden" name="status" value="IN_SESSION">
+        <button class="button-primary" style="padding:5px 12px; font-size:0.82rem;" type="submit">
+          <i class="fa-solid fa-stethoscope"></i> Llamar Paciente
+        </button>
+      </form>
+      <form method="POST" action="/admin/checkin/{{ s.id }}/status">
+        <input type="hidden" name="status" value="CANCELLED">
+        <button class="button-secondary" style="padding:5px 12px; font-size:0.82rem;" type="submit"
+          onclick="return confirm('¿Cancelar esta visita?')">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div style="text-align:center; padding:2rem; color:var(--sidebar-text);">
+    <i class="fa-solid fa-couch" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:0.75rem;"></i>
+    <p>Sala de espera vacía.</p>
+    <a class="button-primary" href="/admin/checkin/new">Registrar llegada</a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- COMPLETADAS HOY -->
+{% if completed %}
+<details class="card" style="margin-bottom:1rem;">
+  <summary style="cursor:pointer; font-weight:700; padding:0.25rem 0;">
+    <i class="fa-solid fa-circle-check" style="color:#16a34a;"></i>
+    Completadas hoy ({{ completed|length }})
+  </summary>
+  <div style="margin-top:1rem;">
+  {% for s in completed %}
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem; border-bottom:1px solid var(--border); font-size:0.88rem;">
+    <span><strong>{{ s.last_name }}, {{ s.first_name }}</strong></span>
+    <span style="color:var(--sidebar-text);">{{ s.completed_time[:16] if s.completed_time else '—' }}</span>
+  </div>
+  {% endfor %}
+  </div>
+</details>
+{% endif %}
+
+{% endblock %}
