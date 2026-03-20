@@ -9,6 +9,7 @@ from app.db.claims import (
     VALID_TRANSITIONS,
 )
 from app.db.financial_lock import is_claim_locked
+from app.db.claim_scrubber import scrub_claim
 from app.db.cms1500_snapshot import generate_cms1500_snapshot
 
 from app.db.cms1500_snapshot import (
@@ -133,6 +134,9 @@ def claim_detail_admin(claim_id: int):
     claim_events = list_events_admin(limit=50, offset=0, claim_id=claim_id)
     locked = is_claim_locked(claim_id)
 
+    # Run scrubber only if not locked
+    scrub = scrub_claim(claim_id) if not locked else {"ready": True, "errors": [], "warnings": []}
+
     return render_template(
         "admin/claim_detail.html",
         claim=claim,
@@ -147,6 +151,7 @@ def claim_detail_admin(claim_id: int):
         snapshots=claim_snapshots,
         events=claim_events,
         locked=locked,
+        scrub=scrub,
     )
 
 

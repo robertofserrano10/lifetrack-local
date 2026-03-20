@@ -56,6 +56,43 @@
   </div>
 </div>
 
+<!-- CLAIM SCRUBBER -->
+{% if not locked %}
+<div class="card" style="margin-bottom:1rem; border-left:4px solid {{ '#16a34a' if scrub.ready else '#dc2626' }};">
+  <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+    <div>
+      {% if scrub.ready %}
+        <strong style="color:#16a34a;"><i class="fa-solid fa-circle-check"></i> Claim listo para enviar</strong>
+        <p style="margin:0.25rem 0 0; font-size:0.85rem; color:var(--sidebar-text);">Todos los campos críticos están completos. Puedes bloquear y generar el CMS-1500.</p>
+      {% else %}
+        <strong style="color:#dc2626;"><i class="fa-solid fa-circle-xmark"></i> Claim tiene errores — No está listo</strong>
+        <p style="margin:0.25rem 0 0; font-size:0.85rem; color:var(--sidebar-text);">Corrige los errores antes de generar el CMS-1500.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if scrub.errors %}
+  <div style="margin-top:1rem;">
+    {% for e in scrub.errors %}
+    <div style="background:#fef2f2; border-radius:6px; padding:6px 12px; margin-bottom:4px; font-size:0.88rem; color:#991b1b;">
+      {{ e }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if scrub.warnings %}
+  <div style="margin-top:0.75rem;">
+    {% for w in scrub.warnings %}
+    <div style="background:#fefce8; border-radius:6px; padding:6px 12px; margin-bottom:4px; font-size:0.88rem; color:#854d0e;">
+      {{ w }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
 <!-- Lock / Snapshot -->
 <div class="card" style="margin-bottom:1rem;">
   {% if locked %}
@@ -77,9 +114,17 @@
       <p style="margin:0; font-size:0.85rem; color:var(--sidebar-text);">Cuando todo esté listo, bloquea el claim para generar el CMS-1500.</p>
     </div>
     <form method="POST" action="{{ url_for('claims_admin.claim_lock', claim_id=claim.id) }}" style="margin-left:auto;" onsubmit="return confirm('¿Bloquear este claim? Se generará el snapshot CMS-1500.')">
+      {% if scrub.ready %}
       <button class="button-primary" type="submit">
         <i class="fa-solid fa-lock"></i> Bloquear y Generar CMS-1500
       </button>
+      {% else %}
+      <button class="button-primary" type="button" disabled
+        style="opacity:0.5;cursor:not-allowed;"
+        title="Corrige los errores del scrubber primero">
+        <i class="fa-solid fa-lock"></i> Bloquear y Generar CMS-1500
+      </button>
+      {% endif %}
     </form>
   </div>
   {% endif %}
