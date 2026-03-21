@@ -72,8 +72,8 @@
           <span>Dashboard</span>
         </a>
 
-        <!-- RECEPCION + ADMIN -->
-        {% if current_user.role in ['ADMIN', 'RECEPCION'] %}
+        <!-- RECEPCION + FACTURADOR + ADMIN -->
+        {% if current_user.role in ['ADMIN', 'RECEPCION', 'FACTURADOR'] %}
         <a href="/admin/patients" class="sidebar-link {{ 'active' if path.startswith('/admin/patients') else '' }}">
           <i class="fa-solid fa-user"></i>
           <span>Pacientes</span>
@@ -82,14 +82,6 @@
           <i class="fa-solid fa-door-open"></i>
           <span>Check-in</span>
         </a>
-        <a href="/admin/appointments" class="sidebar-link {{ 'active' if path.startswith('/admin/appointments') else '' }}">
-          <i class="fa-solid fa-calendar-days"></i>
-          <span>Agenda</span>
-        </a>
-        {% endif %}
-
-        <!-- FACTURADOR -->
-        {% if current_user.role == 'FACTURADOR' %}
         <a href="/admin/appointments" class="sidebar-link {{ 'active' if path.startswith('/admin/appointments') else '' }}">
           <i class="fa-solid fa-calendar-days"></i>
           <span>Agenda</span>

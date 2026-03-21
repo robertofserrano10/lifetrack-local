@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, abort, request, redirect, url_for
 
+from app.security.auth import login_required, role_required
 from app.db.claims import (
     get_claim_by_id,
     get_claim_financial_status,
@@ -36,6 +37,8 @@ claims_admin_bp = Blueprint(
 
 
 @claims_admin_bp.route("/<int:claim_id>")
+@login_required
+@role_required("ADMIN", "FACTURADOR")
 def claim_detail_admin(claim_id: int):
 
     claim = get_claim_by_id(claim_id)
@@ -156,6 +159,8 @@ def claim_detail_admin(claim_id: int):
 
 
 @claims_admin_bp.route("/<int:claim_id>/cms1500")
+@login_required
+@role_required("ADMIN", "FACTURADOR")
 def claim_cms1500(claim_id: int):
     claim = get_claim_by_id(claim_id)
     if not claim:
@@ -172,6 +177,8 @@ def claim_cms1500(claim_id: int):
 
 
 @claims_admin_bp.route("/<int:claim_id>/service/new", methods=["GET", "POST"])
+@login_required
+@role_required("ADMIN", "FACTURADOR")
 def claim_add_service(claim_id: int):
     claim = get_claim_by_id(claim_id)
     if not claim:
@@ -210,6 +217,8 @@ def claim_add_service(claim_id: int):
 
 
 @claims_admin_bp.route("/<int:claim_id>/lock", methods=["POST"])
+@login_required
+@role_required("ADMIN", "FACTURADOR")
 def claim_lock(claim_id: int):
     claim = get_claim_by_id(claim_id)
     if not claim:
@@ -234,6 +243,8 @@ def claim_lock(claim_id: int):
 
 
 @claims_admin_bp.route("/<int:claim_id>/edit", methods=["GET", "POST"])
+@login_required
+@role_required("ADMIN", "FACTURADOR")
 def claim_edit(claim_id: int):
     claim = get_claim_by_id(claim_id)
     if not claim:
@@ -285,6 +296,8 @@ def claim_edit(claim_id: int):
 
 
 @claims_admin_bp.route("/<int:claim_id>/transition", methods=["POST"])
+@login_required
+@role_required("ADMIN", "FACTURADOR")
 def claim_transition(claim_id: int):
 
     claim = get_claim_by_id(claim_id)

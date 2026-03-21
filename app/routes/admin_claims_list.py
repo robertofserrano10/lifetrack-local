@@ -69,6 +69,8 @@ def claims_list():
 # Claim create
 # =========================================================
 @claims_list_bp.route("/new", methods=["GET", "POST"])
+@login_required
+@role_required("ADMIN", "FACTURADOR")
 def claim_create():
 
     conn = sqlite3.connect(DB_PATH)

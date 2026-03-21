@@ -5,7 +5,7 @@
 <div class="page-header">
   <div>
     <h1><i class="fa-solid fa-user-plus" style="color:var(--accent);"></i> Registrar Llegada</h1>
-    <p>Registra la llegada de un paciente sin crear claims ni cargos.</p>
+    <p>Completa todos los pasos antes de enviar al paciente a sala de espera.</p>
   </div>
   <a class="button-secondary" href="/admin/checkin">
     <i class="fa-solid fa-arrow-left"></i> Volver a Recepción
@@ -25,6 +25,7 @@
     <form method="POST" id="checkin-form">
       <input type="hidden" name="action" value="checkin">
 
+      <!-- PASO 1: Paciente y fecha -->
       <div class="card" style="margin-bottom:1rem;">
         <h2 style="margin-bottom:1rem;"><i class="fa-solid fa-user" style="color:var(--accent);"></i> Paciente</h2>
         <div class="form-grid">
@@ -51,7 +52,87 @@
         </div>
       </div>
 
-      <button class="button-primary" type="submit" style="width:100%; padding:14px; font-size:1rem;">
+      <!-- PASO 2: Elegibilidad (REQUERIDO) -->
+      <div class="card" style="margin-bottom:1rem; border-left:4px solid var(--accent);">
+        <h2 style="margin-bottom:0.75rem;"><i class="fa-solid fa-shield-check" style="color:var(--accent);"></i> Elegibilidad</h2>
+        <label id="eligibility-label" style="display:flex; align-items:flex-start; gap:0.75rem; cursor:pointer; padding:0.75rem; border-radius:8px; border:2px solid var(--border); transition:border-color 0.2s;">
+          <input type="checkbox" name="eligibility_verified" id="eligibility_cb"
+                 style="width:18px;height:18px;margin-top:2px;flex-shrink:0;"
+                 onchange="onEligibilityChange()"
+                 {% if request.form.get('eligibility_verified') %}checked{% endif %}>
+          <div>
+            <strong>Elegibilidad verificada <span style="color:#dc2626;">*</span></strong>
+            <p style="margin:0; font-size:0.85rem; color:var(--sidebar-text); margin-top:2px;">
+              Confirmé con la aseguradora que el plan está activo para el día de hoy.
+            </p>
+          </div>
+        </label>
+        <p id="eligibility-warning" style="display:none; margin-top:0.5rem; font-size:0.85rem; color:#dc2626;">
+          <i class="fa-solid fa-circle-xmark"></i> La verificación de elegibilidad es obligatoria para hacer check-in.
+        </p>
+      </div>
+
+      <!-- PASO 3: Copago -->
+      <div class="card" style="margin-bottom:1rem;">
+        <h2 style="margin-bottom:0.75rem;"><i class="fa-solid fa-dollar-sign" style="color:var(--accent);"></i> Copago</h2>
+        <div class="form-grid">
+          <div>
+            <label>Monto del copago ($)</label>
+            <input type="number" name="copago_amount" id="copago_amount"
+                   min="0" step="0.01" placeholder="0.00"
+                   value="{{ request.form.get('copago_amount', '') }}"
+                   oninput="onCopagoChange()" />
+          </div>
+          <div id="copago-method-wrap" style="display:{% if request.form.get('copago_amount') and request.form.get('copago_amount')|float > 0 %}block{% else %}none{% endif %};">
+            <label>Método de pago</label>
+            <select name="copago_method" id="copago_method">
+              <option value="cash" {% if request.form.get('copago_method') == 'cash' or not request.form.get('copago_method') %}selected{% endif %}>Efectivo</option>
+              <option value="check" {% if request.form.get('copago_method') == 'check' %}selected{% endif %}>Cheque</option>
+              <option value="eft" {% if request.form.get('copago_method') == 'eft' %}selected{% endif %}>EFT / Tarjeta</option>
+            </select>
+          </div>
+        </div>
+        <p style="margin-top:0.5rem; font-size:0.82rem; color:var(--sidebar-text);">
+          Si el copago es $0, déjalo en blanco. El cobro se registra como pago no-aplicado hasta recibir el EOB.
+        </p>
+      </div>
+
+      <!-- PASO 4: Referido -->
+      <div class="card" style="margin-bottom:1rem;" id="referral-card">
+        <h2 style="margin-bottom:0.75rem;"><i class="fa-solid fa-file-medical" style="color:var(--accent);"></i> Referido</h2>
+
+        <div id="referral-warning-banner" style="display:none; margin-bottom:0.75rem; padding:0.65rem 0.85rem; background:#fef9c3; border:1px solid #fde047; border-radius:8px; font-size:0.85rem; color:#854d0e;">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <strong>Plan requiere referido.</strong> Si no está en archivo, el claim quedará bloqueado en "Ready for Billing".
+        </div>
+
+        <label style="display:flex; align-items:center; gap:0.75rem; cursor:pointer;">
+          <input type="checkbox" name="referral_on_file" id="referral_cb"
+                 style="width:16px;height:16px;"
+                 onchange="onReferralChange()"
+                 {% if request.form.get('referral_on_file') %}checked{% endif %}>
+          <span>Referido en archivo para esta visita</span>
+        </label>
+      </div>
+
+      <!-- PASO 5: Documentos -->
+      <div class="card" style="margin-bottom:1rem;">
+        <h2 style="margin-bottom:0.75rem;"><i class="fa-solid fa-file-signature" style="color:var(--accent);"></i> Documentos Firmados</h2>
+        <div style="display:flex; flex-direction:column; gap:0.6rem;">
+          <label style="display:flex; align-items:center; gap:0.75rem; cursor:pointer;">
+            <input type="checkbox" name="hipaa_signed" style="width:16px;height:16px;"
+                   {% if request.form.get('hipaa_signed') %}checked{% endif %}>
+            <span>Autorización HIPAA firmada</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:0.75rem; cursor:pointer;">
+            <input type="checkbox" name="consent_signed" style="width:16px;height:16px;"
+                   {% if request.form.get('consent_signed') %}checked{% endif %}>
+            <span>Consentimiento informado firmado</span>
+          </label>
+        </div>
+      </div>
+
+      <button class="button-primary" type="submit" id="submit-btn" style="width:100%; padding:14px; font-size:1rem;">
         <i class="fa-solid fa-door-open"></i> Registrar Llegada y Pasar a Espera
       </button>
     </form>
@@ -83,6 +164,9 @@
             <p style="margin:0; font-size:0.85rem; color:var(--sidebar-text);">
               {{ coverage_info.coverage.insurer_name }} — {{ coverage_info.coverage.plan_name }}<br>
               Póliza: {{ coverage_info.coverage.policy_number }}
+              {% if coverage_info.coverage.referral_required %}
+              <br><span style="color:#b45309;"><i class="fa-solid fa-triangle-exclamation"></i> Requiere referido</span>
+              {% endif %}
             </p>
           </div>
         </div>
@@ -112,30 +196,18 @@
       {% endif %}
     </div>
 
-    <!-- Recordatorios -->
+    <!-- Lista de verificación rápida -->
     <div class="card" style="border-left:4px solid #f59e0b;">
-      <h3 style="margin-bottom:0.75rem; color:#b45309;"><i class="fa-solid fa-clipboard-list"></i> Recordatorios de Recepción</h3>
+      <h3 style="margin-bottom:0.75rem; color:#b45309;"><i class="fa-solid fa-clipboard-check"></i> Lista de verificación</h3>
       <div style="font-size:0.88rem; display:flex; flex-direction:column; gap:0.4rem;">
         <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
           <input type="checkbox" style="width:16px;height:16px;"> Solicitar copia de tarjeta del plan médico
         </label>
         <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-          <input type="checkbox" style="width:16px;height:16px;"> Verificar que el plan esté activo
-        </label>
-        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
           <input type="checkbox" style="width:16px;height:16px;"> Confirmar dirección y teléfono
         </label>
         <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-          <input type="checkbox" style="width:16px;height:16px;"> Consentimiento informado firmado
-        </label>
-        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-          <input type="checkbox" style="width:16px;height:16px;"> Autorización HIPAA firmada
-        </label>
-        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
           <input type="checkbox" style="width:16px;height:16px;"> Signature on file para facturación
-        </label>
-        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
-          <input type="checkbox" style="width:16px;height:16px;"> Cobrar copago si aplica
         </label>
       </div>
     </div>
@@ -151,10 +223,56 @@
 </div>
 
 <script>
+// Estado de referral_required del plan cargado
+let currentReferralRequired = false;
+
+function onEligibilityChange() {
+  const cb = document.getElementById('eligibility_cb');
+  const label = document.getElementById('eligibility-label');
+  const warn = document.getElementById('eligibility-warning');
+  if (cb.checked) {
+    label.style.borderColor = '#16a34a';
+    warn.style.display = 'none';
+  } else {
+    label.style.borderColor = 'var(--border)';
+  }
+}
+
+function onCopagoChange() {
+  const val = parseFloat(document.getElementById('copago_amount').value) || 0;
+  document.getElementById('copago-method-wrap').style.display = val > 0 ? 'block' : 'none';
+}
+
+function onReferralChange() {
+  updateReferralBanner();
+}
+
+function updateReferralBanner() {
+  const banner = document.getElementById('referral-warning-banner');
+  const cb = document.getElementById('referral_cb');
+  if (currentReferralRequired && !cb.checked) {
+    banner.style.display = 'block';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+document.getElementById('checkin-form').addEventListener('submit', function(e) {
+  const cb = document.getElementById('eligibility_cb');
+  if (!cb.checked) {
+    e.preventDefault();
+    document.getElementById('eligibility-warning').style.display = 'block';
+    document.getElementById('eligibility-label').style.borderColor = '#dc2626';
+    document.getElementById('eligibility-label').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
+
 function loadPatientInfo(patientId) {
   if (!patientId) {
     document.getElementById('patient-panel').style.display = 'none';
     document.getElementById('empty-panel').style.display = 'flex';
+    currentReferralRequired = false;
+    updateReferralBanner();
     return;
   }
 
@@ -186,14 +304,19 @@ function loadPatientInfo(patientId) {
       // Update coverage
       const covCard = document.getElementById('coverage-card');
       const cov = data.coverage;
+      currentReferralRequired = cov.referral_required || false;
+
       if (cov.has_coverage) {
+        const referralBadge = currentReferralRequired
+          ? `<br><span style="color:#b45309;"><i class="fa-solid fa-triangle-exclamation"></i> Requiere referido</span>`
+          : '';
         covCard.innerHTML = `
           <div style="display:flex; align-items:center; gap:0.75rem;">
             <i class="fa-solid fa-shield-halved" style="color:#16a34a; font-size:1.3rem;"></i>
             <div>
               <strong style="color:#16a34a;">Seguro activo</strong>
               <p style="margin:0; font-size:0.85rem; color:var(--sidebar-text);">
-                ${cov.insurer} — ${cov.plan}<br>Póliza: ${cov.policy}
+                ${cov.insurer} — ${cov.plan}<br>Póliza: ${cov.policy}${referralBadge}
               </p>
             </div>
           </div>`;
@@ -219,9 +342,15 @@ function loadPatientInfo(patientId) {
             </div>
           </div>`;
       }
+
+      updateReferralBanner();
     })
     .catch(err => console.error('Error loading patient info:', err));
 }
+
+// Init state on page load
+onEligibilityChange();
+onCopagoChange();
 
 // Load on page load if patient preselected
 {% if preselect %}

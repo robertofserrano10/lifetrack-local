@@ -1,5 +1,5 @@
 """
-VISIT SESSIONS — Fase BC
+VISIT SESSIONS — Fase BC / BI-3
 Capa operacional pura. Solo refleja presencia física del paciente.
 NO toca ledger, NO genera cargos, NO crea claims.
 """
@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from app.config import DB_PATH
 
 
-VALID_STATUSES = ['ARRIVED', 'CHECKED_IN', 'WAITING', 'IN_SESSION', 'COMPLETED', 'CANCELLED']
+VALID_STATUSES = ['ARRIVED', 'CHECKED_IN', 'WAITING', 'IN_SESSION', 'COMPLETED', 'CANCELLED', 'NO_SHOW']
 
 
 def _ensure_table():
@@ -22,7 +22,7 @@ def _ensure_table():
                 patient_id INTEGER NOT NULL,
                 appointment_date TEXT NOT NULL,
                 status TEXT NOT NULL DEFAULT 'ARRIVED'
-                    CHECK (status IN ('ARRIVED','CHECKED_IN','WAITING','IN_SESSION','COMPLETED','CANCELLED')),
+                    CHECK (status IN ('ARRIVED','CHECKED_IN','WAITING','IN_SESSION','COMPLETED','CANCELLED','NO_SHOW')),
                 check_in_time TEXT,
                 in_session_time TEXT,
                 completed_time TEXT,
@@ -30,15 +30,97 @@ def _ensure_table():
                 created_by TEXT,
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),
                 updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                eligibility_verified INTEGER DEFAULT 0,
+                copago_amount REAL DEFAULT 0,
+                copago_payment_id INTEGER,
+                referral_on_file INTEGER DEFAULT 0,
+                documents_signed TEXT DEFAULT '{}',
                 FOREIGN KEY (patient_id) REFERENCES patients(id)
             )
         """)
         conn.commit()
+
+        # Migration: update CHECK constraint to include NO_SHOW on existing tables
+        row = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='visit_sessions'"
+        ).fetchone()
+        if row and 'NO_SHOW' not in row['sql']:
+            conn.execute("ALTER TABLE visit_sessions RENAME TO visit_sessions_old")
+            conn.execute("""
+                CREATE TABLE visit_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    patient_id INTEGER NOT NULL,
+                    appointment_date TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'ARRIVED'
+                        CHECK (status IN ('ARRIVED','CHECKED_IN','WAITING','IN_SESSION','COMPLETED','CANCELLED','NO_SHOW')),
+                    check_in_time TEXT,
+                    in_session_time TEXT,
+                    completed_time TEXT,
+                    notes TEXT,
+                    created_by TEXT,
+                    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                    eligibility_verified INTEGER DEFAULT 0,
+                    copago_amount REAL DEFAULT 0,
+                    copago_payment_id INTEGER,
+                    referral_on_file INTEGER DEFAULT 0,
+                    documents_signed TEXT DEFAULT '{}',
+                    FOREIGN KEY (patient_id) REFERENCES patients(id)
+                )
+            """)
+            conn.execute("""
+                INSERT INTO visit_sessions
+                SELECT
+                    id, patient_id, appointment_date, status,
+                    check_in_time, in_session_time, completed_time,
+                    notes, created_by, created_at, updated_at,
+                    COALESCE(eligibility_verified, 0),
+                    COALESCE(copago_amount, 0),
+                    copago_payment_id,
+                    COALESCE(referral_on_file, 0),
+                    COALESCE(documents_signed, '{}')
+                FROM visit_sessions_old
+            """)
+            conn.execute("DROP TABLE visit_sessions_old")
+            conn.commit()
+
+        # Migrations for existing tables (BI-3)
+        new_cols = [
+            ("eligibility_verified", "INTEGER DEFAULT 0"),
+            ("copago_amount",        "REAL DEFAULT 0"),
+            ("copago_payment_id",    "INTEGER"),
+            ("referral_on_file",     "INTEGER DEFAULT 0"),
+            ("documents_signed",     "TEXT DEFAULT '{}'"),
+        ]
+        for col, coldef in new_cols:
+            try:
+                conn.execute(f"ALTER TABLE visit_sessions ADD COLUMN {col} {coldef}")
+                conn.commit()
+            except sqlite3.OperationalError:
+                pass  # column already exists
+
+        # Migration: add referral_required to coverages if missing
+        try:
+            conn.execute("ALTER TABLE coverages ADD COLUMN referral_required INTEGER DEFAULT 0")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
+
     finally:
         conn.close()
 
 
-def create_visit_session(patient_id: int, appointment_date: str, notes: str = None, created_by: str = None) -> int:
+def create_visit_session(
+    patient_id: int,
+    appointment_date: str,
+    notes: str = None,
+    created_by: str = None,
+    eligibility_verified: int = 0,
+    copago_amount: float = 0,
+    copago_payment_id: int = None,
+    referral_on_file: int = 0,
+    documents_signed: str = "{}",
+) -> int:
     _ensure_table()
     now = datetime.now(timezone.utc).isoformat()
     conn = sqlite3.connect(DB_PATH)
@@ -47,9 +129,15 @@ def create_visit_session(patient_id: int, appointment_date: str, notes: str = No
         cur.execute("""
             INSERT INTO visit_sessions (
                 patient_id, appointment_date, status,
-                check_in_time, notes, created_by, created_at, updated_at
-            ) VALUES (?, ?, 'ARRIVED', ?, ?, ?, ?, ?)
-        """, (patient_id, appointment_date, now, notes, created_by, now, now))
+                check_in_time, notes, created_by, created_at, updated_at,
+                eligibility_verified, copago_amount, copago_payment_id,
+                referral_on_file, documents_signed
+            ) VALUES (?, ?, 'ARRIVED', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            patient_id, appointment_date, now, notes, created_by, now, now,
+            eligibility_verified, copago_amount, copago_payment_id,
+            referral_on_file, documents_signed,
+        ))
         conn.commit()
         return cur.lastrowid
     finally:
