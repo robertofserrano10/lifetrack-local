@@ -18,179 +18,131 @@
 
 <body>
   <div class="admin-container">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="sidebar-logo">
+
+    <!-- TOP BRAND BAR -->
+    <header class="topnav">
+      <div class="topnav-brand">
         <i class="fa-solid fa-heart-pulse"></i>
         <span>LifeTrack</span>
       </div>
 
-      {% if current_user %}
-      <div class="sidebar-search">
-        <div class="sidebar-search-wrap">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="patient-search-input" placeholder="Search patient…" autocomplete="off" spellcheck="false">
-        </div>
-        <div id="patient-search-results" class="patient-search-dropdown" hidden></div>
-      </div>
-      {% endif %}
-
-      <nav class="sidebar-nav">
-
-        {% set path = request.path %}
+      <div class="topnav-right">
+        <button id="theme-toggle" title="Cambiar tema">
+          <i class="fa-solid fa-moon"></i>
+        </button>
 
         {% if current_user %}
-        <a href="/admin/dashboard" class="{{ 'active' if path == '/admin/dashboard' else '' }}">
+        <div class="header-user">
+          <i class="fa-solid fa-circle-user"></i>
+          <span>{{ current_user.username }}</span>
+          <span class="header-role-badge">{{ current_user.role }}</span>
+        </div>
+        <a href="/logout" class="btn-logout" title="Cerrar sesión">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Salir</span>
+        </a>
+        {% endif %}
+      </div>
+    </header>
+
+    <!-- BODY: SIDEBAR + CONTENT -->
+    <div class="admin-body">
+
+      {% if current_user %}
+      {% set path = request.path %}
+      <nav class="sidebar">
+
+        <!-- Logo -->
+        <div class="sidebar-logo">
+          <img src="/static/img/Psynántisi_Logo-10.png" alt="Psynántisi">
+        </div>
+
+        <!-- Patient Search -->
+        <div class="sidebar-search">
+          <div class="sidebar-search-wrap">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="patient-search-input" placeholder="Buscar paciente…" autocomplete="off" spellcheck="false">
+          </div>
+          <div id="patient-search-results" class="patient-search-dropdown" hidden></div>
+        </div>
+
+        <!-- Dashboard: all roles -->
+        <a href="/admin/dashboard" class="sidebar-link {{ 'active' if path == '/admin/dashboard' else '' }}">
           <i class="fa-solid fa-chart-line"></i>
           <span>Dashboard</span>
         </a>
-        {% endif %}
 
-        {% if current_user and current_user.role in ['ADMIN','RECEPCION'] %}
-        <a href="/admin/checkin" class="{{ 'active' if path.startswith('/admin/checkin') else '' }}">
-          <i class="fa-solid fa-door-open"></i>
-          <span>Check-in</span>
-        </a>
-        {% endif %}
-
-        {% if current_user and current_user.role in ['ADMIN','RECEPCION','FACTURADOR'] %}
-        <a href="/admin/checkin" class="{{ 'active' if path.startswith('/admin/checkin') else '' }}"
-           style="background:{% if path.startswith('/admin/checkin') %}var(--accent-soft){% endif %};">
-          <i class="fa-solid fa-door-open"></i>
-          <span>Check-in</span>
-        </a>
-        {% endif %}
-
-        {% if current_user and current_user.role in ['ADMIN','FACTURADOR','RECEPCION'] %}
-        <a href="/admin/patients" class="{{ 'active' if path.startswith('/admin/patients') else '' }}">
+        <!-- RECEPCION + ADMIN -->
+        {% if current_user.role in ['ADMIN', 'RECEPCION'] %}
+        <a href="/admin/patients" class="sidebar-link {{ 'active' if path.startswith('/admin/patients') else '' }}">
           <i class="fa-solid fa-user"></i>
-          <span>Patients</span>
+          <span>Pacientes</span>
+        </a>
+        <a href="/admin/checkin" class="sidebar-link {{ 'active' if path.startswith('/admin/checkin') else '' }}">
+          <i class="fa-solid fa-door-open"></i>
+          <span>Check-in</span>
         </a>
         {% endif %}
 
-        {% if current_user and current_user.role in ['ADMIN','FACTURADOR','RECEPCION'] %}
-        <a href="/admin/services" class="{{ 'active' if path.startswith('/admin/services') else '' }}">
-          <i class="fa-solid fa-stethoscope"></i>
-          <span>Services</span>
-        </a>
-        {% endif %}
-
-        {% if current_user %}
-        <a href="/admin/claims" class="{{ 'active' if path.startswith('/admin/claims') else '' }}">
+        <!-- FACTURADOR + ADMIN -->
+        {% if current_user.role in ['ADMIN', 'FACTURADOR'] %}
+        <a href="/admin/claims" class="sidebar-link {{ 'active' if path.startswith('/admin/claims') else '' }}">
           <i class="fa-solid fa-file-medical"></i>
           <span>Claims</span>
         </a>
-        {% endif %}
-
-        {% if current_user and current_user.role in ['ADMIN','FACTURADOR','DRA'] %}
-        <a href="/admin/snapshots" class="{{ 'active' if path.startswith('/admin/snapshots') else '' }}">
-          <i class="fa-solid fa-snowflake"></i>
-          <span>Snapshots</span>
-        </a>
-        {% endif %}
-
-        {% if current_user and current_user.role in ['ADMIN','FACTURADOR','RECEPCION'] %}
-        <a href="/admin/coverages" class="{{ 'active' if path.startswith('/admin/coverages') else '' }}">
-          <i class="fa-solid fa-shield-halved"></i>
-          <span>Coverages</span>
-        </a>
-        {% endif %}
-
-        {% if current_user and current_user.role in ['ADMIN','FACTURADOR'] %}
-        <a href="/admin/finances" class="{{ 'active' if path.startswith('/admin/finances') else '' }}">
-          <i class="fa-solid fa-dollar-sign"></i>
-          <span>Finances</span>
-        </a>
-        <a href="/admin/eob" class="{{ 'active' if path.startswith('/admin/eob') else '' }}">
+        <a href="/admin/eob" class="sidebar-link {{ 'active' if path.startswith('/admin/eob') else '' }}">
           <i class="fa-solid fa-receipt"></i>
           <span>EOB</span>
         </a>
+        <a href="/admin/reports" class="sidebar-link {{ 'active' if path.startswith('/admin/reports') else '' }}">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Reportes</span>
+        </a>
         {% endif %}
 
-        {% if current_user and current_user.role in ['ADMIN','FACTURADOR'] %}
-        <a href="/admin/events" class="{{ 'active' if path.startswith('/admin/events') else '' }}">
+        <!-- DRA + ADMIN: Clínico section -->
+        {% if current_user.role in ['ADMIN', 'DRA'] %}
+        <div class="sidebar-section-label">Clínico</div>
+        <a href="/admin/encounters" class="sidebar-link {{ 'active' if path.startswith('/admin/encounters') else '' }}">
+          <i class="fa-solid fa-calendar-check"></i>
+          <span>Encounters</span>
+        </a>
+        <a href="/admin/clinical/notes" class="sidebar-link {{ 'active' if path.startswith('/admin/clinical') else '' }}">
+          <i class="fa-solid fa-file-alt"></i>
+          <span>Notas</span>
+        </a>
+        <a href="/admin/doctor-dashboard" class="sidebar-link {{ 'active' if path == '/admin/doctor-dashboard' else '' }}">
+          <i class="fa-solid fa-user-doctor"></i>
+          <span>Doctor Dashboard</span>
+        </a>
+        {% endif %}
+
+        <!-- ADMIN only: Admin section -->
+        {% if current_user.role == 'ADMIN' %}
+        <div class="sidebar-section-label">Admin</div>
+        <a href="/admin/settings" class="sidebar-link {{ 'active' if path.startswith('/admin/settings') else '' }}">
+          <i class="fa-solid fa-gear"></i>
+          <span>Settings</span>
+        </a>
+        <a href="/admin/events" class="sidebar-link {{ 'active' if path.startswith('/admin/events') else '' }}">
           <i class="fa-solid fa-clock-rotate-left"></i>
           <span>Event Ledger</span>
         </a>
         {% endif %}
 
-        {% if current_user and current_user.role in ['ADMIN','FACTURADOR'] %}
-        <a href="/admin/reports" class="{{ 'active' if path.startswith('/admin/reports') else '' }}">
-          <i class="fa-solid fa-chart-pie"></i>
-          <span>Reports</span>
-        </a>
-        {% endif %}
-
-        {% if current_user and current_user.role in ['ADMIN','DRA'] %}
-
-        <div class="sidebar-section-label">Clínico</div>
-
-        <a href="/admin/clinical" class="{{ 'active' if path == '/admin/clinical' else '' }}">
-          <i class="fa-solid fa-notes-medical"></i>
-          <span>Clinical</span>
-        </a>
-
-        <a href="/admin/clinical/notes" class="{{ 'active' if path == '/admin/clinical/notes' else '' }}">
-          <i class="fa-solid fa-file-alt"></i>
-          <span>Clinical Notes</span>
-        </a>
-
-        <a href="/admin/encounters" class="{{ 'active' if path.startswith('/admin/encounters') else '' }}">
-          <i class="fa-solid fa-calendar-check"></i>
-          <span>Encounters</span>
-        </a>
-
-        <a href="/admin/doctor-dashboard" class="{{ 'active' if path == '/admin/doctor-dashboard' else '' }}">
-          <i class="fa-solid fa-user-doctor"></i>
-          <span>Doctor Dashboard</span>
-        </a>
-
-        {% endif %}
-
-        {% if current_user and current_user.role == 'ADMIN' %}
-        <a href="/admin/settings" class="{{ 'active' if path.startswith('/admin/settings') else '' }}">
-          <i class="fa-solid fa-gear"></i>
-          <span>Settings</span>
-        </a>
-        {% endif %}
-
       </nav>
-    </aside>
+      {% endif %}
 
-    <!-- MAIN -->
-    <div class="main-area">
-
-      <header class="admin-header">
-        <div class="header-left">
-          <span class="system-title">LifeTrack Clearinghouse</span>
-        </div>
-
-        <div class="header-right">
-          <button id="theme-toggle" title="Cambiar tema">
-            <i class="fa-solid fa-moon"></i>
-          </button>
-
-          {% if current_user %}
-          <div class="header-user">
-            <i class="fa-solid fa-circle-user"></i>
-            <span>{{ current_user.username }}</span>
-            <span class="header-role-badge">{{ current_user.role }}</span>
-          </div>
-          <a href="/logout" class="btn-logout" title="Cerrar sesión">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            <span>Salir</span>
-          </a>
-          {% endif %}
-        </div>
-      </header>
-
+      <!-- MAIN CONTENT -->
       <main class="admin-content">
         {% block content %}
         {% endblock %}
       </main>
 
-    </div>
-  </div>
+    </div><!-- .admin-body -->
+
+  </div><!-- .admin-container -->
+
   <script>
   (function () {
     var input = document.getElementById('patient-search-input');
