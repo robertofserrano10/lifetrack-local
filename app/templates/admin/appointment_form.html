@@ -1,0 +1,170 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-calendar-plus" style="color:var(--accent);"></i> Nueva Cita</h1>
+    <p>Agendar cita para un paciente</p>
+  </div>
+  <a class="button-secondary" href="/admin/appointments">
+    <i class="fa-solid fa-arrow-left"></i> Volver
+  </a>
+</div>
+
+{% if error %}
+<div style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem;">
+  <i class="fa-solid fa-triangle-exclamation"></i> {{ error }}
+</div>
+{% endif %}
+
+<div class="card" style="max-width:640px;">
+  <form method="POST" action="/admin/appointments/new">
+
+    <!-- Paciente -->
+    <div style="margin-bottom:1.25rem;">
+      <label style="display:block; font-weight:600; margin-bottom:0.4rem;">
+        Paciente <span style="color:var(--accent);">*</span>
+      </label>
+
+      <!-- Búsqueda rápida -->
+      <div style="position:relative; margin-bottom:0.5rem;">
+        <div style="display:flex; align-items:center; border:1px solid var(--border); border-radius:8px; padding:0 0.75rem; background:var(--card-bg);">
+          <i class="fa-solid fa-magnifying-glass" style="color:var(--sidebar-text); margin-right:0.5rem; font-size:0.85rem;"></i>
+          <input
+            type="text"
+            id="appt-patient-search"
+            placeholder="Buscar por nombre…"
+            autocomplete="off"
+            spellcheck="false"
+            style="border:none; outline:none; padding:0.55rem 0; width:100%; background:transparent; font-size:0.95rem; color:var(--text);"
+          >
+        </div>
+        <div id="appt-search-results" hidden style="position:absolute; top:100%; left:0; right:0; z-index:20; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow); max-height:220px; overflow-y:auto;"></div>
+      </div>
+
+      <!-- Select oculto que se envía -->
+      <select name="patient_id" id="patient-id-select" style="width:100%; padding:0.55rem 0.75rem; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text); font-size:0.92rem;" required>
+        <option value="">— seleccionar paciente —</option>
+        {% for p in patients %}
+        <option value="{{ p.id }}" {% if preselect and preselect|int == p.id %}selected{% endif %}>
+          {{ p.last_name }}, {{ p.first_name }} ({{ p.date_of_birth }})
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Fecha y hora -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
+      <div>
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">
+          Fecha <span style="color:var(--accent);">*</span>
+        </label>
+        <input
+          type="date"
+          name="scheduled_date"
+          value="{{ today }}"
+          required
+          style="width:100%; padding:0.55rem 0.75rem; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text); font-size:0.92rem; box-sizing:border-box;"
+        >
+      </div>
+      <div>
+        <label style="display:block; font-weight:600; margin-bottom:0.4rem;">
+          Hora <span style="color:var(--accent);">*</span>
+        </label>
+        <input
+          type="time"
+          name="scheduled_time"
+          value="09:00"
+          required
+          style="width:100%; padding:0.55rem 0.75rem; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text); font-size:0.92rem; box-sizing:border-box;"
+        >
+      </div>
+    </div>
+
+    <!-- Tipo de servicio -->
+    <div style="margin-bottom:1.25rem;">
+      <label style="display:block; font-weight:600; margin-bottom:0.4rem;">
+        Tipo de Servicio <span style="color:var(--accent);">*</span>
+      </label>
+      <select name="service_type" required style="width:100%; padding:0.55rem 0.75rem; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text); font-size:0.92rem;">
+        <option value="">— seleccionar —</option>
+        {% for st in service_types %}
+        <option value="{{ st }}">{{ st }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Notas -->
+    <div style="margin-bottom:1.5rem;">
+      <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Notas</label>
+      <textarea
+        name="notes"
+        rows="3"
+        placeholder="Instrucciones especiales, recordatorios, etc."
+        style="width:100%; padding:0.55rem 0.75rem; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text); font-size:0.92rem; resize:vertical; box-sizing:border-box;"
+      ></textarea>
+    </div>
+
+    <div style="display:flex; gap:0.75rem;">
+      <button type="submit" class="button-primary">
+        <i class="fa-solid fa-calendar-check"></i> Guardar Cita
+      </button>
+      <a href="/admin/appointments" class="button-secondary">Cancelar</a>
+    </div>
+
+  </form>
+</div>
+
+<script>
+(function () {
+  var searchInput = document.getElementById('appt-patient-search');
+  var resultsDiv  = document.getElementById('appt-search-results');
+  var selectEl    = document.getElementById('patient-id-select');
+  var timer;
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  searchInput.addEventListener('input', function () {
+    clearTimeout(timer);
+    var q = searchInput.value.trim();
+    if (q.length < 2) { resultsDiv.hidden = true; return; }
+    timer = setTimeout(function () {
+      fetch('/admin/patient-search?q=' + encodeURIComponent(q))
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (!data.length) { resultsDiv.hidden = true; return; }
+          resultsDiv.innerHTML = data.map(function (p) {
+            return '<div class="psr-item" data-id="' + p.id + '" style="cursor:pointer; padding:0.5rem 0.75rem; border-bottom:1px solid var(--border);">' +
+              '<span class="psr-name" style="font-weight:500;">' + escHtml(p.last_name) + ', ' + escHtml(p.first_name) + '</span>' +
+              '<span class="psr-dob" style="font-size:0.8rem; color:var(--sidebar-text); margin-left:0.5rem;">' + escHtml(p.date_of_birth || '') + '</span>' +
+              '</div>';
+          }).join('');
+          resultsDiv.hidden = false;
+
+          resultsDiv.querySelectorAll('.psr-item').forEach(function (el) {
+            el.addEventListener('click', function () {
+              selectEl.value = el.dataset.id;
+              searchInput.value = el.querySelector('.psr-name').textContent.trim();
+              resultsDiv.hidden = true;
+            });
+          });
+        });
+    }, 250);
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('#appt-patient-search') && !e.target.closest('#appt-search-results')) {
+      resultsDiv.hidden = true;
+    }
+  });
+
+  searchInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { resultsDiv.hidden = true; }
+  });
+})();
+</script>
+
+{% endblock %}

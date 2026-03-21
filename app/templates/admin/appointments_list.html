@@ -1,0 +1,147 @@
+{% extends "layouts/admin_base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1><i class="fa-solid fa-calendar-days" style="color:var(--accent);"></i> Agenda</h1>
+    <p>{{ today }} &nbsp;·&nbsp; {{ today_appts|length }} cita{{ 's' if today_appts|length != 1 else '' }} hoy</p>
+  </div>
+  {% if current_user.role in ['ADMIN', 'RECEPCION', 'DRA'] %}
+  <a class="button-primary" href="/admin/appointments/new">
+    <i class="fa-solid fa-plus"></i> Nueva Cita
+  </a>
+  {% endif %}
+</div>
+
+<!-- CITAS DE HOY -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <h2 style="margin-bottom:1rem;">
+    <i class="fa-solid fa-calendar-day" style="color:var(--accent);"></i> Hoy
+  </h2>
+
+  {% if today_appts %}
+  <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border); text-align:left;">
+          <th style="padding:0.5rem 0.75rem;">Hora</th>
+          <th style="padding:0.5rem 0.75rem;">Paciente</th>
+          <th style="padding:0.5rem 0.75rem;">Tipo</th>
+          <th style="padding:0.5rem 0.75rem;">Estado</th>
+          <th style="padding:0.5rem 0.75rem;">Notas</th>
+          <th style="padding:0.5rem 0.75rem;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in today_appts %}
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:0.6rem 0.75rem; font-weight:600;">{{ a.scheduled_time }}</td>
+          <td style="padding:0.6rem 0.75rem;">
+            <a href="/admin/patients/{{ a.patient_id }}/edit" style="color:var(--text); text-decoration:none; font-weight:500;">
+              {{ a.last_name }}, {{ a.first_name }}
+            </a>
+            <div style="font-size:0.78rem; color:var(--sidebar-text);">{{ a.date_of_birth }}</div>
+          </td>
+          <td style="padding:0.6rem 0.75rem;">
+            <span style="background:var(--accent-soft); color:var(--accent); border-radius:999px; padding:2px 10px; font-size:0.8rem; font-weight:500;">
+              {{ a.service_type }}
+            </span>
+          </td>
+          <td style="padding:0.6rem 0.75rem;">
+            {% set sc = {
+              'SCHEDULED': ('#f59e0b', '#fffbeb', 'Programada'),
+              'CONFIRMED':  ('#2563eb', '#eff6ff', 'Confirmada'),
+              'ARRIVED':    ('#16a34a', '#f0fdf4', 'Llegó'),
+              'COMPLETED':  ('#6b7280', '#f9fafb', 'Completada'),
+              'CANCELLED':  ('#dc2626', '#fef2f2', 'Cancelada'),
+              'NO_SHOW':    ('#7c3aed', '#faf5ff', 'No llegó'),
+            } %}
+            {% set info = sc.get(a.status, ('#6b7280', '#f9fafb', a.status)) %}
+            <span style="background:{{ info[1] }}; color:{{ info[0] }}; border-radius:999px; padding:2px 10px; font-size:0.78rem; font-weight:600;">
+              {{ info[2] }}
+            </span>
+          </td>
+          <td style="padding:0.6rem 0.75rem; font-size:0.82rem; color:var(--sidebar-text);">
+            {{ a.notes or '—' }}
+          </td>
+          <td style="padding:0.6rem 0.75rem;">
+            {% if a.status not in ['COMPLETED', 'CANCELLED', 'NO_SHOW'] %}
+            <details style="position:relative;">
+              <summary style="cursor:pointer; list-style:none; padding:4px 10px; border:1px solid var(--border); border-radius:6px; font-size:0.8rem; user-select:none;">
+                <i class="fa-solid fa-chevron-down" style="font-size:0.7rem;"></i> Cambiar
+              </summary>
+              <div style="position:absolute; right:0; z-index:10; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:0.5rem; min-width:160px; box-shadow:var(--shadow);">
+                {% for s in valid_statuses %}
+                {% if s != a.status %}
+                <form method="POST" action="/admin/appointments/{{ a.id }}/status">
+                  <input type="hidden" name="status" value="{{ s }}">
+                  <button type="submit" style="width:100%; text-align:left; background:none; border:none; padding:5px 8px; font-size:0.82rem; cursor:pointer; border-radius:4px; color:var(--text);">
+                    {% if s == 'CONFIRMED' %}Confirmar
+                    {% elif s == 'ARRIVED' %}Llegó
+                    {% elif s == 'COMPLETED' %}Completar
+                    {% elif s == 'CANCELLED' %}Cancelar
+                    {% elif s == 'NO_SHOW' %}No llegó
+                    {% else %}{{ s }}{% endif %}
+                  </button>
+                </form>
+                {% endif %}
+                {% endfor %}
+              </div>
+            </details>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="text-align:center; padding:2.5rem; color:var(--sidebar-text);">
+    <i class="fa-solid fa-calendar-xmark" style="font-size:2.5rem; opacity:0.25; display:block; margin-bottom:0.75rem;"></i>
+    <p>No hay citas programadas para hoy.</p>
+    {% if current_user.role in ['ADMIN', 'RECEPCION', 'DRA'] %}
+    <a class="button-primary" href="/admin/appointments/new">Agregar cita</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- PRÓXIMOS DÍAS -->
+{% if upcoming_by_date %}
+<div class="card">
+  <h2 style="margin-bottom:1rem;">
+    <i class="fa-solid fa-calendar-week" style="color:var(--sidebar-text);"></i> Próximos días
+  </h2>
+
+  {% for date, appts in upcoming_by_date.items() %}
+  <details open style="margin-bottom:1rem;">
+    <summary style="cursor:pointer; font-weight:600; padding:0.4rem 0; border-bottom:1px solid var(--border); margin-bottom:0.5rem; list-style:none; display:flex; justify-content:space-between; align-items:center;">
+      <span>{{ date }}</span>
+      <span style="font-size:0.82rem; color:var(--sidebar-text); font-weight:400;">{{ appts|length }} cita{{ 's' if appts|length != 1 else '' }}</span>
+    </summary>
+    {% for a in appts %}
+    <div style="display:flex; align-items:center; gap:1rem; padding:0.5rem 0.25rem; border-bottom:1px solid var(--border); font-size:0.88rem;">
+      <span style="font-weight:600; min-width:48px;">{{ a.scheduled_time }}</span>
+      <span style="flex:1;">
+        <a href="/admin/patients/{{ a.patient_id }}/edit" style="color:var(--text); text-decoration:none;">{{ a.last_name }}, {{ a.first_name }}</a>
+      </span>
+      <span style="background:var(--accent-soft); color:var(--accent); border-radius:999px; padding:1px 9px; font-size:0.78rem;">{{ a.service_type }}</span>
+      {% set sc = {
+        'SCHEDULED': ('#f59e0b', 'Programada'),
+        'CONFIRMED':  ('#2563eb', 'Confirmada'),
+        'ARRIVED':    ('#16a34a', 'Llegó'),
+        'COMPLETED':  ('#6b7280', 'Completada'),
+        'CANCELLED':  ('#dc2626', 'Cancelada'),
+        'NO_SHOW':    ('#7c3aed', 'No llegó'),
+      } %}
+      {% set info = sc.get(a.status, ('#6b7280', a.status)) %}
+      <span style="color:{{ info[0] }}; font-weight:600; font-size:0.78rem; min-width:72px; text-align:right;">{{ info[1] }}</span>
+    </div>
+    {% endfor %}
+  </details>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

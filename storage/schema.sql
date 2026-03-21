@@ -330,3 +330,28 @@ CREATE TABLE IF NOT EXISTS visit_sessions (
 
 CREATE INDEX IF NOT EXISTS idx_visit_sessions_patient ON visit_sessions(patient_id);
 CREATE INDEX IF NOT EXISTS idx_visit_sessions_date ON visit_sessions(appointment_date);
+
+-- =========================================
+-- APPOINTMENTS (BI-2)
+-- Citas formales — agenda clínica
+-- =========================================
+
+CREATE TABLE IF NOT EXISTS appointments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    patient_id INTEGER NOT NULL,
+    encounter_id INTEGER,
+    scheduled_date TEXT NOT NULL,
+    scheduled_time TEXT NOT NULL,
+    service_type TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'SCHEDULED'
+        CHECK (status IN ('SCHEDULED','CONFIRMED','ARRIVED','COMPLETED','CANCELLED','NO_SHOW')),
+    notes TEXT,
+    created_by TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (patient_id) REFERENCES patients(id),
+    FOREIGN KEY (encounter_id) REFERENCES encounters(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(scheduled_date);
+CREATE INDEX IF NOT EXISTS idx_appointments_patient ON appointments(patient_id);
