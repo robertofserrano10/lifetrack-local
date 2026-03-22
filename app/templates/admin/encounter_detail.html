@@ -2,6 +2,46 @@
 
 {% block content %}
 
+{# ── Ready for Billing section ─────────────────────────────────────── #}
+<div class="card" style="margin-bottom:1rem; border-left:4px solid {% if encounter.ready_for_billing %}#16a34a{% else %}#f59e0b{% endif %};">
+  <h2 style="margin-bottom:0.75rem;">
+    <i class="fa-solid {% if encounter.ready_for_billing %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}"
+       style="color:{% if encounter.ready_for_billing %}#16a34a{% else %}#f59e0b{% endif %};"></i>
+    Estado de Facturación
+  </h2>
+
+  {% if encounter.ready_for_billing %}
+    <span style="display:inline-block; background:#dcfce7; color:#15803d; border-radius:999px; padding:4px 14px; font-size:0.85rem; font-weight:600;">
+      ✅ Listo para Facturar
+    </span>
+    <p style="margin-top:0.6rem; font-size:0.88rem; color:var(--sidebar-text);">
+      Marcado el {{ encounter.ready_for_billing_at }} por <strong>{{ encounter.ready_for_billing_by }}</strong>
+    </p>
+  {% else %}
+    {% if rfb_error %}
+    <div style="background:#fee2e2; color:#991b1b; border-radius:6px; padding:0.75rem 1rem; margin-bottom:0.75rem; font-size:0.88rem;">
+      <i class="fa-solid fa-triangle-exclamation"></i> {{ rfb_error }}
+    </div>
+    {% endif %}
+
+    {% if rfb_blocking %}
+    <div style="background:#fef9c3; color:#854d0e; border-radius:6px; padding:0.75rem 1rem; margin-bottom:0.75rem; font-size:0.88rem;">
+      <i class="fa-solid fa-lock"></i> <strong>Bloqueado:</strong> {{ rfb_blocking }}
+    </div>
+    {% endif %}
+
+    {% if current_user and current_user.role in ['ADMIN', 'FACTURADOR'] %}
+    <form method="POST" action="{{ url_for('encounters_admin.encounter_ready_for_billing', encounter_id=encounter.id) }}"
+          onsubmit="return confirm('¿Confirmar que este encounter está listo para facturar?');">
+      <button type="submit" class="button-primary"
+              {% if rfb_blocking %}disabled style="opacity:0.5; cursor:not-allowed;"{% endif %}>
+        <i class="fa-solid fa-check-double"></i> Marcar Ready for Billing
+      </button>
+    </form>
+    {% endif %}
+  {% endif %}
+</div>
+
 <div class="page-header">
   <div>
     <h1>Encounter #{{ encounter.id }}</h1>

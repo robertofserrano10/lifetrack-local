@@ -13,6 +13,10 @@
 
 <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:1.5rem;">
   <div class="dashboard-card">
+    <h3>Ready for Billing</h3>
+    <p style="color:#16a34a;">{{ rfb_count }}</p>
+  </div>
+  <div class="dashboard-card">
     <h3>Pendientes Envío</h3>
     <p style="color:#f59e0b;">{{ draft }}</p>
   </div>
@@ -29,6 +33,44 @@
     <p style="color:#dc2626;">${{ '%.2f'|format(pendiente_cobro) }}</p>
   </div>
 </div>
+
+{% if encounters_rfb %}
+<div class="card" style="margin-bottom:1rem; border-left:4px solid #16a34a;">
+  <h2 style="margin-bottom:0.75rem;">
+    <i class="fa-solid fa-circle-check" style="color:#16a34a;"></i>
+    Encounters Listos para Facturar
+    <span style="background:#dcfce7; color:#15803d; border-radius:999px; padding:2px 10px; font-size:0.78rem; margin-left:0.5rem;">{{ rfb_count }}</span>
+  </h2>
+  <table class="claims-table">
+    <thead>
+      <tr>
+        <th>Paciente</th>
+        <th>Fecha Encounter</th>
+        <th>Marcado por</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for e in encounters_rfb %}
+    <tr>
+      <td><strong>{{ e.last_name }}, {{ e.first_name }}</strong></td>
+      <td>{{ e.encounter_date }}</td>
+      <td style="font-size:0.82rem; color:var(--sidebar-text);">{{ e.ready_for_billing_by }}</td>
+      <td>
+        <a class="button-primary" style="font-size:0.8rem; padding:4px 10px;"
+           href="/admin/encounters/{{ e.id }}">Ver Encounter</a>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card" style="margin-bottom:1rem; border-left:4px solid var(--border); text-align:center; padding:1.5rem; color:var(--sidebar-text);">
+  <i class="fa-solid fa-hourglass-half" style="font-size:1.5rem; margin-bottom:0.4rem; display:block;"></i>
+  No hay encounters listos para facturar en este momento.
+</div>
+{% endif %}
 
 {% if claims_draft %}
 <div class="card" style="margin-bottom:1rem; border-left:4px solid #f59e0b;">

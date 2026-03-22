@@ -130,6 +130,26 @@ def dashboard():
         row = cur.fetchone()
         pendiente_cobro = row["total"] if row["total"] else 0.0
 
+        # Encounters ready for billing with no claim yet
+        try:
+            cur.execute("""
+                SELECT e.id, e.encounter_date, e.ready_for_billing_at, e.ready_for_billing_by,
+                       p.first_name, p.last_name
+                FROM encounters e
+                JOIN patients p ON p.id = e.patient_id
+                WHERE e.ready_for_billing = 1
+                  AND NOT EXISTS (
+                      SELECT 1 FROM claims cl WHERE cl.encounter_id = e.id
+                  )
+                ORDER BY e.encounter_date DESC
+                LIMIT 20
+            """)
+            encounters_rfb = [dict(r) for r in cur.fetchall()]
+        except Exception:
+            encounters_rfb = []
+
+        rfb_count = len(encounters_rfb)
+
         conn.close()
         return render_template("admin/dashboard_facturador.html",
             today=today,
@@ -138,6 +158,8 @@ def dashboard():
             paid=paid,
             claims_draft=claims_draft,
             pendiente_cobro=pendiente_cobro,
+            encounters_rfb=encounters_rfb,
+            rfb_count=rfb_count,
         )
 
     else:

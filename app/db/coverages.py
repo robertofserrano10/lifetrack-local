@@ -2,6 +2,16 @@ from app.db.connection import get_connection
 from app.db.event_ledger import log_event
 
 
+def _ensure_referral_required_column():
+    with get_connection() as conn:
+        cols = [row[1] for row in conn.execute("PRAGMA table_info(coverages)")]
+        if "referral_required" not in cols:
+            conn.execute(
+                "ALTER TABLE coverages ADD COLUMN referral_required INTEGER DEFAULT 0"
+            )
+            conn.commit()
+
+
 def create_coverage(
     patient_id,
     insurer_name,
@@ -20,6 +30,7 @@ def create_coverage(
     insured_zip=None,
     other_health_plan_11d=0,
 ):
+    _ensure_referral_required_column()
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute("""
@@ -51,6 +62,7 @@ def create_coverage(
 
 
 def list_coverages_by_patient(patient_id):
+    _ensure_referral_required_column()
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute(
@@ -62,6 +74,7 @@ def list_coverages_by_patient(patient_id):
 
 
 def get_coverage_by_id(coverage_id):
+    _ensure_referral_required_column()
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute("SELECT * FROM coverages WHERE id = ?", (coverage_id,))
@@ -87,6 +100,7 @@ def update_coverage(
     insured_zip=None,
     other_health_plan_11d=0,
 ):
+    _ensure_referral_required_column()
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute("""
@@ -127,6 +141,7 @@ def update_coverage(
 
 
 def delete_coverage(coverage_id):
+    _ensure_referral_required_column()
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute("DELETE FROM coverages WHERE id = ?", (coverage_id,))

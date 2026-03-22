@@ -1,7 +1,7 @@
 import sqlite3
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, session as flask_session
 
-from app.db.encounters import get_all_encounters, create_encounter, get_encounter_by_id, get_claims_by_patient
+from app.db.encounters import get_all_encounters, create_encounter, get_encounter_by_id, get_claims_by_patient, mark_ready_for_billing
 from app.db.services import create_service
 from app.db.progress_notes import get_notes_by_encounter
 from app.security.auth import login_required, role_required
@@ -77,7 +77,7 @@ def encounter_create():
 
 @encounters_admin_bp.route("/<int:encounter_id>")
 @login_required
-@role_required("ADMIN", "DRA")
+@role_required("ADMIN", "DRA", "FACTURADOR")
 def encounter_detail(encounter_id: int):
 
     encounter = get_encounter_by_id(encounter_id)
@@ -106,6 +106,13 @@ def encounter_detail(encounter_id: int):
     conn.close()
 
     notes = get_notes_by_encounter(encounter_id)
+    rfb_error = request.args.get("rfb_error", "")
+
+    # Determine blocking reason for Ready for Billing UI
+    has_signed_note = any(n["signed"] for n in notes)
+    rfb_blocking = None
+    if not has_signed_note:
+        rfb_blocking = "No hay nota de progreso firmada para este encounter."
 
     return render_template(
         "admin/encounter_detail.html",
@@ -113,6 +120,8 @@ def encounter_detail(encounter_id: int):
         claims=claims,
         services=services,
         notes=notes,
+        rfb_error=rfb_error,
+        rfb_blocking=rfb_blocking,
     )
 
 
@@ -166,3 +175,19 @@ def encounter_add_service(encounter_id: int):
         encounter=encounter,
         claims=claims,
     )
+
+
+@encounters_admin_bp.route("/<int:encounter_id>/ready-for-billing", methods=["POST"])
+@login_required
+@role_required("ADMIN", "FACTURADOR")
+def encounter_ready_for_billing(encounter_id: int):
+    marked_by = flask_session.get("username", "unknown")
+    try:
+        mark_ready_for_billing(encounter_id, marked_by)
+        return redirect(url_for("encounters_admin.encounter_detail", encounter_id=encounter_id))
+    except ValueError as e:
+        return redirect(url_for(
+            "encounters_admin.encounter_detail",
+            encounter_id=encounter_id,
+            rfb_error=str(e),
+        ))
