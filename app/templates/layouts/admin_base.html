@@ -107,10 +107,12 @@
         <!-- DRA + ADMIN: Clínico section -->
         {% if current_user.role in ['ADMIN', 'DRA'] %}
         <div class="sidebar-section-label">Clínico</div>
+        {% if current_user.role == 'DRA' %}
         <a href="/admin/appointments" class="sidebar-link {{ 'active' if path.startswith('/admin/appointments') else '' }}">
           <i class="fa-solid fa-calendar-days"></i>
           <span>Agenda</span>
         </a>
+        {% endif %}
         <a href="/admin/encounters" class="sidebar-link {{ 'active' if path.startswith('/admin/encounters') else '' }}">
           <i class="fa-solid fa-calendar-check"></i>
           <span>Encounters</span>
