@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autorización HIPAA — {{ patient.first_name }} {{ patient.last_name }}</title>
+  <style>
+    /* ── Base ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 11pt;
+      line-height: 1.55;
+      color: #111;
+      background: #fff;
+      padding: 0.75in 1in;
+      max-width: 8.5in;
+      margin: 0 auto;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2.5px solid #201751;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .practice-name {
+      font-size: 20pt;
+      font-weight: bold;
+      color: #201751;
+      letter-spacing: 0.5px;
+    }
+
+    .practice-sub {
+      font-size: 9pt;
+      color: #555;
+      margin-top: 2px;
+    }
+
+    .doc-title {
+      text-align: right;
+    }
+
+    .doc-title h2 {
+      font-size: 14pt;
+      color: #201751;
+      font-weight: bold;
+    }
+
+    .doc-title p {
+      font-size: 8.5pt;
+      color: #666;
+    }
+
+    /* ── Section headings ───────────────────────────────── */
+    h3 {
+      font-size: 10.5pt;
+      color: #201751;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 2px;
+      margin: 1.1rem 0 0.5rem;
+    }
+
+    /* ── Pre-filled info grid ───────────────────────────── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.35rem 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .info-row {
+      display: flex;
+      gap: 0.4rem;
+      align-items: baseline;
+    }
+
+    .info-label {
+      font-size: 8.5pt;
+      color: #555;
+      white-space: nowrap;
+      font-weight: bold;
+    }
+
+    .info-value {
+      border-bottom: 1px solid #333;
+      flex: 1;
+      font-size: 10.5pt;
+      padding: 0 2px;
+      min-width: 80px;
+    }
+
+    /* ── Body text ──────────────────────────────────────── */
+    .body-section p {
+      margin-bottom: 0.6rem;
+      text-align: justify;
+    }
+
+    .body-section ol,
+    .body-section ul {
+      margin: 0.4rem 0 0.6rem 1.4rem;
+    }
+
+    .body-section li {
+      margin-bottom: 0.3rem;
+    }
+
+    /* ── Signature block ────────────────────────────────── */
+    .sig-block {
+      margin-top: 1.8rem;
+      display: grid;
+      grid-template-columns: 1fr 0.4fr;
+      gap: 1.5rem;
+    }
+
+    .sig-line {
+      margin-top: 2rem;
+    }
+
+    .sig-line .line {
+      border-bottom: 1px solid #333;
+      height: 1.4rem;
+    }
+
+    .sig-line .caption {
+      font-size: 8pt;
+      color: #555;
+      margin-top: 3px;
+    }
+
+    /* ── Footer ─────────────────────────────────────────── */
+    .doc-footer {
+      margin-top: 1.8rem;
+      border-top: 1px solid #ccc;
+      padding-top: 0.4rem;
+      font-size: 7.5pt;
+      color: #777;
+      text-align: center;
+    }
+
+    /* ── Print button ───────────────────────────────────── */
+    .print-btn {
+      position: fixed;
+      top: 18px;
+      right: 24px;
+      background: #201751;
+      color: #fff;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: sans-serif;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      z-index: 999;
+    }
+
+    .print-btn:hover { background: #EA6852; }
+
+    @media print {
+      body { padding: 0.5in 0.75in; }
+      .print-btn { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<button class="print-btn" onclick="window.print()">🖨 Imprimir</button>
+
+<!-- ══════════════════════════════════════════════════════
+     ENCABEZADO
+═══════════════════════════════════════════════════════ -->
+<div class="doc-header">
+  <div>
+    <div class="practice-name">Psynántisi</div>
+    <div class="practice-sub">Servicios de Psicología &nbsp;·&nbsp; Puerto Rico</div>
+  </div>
+  <div class="doc-title">
+    <h2>Autorización HIPAA</h2>
+    <p>45 C.F.R. § 164.508</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     DATOS DEL PACIENTE
+═══════════════════════════════════════════════════════ -->
+<h3>I. Información del Paciente</h3>
+
+<div class="info-grid">
+  <div class="info-row">
+    <span class="info-label">Nombre completo:</span>
+    <span class="info-value">{{ patient.first_name }} {{ patient.last_name }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Fecha de nacimiento:</span>
+    <span class="info-value">{{ patient.date_of_birth or '' }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Dirección:</span>
+    <span class="info-value">
+      {% if patient.address %}
+        {{ patient.address }}{% if patient.city %}, {{ patient.city }}{% endif %}{% if patient.zip_code %} {{ patient.zip_code }}{% endif %}
+      {% endif %}
+    </span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Teléfono:</span>
+    <span class="info-value">{{ patient.phone or '' }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Aseguradora:</span>
+    <span class="info-value">{{ coverage.insurer_name if coverage else '' }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Número de póliza:</span>
+    <span class="info-value">{{ coverage.policy_number if coverage else '' }}</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     AUTORIZACIÓN
+═══════════════════════════════════════════════════════ -->
+<h3>II. Divulgación Autorizada</h3>
+
+<div class="body-section">
+  <p>
+    Yo, el paciente identificado arriba (o su representante legal autorizado), por medio de este documento
+    <strong>autorizo voluntariamente</strong> a <strong>Psynántisi, Servicios de Psicología</strong>
+    a usar y divulgar mi información de salud protegida ("PHI") según se describe a continuación,
+    en cumplimiento con la Ley de Portabilidad y Responsabilidad del Seguro Médico
+    (HIPAA, <em>Health Insurance Portability and Accountability Act</em>, 45 C.F.R. § 164.508)
+    y la Ley de Confidencialidad y Acceso a Récords de Salud de Puerto Rico (Ley Núm. 194 de 2000).
+  </p>
+
+  <p><strong>Información a divulgar:</strong></p>
+  <ul>
+    <li>Diagnósticos, evaluaciones psicológicas, y planes de tratamiento.</li>
+    <li>Notas de progreso y notas de psicoterapia, según aplique.</li>
+    <li>Registros de facturación, reclamaciones de seguro (claims), y coberturas.</li>
+    <li>Cualquier otra información de salud necesaria para los propósitos indicados.</li>
+  </ul>
+
+  <p><strong>Propósito de la divulgación:</strong></p>
+  <ul>
+    <li>Coordinación de cuidado y continuidad de tratamiento con proveedores de salud.</li>
+    <li>Procesamiento de reclamaciones con compañías de seguro médico.</li>
+    <li>Cumplimiento con requisitos legales o regulatorios aplicables.</li>
+    <li>A solicitud del propio paciente o su representante legal.</li>
+  </ul>
+
+  <p><strong>Personas o entidades autorizadas a recibir la información:</strong></p>
+  <ul>
+    <li>Compañías de seguro médico (ej. Triple-S, MCS, Humana) vinculadas al plan del paciente.</li>
+    <li>Médicos, especialistas u otros profesionales de la salud que participen en el cuidado del paciente.</li>
+    <li>Organismos gubernamentales, según lo exija la ley.</li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     DERECHOS DEL PACIENTE
+═══════════════════════════════════════════════════════ -->
+<h3>III. Derechos del Paciente</h3>
+
+<div class="body-section">
+  <p>Usted tiene derecho a:</p>
+  <ol>
+    <li><strong>Revocar esta autorización</strong> en cualquier momento mediante notificación escrita
+        a Psynántisi, excepto en la medida en que ya se haya tomado acción basada en ella.</li>
+    <li><strong>Inspeccionar y copiar</strong> su información de salud protegida, según lo permite HIPAA.</li>
+    <li><strong>Negarse a firmar</strong> esta autorización. La negativa no afectará su derecho a recibir
+        tratamiento, aunque puede limitar la capacidad de la oficina de procesar reclamaciones de seguro
+        en su nombre.</li>
+    <li>Recibir una <strong>copia de esta autorización</strong> firmada.</li>
+  </ol>
+
+  <p>
+    La información divulgada bajo esta autorización podría ser re-divulgada por el receptor y
+    dejar de estar protegida por HIPAA. Psynántisi implementa las salvaguardas administrativas,
+    físicas y técnicas requeridas para proteger su información.
+  </p>
+
+  <p><strong>Vigencia:</strong> Esta autorización estará vigente por un período de
+  <strong>un (1) año</strong> a partir de la fecha de firma, o hasta que sea revocada por escrito.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     BLOQUE DE FIRMAS
+═══════════════════════════════════════════════════════ -->
+<h3>IV. Firmas</h3>
+
+<div class="sig-block">
+  <div>
+    <div class="sig-line">
+      <div class="line"></div>
+      <div class="caption">Firma del Paciente o Representante Legal Autorizado</div>
+    </div>
+    <div class="sig-line">
+      <div class="line"></div>
+      <div class="caption">Nombre en letra de molde</div>
+    </div>
+    <div class="sig-line">
+      <div class="line"></div>
+      <div class="caption">Relación con el paciente (si aplica)</div>
+    </div>
+  </div>
+  <div>
+    <div class="sig-line">
+      <div class="line"></div>
+      <div class="caption">Fecha</div>
+    </div>
+    <div class="sig-line">
+      <div class="line"></div>
+      <div class="caption">Firma del Testigo</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PIE DE PÁGINA
+═══════════════════════════════════════════════════════ -->
+<div class="doc-footer">
+  Este documento fue impreso el {{ print_date }}.
+  &nbsp;·&nbsp; Archivar en expediente físico del paciente.
+  &nbsp;·&nbsp; Psynántisi — Servicios de Psicología, Puerto Rico
+</div>
+
+</body>
+</html>

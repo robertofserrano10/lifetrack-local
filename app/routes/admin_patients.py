@@ -1,9 +1,16 @@
 from flask import Blueprint, render_template, abort, request, redirect, url_for
 import sqlite3
+from datetime import date
 from app.config import DB_PATH
 
 from app.db.patients import create_patient, get_patient_by_id, update_patient
 from app.security.auth import login_required, role_required
+
+MESES_ES = {
+    1: "enero", 2: "febrero", 3: "marzo", 4: "abril",
+    5: "mayo", 6: "junio", 7: "julio", 8: "agosto",
+    9: "septiembre", 10: "octubre", 11: "noviembre", 12: "diciembre",
+}
 
 
 patients_admin_bp = Blueprint(
@@ -258,6 +265,88 @@ def patient_detail(patient_id: int):
         services=services,
         timeline=timeline,
     )
+
+# =========================================================
+# Consent: HIPAA Authorization (printable)
+# =========================================================
+@patients_admin_bp.route("/<int:patient_id>/consent/hipaa")
+@login_required
+@role_required("ADMIN", "RECEPCION", "FACTURADOR")
+def consent_hipaa(patient_id: int):
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM patients WHERE id = ?", (patient_id,))
+    patient = cur.fetchone()
+    if not patient:
+        conn.close()
+        abort(404)
+
+    cur.execute(
+        """
+        SELECT insurer_name, plan_name, policy_number
+        FROM coverages
+        WHERE patient_id = ?
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (patient_id,),
+    )
+    coverage = cur.fetchone()
+    conn.close()
+
+    today = date.today()
+    print_date = f"{today.day} de {MESES_ES[today.month]} de {today.year}"
+    return render_template(
+        "admin/consent_hipaa.html",
+        patient=patient,
+        coverage=coverage,
+        print_date=print_date,
+    )
+
+
+# =========================================================
+# Consent: Informed Consent (printable)
+# =========================================================
+@patients_admin_bp.route("/<int:patient_id>/consent/informado")
+@login_required
+@role_required("ADMIN", "RECEPCION", "FACTURADOR")
+def consent_informado(patient_id: int):
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM patients WHERE id = ?", (patient_id,))
+    patient = cur.fetchone()
+    if not patient:
+        conn.close()
+        abort(404)
+
+    cur.execute(
+        """
+        SELECT insurer_name, plan_name, policy_number
+        FROM coverages
+        WHERE patient_id = ?
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (patient_id,),
+    )
+    coverage = cur.fetchone()
+    conn.close()
+
+    today = date.today()
+    print_date = f"{today.day} de {MESES_ES[today.month]} de {today.year}"
+    return render_template(
+        "admin/consent_informado.html",
+        patient=patient,
+        coverage=coverage,
+        print_date=print_date,
+    )
+
 
 # =========================================================
 # Clinical Timeline

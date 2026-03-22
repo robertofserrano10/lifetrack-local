@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Consentimiento Informado — {{ patient.first_name }} {{ patient.last_name }}</title>
+  <style>
+    /* ── Base ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 11pt;
+      line-height: 1.55;
+      color: #111;
+      background: #fff;
+      padding: 0.75in 1in;
+      max-width: 8.5in;
+      margin: 0 auto;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2.5px solid #201751;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .practice-name {
+      font-size: 20pt;
+      font-weight: bold;
+      color: #201751;
+      letter-spacing: 0.5px;
+    }
+
+    .practice-sub {
+      font-size: 9pt;
+      color: #555;
+      margin-top: 2px;
+    }
+
+    .doc-title {
+      text-align: right;
+    }
+
+    .doc-title h2 {
+      font-size: 14pt;
+      color: #201751;
+      font-weight: bold;
+    }
+
+    .doc-title p {
+      font-size: 8.5pt;
+      color: #666;
+    }
+
+    /* ── Section headings ───────────────────────────────── */
+    h3 {
+      font-size: 10.5pt;
+      color: #201751;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 2px;
+      margin: 1.1rem 0 0.5rem;
+    }
+
+    /* ── Pre-filled info grid ───────────────────────────── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.35rem 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .info-row {
+      display: flex;
+      gap: 0.4rem;
+      align-items: baseline;
+    }
+
+    .info-label {
+      font-size: 8.5pt;
+      color: #555;
+      white-space: nowrap;
+      font-weight: bold;
+    }
+
+    .info-value {
+      border-bottom: 1px solid #333;
+      flex: 1;
+      font-size: 10.5pt;
+      padding: 0 2px;
+      min-width: 80px;
+    }
+
+    /* ── Body text ──────────────────────────────────────── */
+    .body-section p {
+      margin-bottom: 0.6rem;
+      text-align: justify;
+    }
+
+    .body-section ol,
+    .body-section ul {
+      margin: 0.4rem 0 0.6rem 1.4rem;
+    }
+
+    .body-section li {
+      margin-bottom: 0.3rem;
+    }
+
+    /* ── Signature block ────────────────────────────────── */
+    .sig-block {
+      margin-top: 1.8rem;
+      display: grid;
+      grid-template-columns: 1fr 0.4fr;
+      gap: 1.5rem;
+    }
+
+    .sig-line {
+      margin-top: 2rem;
+    }
+
+    .sig-line .line {
+      border-bottom: 1px solid #333;
+      height: 1.4rem;
+    }
+
+    .sig-line .caption {
+      font-size: 8pt;
+      color: #555;
+      margin-top: 3px;
+    }
+
+    /* ── Footer ─────────────────────────────────────────── */
+    .doc-footer {
+      margin-top: 1.8rem;
+      border-top: 1px solid #ccc;
+      padding-top: 0.4rem;
+      font-size: 7.5pt;
+      color: #777;
+      text-align: center;
+    }
+
+    /* ── Print button ───────────────────────────────────── */
+    .print-btn {
+      position: fixed;
+      top: 18px;
+      right: 24px;
+      background: #201751;
+      color: #fff;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: sans-serif;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      z-index: 999;
+    }
+
+    .print-btn:hover { background: #EA6852; }
+
+    @media print {
+      body { padding: 0.5in 0.75in; }
+      .print-btn { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<button class="print-btn" onclick="window.print()">🖨 Imprimir</button>
+
+<!-- ══════════════════════════════════════════════════════
+     ENCABEZADO
+═══════════════════════════════════════════════════════ -->
+<div class="doc-header">
+  <div>
+    <div class="practice-name">Psynántisi</div>
+    <div class="practice-sub">Servicios de Psicología &nbsp;·&nbsp; Puerto Rico</div>
+  </div>
+  <div class="doc-title">
+    <h2>Consentimiento Informado</h2>
+    <p>Servicios de Psicología</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     DATOS DEL PACIENTE
+═══════════════════════════════════════════════════════ -->
+<h3>I. Información del Paciente</h3>
+
+<div class="info-grid">
+  <div class="info-row">
+    <span class="info-label">Nombre completo:</span>
+    <span class="info-value">{{ patient.first_name }} {{ patient.last_name }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Fecha de nacimiento:</span>
+    <span class="info-value">{{ patient.date_of_birth or '' }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Dirección:</span>
+    <span class="info-value">
+      {% if patient.address %}
+        {{ patient.address }}{% if patient.city %}, {{ patient.city }}{% endif %}{% if patient.zip_code %} {{ patient.zip_code }}{% endif %}
+      {% endif %}
+    </span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Teléfono:</span>
+    <span class="info-value">{{ patient.phone or '' }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Aseguradora:</span>
+    <span class="info-value">{{ coverage.insurer_name if coverage else '' }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Número de póliza:</span>
+    <span class="info-value">{{ coverage.policy_number if coverage else '' }}</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PROPÓSITO DE LOS SERVICIOS
+═══════════════════════════════════════════════════════ -->
+<h3>II. Naturaleza y Propósito de los Servicios</h3>
+
+<div class="body-section">
+  <p>
+    Psynántisi ofrece servicios de psicología que pueden incluir evaluación psicológica,
+    psicoterapia individual, orientación y consejería, y seguimiento de salud mental.
+    El propósito del tratamiento es promover el bienestar emocional, desarrollar habilidades
+    de afrontamiento y apoyar la salud mental del paciente.
+  </p>
+  <p>
+    El proceso terapéutico varía según las necesidades individuales de cada paciente.
+    La psicóloga y el paciente colaborarán para establecer objetivos de tratamiento,
+    los cuales podrán ser revisados y ajustados durante el transcurso de la terapia.
+    No existe garantía de resultados específicos; sin embargo, la psicóloga se compromete
+    a brindar servicios conforme a los estándares éticos y profesionales vigentes.
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     CONFIDENCIALIDAD
+═══════════════════════════════════════════════════════ -->
+<h3>III. Confidencialidad</h3>
+
+<div class="body-section">
+  <p>
+    Toda la información compartida durante los servicios psicológicos es estrictamente
+    confidencial y está protegida por la Ley de Confidencialidad y Acceso a Récords de
+    Salud de Puerto Rico (Ley Núm. 194 de 2000) y la Ley HIPAA federal. Su información
+    no será divulgada sin su consentimiento escrito, excepto en las siguientes
+    <strong>circunstancias obligatorias establecidas por ley</strong>:
+  </p>
+  <ol>
+    <li>
+      <strong>Sospecha de maltrato o abuso de menores, personas mayores o con discapacidades:</strong>
+      la psicóloga tiene la obligación legal de reportar a las autoridades correspondientes
+      (ADFAN, Policía de Puerto Rico), independientemente del deseo del paciente.
+    </li>
+    <li>
+      <strong>Peligro inminente hacia sí mismo/a:</strong> si el paciente expresa ideación
+      suicida con un plan y la intención de actuar, la psicóloga tomará las medidas necesarias
+      para proteger su vida, incluyendo notificar a familiares, médicos o autoridades según corresponda.
+    </li>
+    <li>
+      <strong>Peligro inminente hacia terceros:</strong> si el paciente expresa una amenaza
+      creíble y específica contra una persona identificable, la psicóloga tiene la obligación
+      de tomar medidas razonables para proteger a dicha persona (<em>Deber de Advertir</em>).
+    </li>
+    <li>
+      <strong>Orden judicial:</strong> cuando un tribunal de justicia competente ordene la
+      divulgación de información del expediente clínico.
+    </li>
+    <li>
+      <strong>Supervisión clínica y procesos de acreditación</strong> bajo estrictos acuerdos
+      de confidencialidad profesional.
+    </li>
+  </ol>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     HONORARIOS Y POLÍTICA DE CANCELACIÓN
+═══════════════════════════════════════════════════════ -->
+<h3>IV. Honorarios y Política de Pagos</h3>
+
+<div class="body-section">
+  <p>
+    Los honorarios por sesión son establecidos conforme a las tarifas del plan de seguro
+    del paciente o según acuerdo privado entre las partes. El copago, deducible u otros
+    gastos de bolsillo son responsabilidad del paciente y deben ser satisfechos al momento
+    de la visita, antes del inicio de la sesión.
+  </p>
+  <p>
+    Si el paciente no tiene cobertura de seguro activa, o si los servicios no están cubiertos
+    por su plan, se informará la tarifa aplicable antes de iniciar el tratamiento.
+    Las facturas no pagadas dentro de los treinta (30) días siguientes a la fecha de servicio
+    podrán generar intereses o ser referidas a gestiones de cobro, previa notificación.
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     POLÍTICA DE CANCELACIÓN
+═══════════════════════════════════════════════════════ -->
+<h3>V. Política de Cancelación y Ausencias</h3>
+
+<div class="body-section">
+  <p>
+    Si el paciente necesita cancelar o reprogramar una cita, debe notificarlo con un mínimo
+    de <strong>24 horas de anticipación</strong>. Las cancelaciones con menos de 24 horas
+    de antelación o las ausencias sin previo aviso (<em>no-show</em>) podrán conllevar
+    el cobro de una tarifa de cancelación tardía, la cual será notificada por la oficina.
+  </p>
+  <p>
+    En caso de emergencia genuina, la psicóloga evaluará la situación de manera individual.
+    La reiteración de ausencias sin notificación podría resultar en la discontinuación del
+    servicio, previa comunicación escrita al paciente.
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     COMUNICACIONES
+═══════════════════════════════════════════════════════ -->
+<h3>VI. Comunicaciones Electrónicas</h3>
+
+<div class="body-section">
+  <p>
+    El paciente reconoce que las comunicaciones por correo electrónico, mensajes de texto
+    o plataformas de mensajería pueden no ser completamente seguras. Psynántisi utilizará
+    medios seguros para comunicaciones de naturaleza clínica. El uso de mensajes de texto
+    o correo electrónico se limita a asuntos administrativos como confirmación de citas.
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     DECLARACIÓN DE CONSENTIMIENTO
+═══════════════════════════════════════════════════════ -->
+<h3>VII. Declaración de Consentimiento</h3>
+
+<div class="body-section">
+  <p>
+    Al firmar este documento, el paciente (o su representante legal) declara que:
+  </p>
+  <ol>
+    <li>Ha leído y comprendido la información contenida en este consentimiento.</li>
+    <li>Ha tenido la oportunidad de formular preguntas y estas fueron respondidas satisfactoriamente.</li>
+    <li>Consiente voluntariamente a recibir los servicios de psicología en Psynántisi.</li>
+    <li>Comprende que puede revocar este consentimiento en cualquier momento mediante
+        notificación escrita, sin que ello afecte los servicios ya prestados.</li>
+    <li>Comprende que la interrupción del tratamiento debe hacerse de manera planificada
+        para asegurar una transición adecuada del cuidado.</li>
+  </ol>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     BLOQUE DE FIRMAS
+═══════════════════════════════════════════════════════ -->
+<h3>VIII. Firmas</h3>
+
+<div class="sig-block">
+  <div>
+    <div class="sig-line">
+      <div class="line"></div>
+      <div class="caption">Firma del Paciente o Representante Legal Autorizado</div>
+    </div>
+    <div class="sig-line">
+      <div class="line"></div>
+      <div class="caption">Nombre en letra de molde</div>
+    </div>
+    <div class="sig-line">
+      <div class="line"></div>
+      <div class="caption">Relación con el paciente (si aplica)</div>
+    </div>
+    <div class="sig-line">
+      <div class="line"></div>
+      <div class="caption">Firma de la Psicóloga</div>
+    </div>
+    <div class="sig-line">
+      <div class="line"></div>
+      <div class="caption">Nombre y Número de Licencia</div>
+    </div>
+  </div>
+  <div>
+    <div class="sig-line">
+      <div class="line"></div>
+      <div class="caption">Fecha</div>
+    </div>
+    <div class="sig-line">
+      <div class="line"></div>
+      <div class="caption">Fecha</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PIE DE PÁGINA
+═══════════════════════════════════════════════════════ -->
+<div class="doc-footer">
+  Este documento fue impreso el {{ print_date }}.
+  &nbsp;·&nbsp; Archivar en expediente físico del paciente.
+  &nbsp;·&nbsp; Psynántisi — Servicios de Psicología, Puerto Rico
+</div>
+
+</body>
+</html>
