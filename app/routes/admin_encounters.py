@@ -4,6 +4,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from app.db.encounters import get_all_encounters, create_encounter, get_encounter_by_id, get_claims_by_patient, mark_ready_for_billing
 from app.db.services import create_service
 from app.db.progress_notes import get_notes_by_encounter
+from app.db.claims import create_claim
 from app.security.auth import login_required, role_required
 from app.db.connection import get_connection
 
@@ -114,6 +115,16 @@ def encounter_detail(encounter_id: int):
     if not has_signed_note:
         rfb_blocking = "No hay nota de progreso firmada para este encounter."
 
+    # Claim linked to this specific encounter (if any)
+    encounter_claim = None
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT * FROM claims WHERE encounter_id = ? LIMIT 1",
+            (encounter_id,),
+        ).fetchone()
+        if row:
+            encounter_claim = dict(row)
+
     return render_template(
         "admin/encounter_detail.html",
         encounter=encounter,
@@ -122,6 +133,7 @@ def encounter_detail(encounter_id: int):
         notes=notes,
         rfb_error=rfb_error,
         rfb_blocking=rfb_blocking,
+        encounter_claim=encounter_claim,
     )
 
 
@@ -191,3 +203,53 @@ def encounter_ready_for_billing(encounter_id: int):
             encounter_id=encounter_id,
             rfb_error=str(e),
         ))
+
+
+@encounters_admin_bp.route("/<int:encounter_id>/create-claim", methods=["POST"])
+@login_required
+@role_required("ADMIN", "FACTURADOR")
+def encounter_create_claim(encounter_id: int):
+    encounter = get_encounter_by_id(encounter_id)
+    if not encounter:
+        return "Encounter no encontrado", 404
+
+    if not encounter["ready_for_billing"]:
+        return redirect(url_for(
+            "encounters_admin.encounter_detail",
+            encounter_id=encounter_id,
+            rfb_error="El encounter debe estar marcado como Ready for Billing antes de crear un claim.",
+        ))
+
+    # Verificar que no existe ya un claim para este encounter
+    with get_connection() as conn:
+        existing = conn.execute(
+            "SELECT id FROM claims WHERE encounter_id = ? LIMIT 1",
+            (encounter_id,),
+        ).fetchone()
+        if existing:
+            return redirect(url_for("claims_admin.claim_detail_admin", claim_id=existing["id"]))
+
+    # Obtener la cobertura activa más reciente del paciente
+    patient_id = encounter["patient_id"]
+    with get_connection() as conn:
+        coverage_row = conn.execute(
+            """
+            SELECT id FROM coverages
+            WHERE patient_id = ?
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            (patient_id,),
+        ).fetchone()
+
+    if not coverage_row:
+        return redirect(url_for(
+            "encounters_admin.encounter_detail",
+            encounter_id=encounter_id,
+            rfb_error="El paciente no tiene cobertura registrada. Agregue una cobertura antes de crear el claim.",
+        ))
+
+    coverage_id = coverage_row["id"]
+    claim_id = create_claim(patient_id, coverage_id, encounter_id=encounter_id)
+
+    return redirect(url_for("claims_admin.claim_detail_admin", claim_id=claim_id))

@@ -17,6 +17,27 @@
     <p style="margin-top:0.6rem; font-size:0.88rem; color:var(--sidebar-text);">
       Marcado el {{ encounter.ready_for_billing_at }} por <strong>{{ encounter.ready_for_billing_by }}</strong>
     </p>
+
+    {# ── Crear Claim / Ver Claim ─────────────────────────────────── #}
+    {% if current_user and current_user.role in ['ADMIN', 'FACTURADOR'] %}
+    <div style="margin-top:1rem;">
+      {% if encounter_claim %}
+        <a class="button-primary"
+           href="{{ url_for('claims_admin.claim_detail_admin', claim_id=encounter_claim.id) }}">
+          <i class="fa-solid fa-file-invoice-dollar"></i> Ver Claim {{ encounter_claim.claim_number }}
+        </a>
+      {% else %}
+        <form method="POST"
+              action="{{ url_for('encounters_admin.encounter_create_claim', encounter_id=encounter.id) }}"
+              onsubmit="return confirm('¿Crear un claim nuevo desde este encounter?');">
+          <button type="submit" class="button-primary">
+            <i class="fa-solid fa-file-circle-plus"></i> Crear Claim desde este Encounter
+          </button>
+        </form>
+      {% endif %}
+    </div>
+    {% endif %}
+
   {% else %}
     {% if rfb_error %}
     <div style="background:#fee2e2; color:#991b1b; border-radius:6px; padding:0.75rem 1rem; margin-bottom:0.75rem; font-size:0.88rem;">

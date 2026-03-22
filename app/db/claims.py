@@ -29,19 +29,31 @@ VALID_TRANSITIONS = {
 # CORE CLAIM CRUD
 # ============================================================
 
-def create_claim(patient_id: int, coverage_id: int) -> int:
+def _ensure_encounter_id_column():
+    """Migración automática — agrega columna encounter_id a claims si no existe."""
+    with get_connection() as conn:
+        cols = [row[1] for row in conn.execute("PRAGMA table_info(claims)")]
+        if "encounter_id" not in cols:
+            conn.execute(
+                "ALTER TABLE claims ADD COLUMN encounter_id INTEGER REFERENCES encounters(id)"
+            )
+            conn.commit()
+
+
+def create_claim(patient_id: int, coverage_id: int, encounter_id: int | None = None) -> int:
+    _ensure_encounter_id_column()
     now = datetime.now(timezone.utc).isoformat()
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute(
             """
             INSERT INTO claims (
-                patient_id, coverage_id, status,
+                patient_id, coverage_id, encounter_id, status,
                 created_at, updated_at
             )
-            VALUES (?, ?, 'DRAFT', ?, ?)
+            VALUES (?, ?, ?, 'DRAFT', ?, ?)
             """,
-            (patient_id, coverage_id, now, now),
+            (patient_id, coverage_id, encounter_id, now, now),
         )
         claim_id = cur.lastrowid
 
