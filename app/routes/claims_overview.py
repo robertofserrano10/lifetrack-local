@@ -1,11 +1,14 @@
 from flask import Blueprint, render_template
 from app.db.connection import get_connection
 from app.db.financial_lock import is_claim_locked
+from app.security.auth import login_required, role_required
 
 claims_overview_bp = Blueprint("claims_overview", __name__)
 
 
 @claims_overview_bp.route("/claims/overview")
+@login_required
+@role_required("ADMIN", "FACTURADOR")
 def claims_overview():
     """
     Vista administrativa consolidada de todos los claims.

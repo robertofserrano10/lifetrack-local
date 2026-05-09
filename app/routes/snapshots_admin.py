@@ -5,6 +5,7 @@ from app.db.cms1500_snapshot import (
     get_snapshot_by_id,
     verify_snapshot_integrity,
 )
+from app.security.auth import login_required, role_required
 
 snapshots_admin_bp = Blueprint(
     "snapshots_admin",
@@ -14,6 +15,8 @@ snapshots_admin_bp = Blueprint(
 
 
 @snapshots_admin_bp.route("/", methods=["GET"])
+@login_required
+@role_required("ADMIN", "FACTURADOR", "DRA")
 def snapshots_index():
     snapshots = list_snapshots_admin()
 
@@ -24,6 +27,8 @@ def snapshots_index():
 
 
 @snapshots_admin_bp.route("/<int:snapshot_id>", methods=["GET"])
+@login_required
+@role_required("ADMIN", "FACTURADOR", "DRA")
 def snapshot_detail(snapshot_id: int):
 
     snap = get_snapshot_by_id(snapshot_id)
@@ -42,6 +47,8 @@ def snapshot_detail(snapshot_id: int):
 # =========================================================
 
 @snapshots_admin_bp.route("/<int:snapshot_id>/verify", methods=["GET"])
+@login_required
+@role_required("ADMIN", "FACTURADOR", "DRA")
 def snapshot_verify(snapshot_id: int):
 
     result = verify_snapshot_integrity(snapshot_id)
@@ -63,6 +70,8 @@ def snapshot_verify(snapshot_id: int):
 # =========================================================
 
 @snapshots_admin_bp.route("/api", methods=["GET"])
+@login_required
+@role_required("ADMIN", "FACTURADOR", "DRA")
 def snapshots_api():
 
     snapshots = list_snapshots_admin()
@@ -71,6 +80,8 @@ def snapshots_api():
 
 
 @snapshots_admin_bp.route("/api/<int:snapshot_id>", methods=["GET"])
+@login_required
+@role_required("ADMIN", "FACTURADOR", "DRA")
 def snapshot_api(snapshot_id: int):
 
     snap = get_snapshot_by_id(snapshot_id)
@@ -100,6 +111,8 @@ def _flatten(prefix, obj, out):
 
 
 @snapshots_admin_bp.route("/diff", methods=["GET"])
+@login_required
+@role_required("ADMIN", "FACTURADOR", "DRA")
 def snapshot_diff():
 
     a = request.args.get("a", type=int)
@@ -151,6 +164,8 @@ def snapshot_diff():
 # =========================================================
 
 @snapshots_admin_bp.route("/claim/<int:claim_id>", methods=["GET"])
+@login_required
+@role_required("ADMIN", "FACTURADOR", "DRA")
 def snapshots_by_claim(claim_id: int):
 
     all_snaps = list_snapshots_admin()

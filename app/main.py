@@ -14,6 +14,7 @@ from flask import (
 
 from werkzeug.security import check_password_hash
 
+from app.security.auth import login_required, role_required
 from app.views.cms1500_render import get_latest_snapshot_by_claim
 from app.utils.snapshot_hash import compute_snapshot_hash
 
@@ -210,6 +211,8 @@ def patient_search():
 # CMS1500 VIEW
 # =========================
 @app.route("/cms1500/<int:claim_id>")
+@login_required
+@role_required("ADMIN", "FACTURADOR", "DRA")
 def cms1500_view(claim_id):
     snapshot = get_latest_snapshot_by_claim(claim_id)
     if not snapshot:

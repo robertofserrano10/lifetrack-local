@@ -1,17 +1,22 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 
 from app.db.provider_settings import get_provider_settings, update_provider_settings
+from app.security.auth import login_required, role_required
 
 provider_settings_bp = Blueprint("provider_settings", __name__)
 
 
 @provider_settings_bp.route("/provider/edit", methods=["GET"])
+@login_required
+@role_required("ADMIN")
 def edit_provider_settings():
     ps = get_provider_settings()
     return render_template("provider/edit.html", ps=ps)
 
 
 @provider_settings_bp.route("/provider/edit", methods=["POST"])
+@login_required
+@role_required("ADMIN")
 def update_provider_settings_view():
     # =========================
     # MAPEO / NORMALIZACIÓN

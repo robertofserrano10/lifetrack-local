@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template
 from app.db.balances import get_claim_balance
 from app.db.connection import get_connection
+from app.security.auth import login_required, role_required
 
 claim_financial_summary_bp = Blueprint(
     "claim_financial_summary",
@@ -9,6 +10,8 @@ claim_financial_summary_bp = Blueprint(
 
 
 @claim_financial_summary_bp.route("/claims/<int:claim_id>/financial")
+@login_required
+@role_required("ADMIN", "FACTURADOR")
 def claim_financial_summary(claim_id):
 
     balance = get_claim_balance(claim_id)

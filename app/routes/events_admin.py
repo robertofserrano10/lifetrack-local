@@ -4,6 +4,7 @@ from flask import Response
 import json
 import csv
 import io
+from app.security.auth import login_required, role_required
 
 events_admin_bp = Blueprint(
     "events_admin",
@@ -12,6 +13,8 @@ events_admin_bp = Blueprint(
 )
 
 @events_admin_bp.route("/", methods=["GET"])
+@login_required
+@role_required("ADMIN", "FACTURADOR")
 def events_index():
     page_raw = request.args.get("page", "1")
     page = int(page_raw) if page_raw.isdigit() else 1
@@ -44,6 +47,8 @@ def events_index():
         total=total,
     )
 @events_admin_bp.route("/export/json", methods=["GET"])
+@login_required
+@role_required("ADMIN", "FACTURADOR")
 def export_events_json():
     claim_id_raw = request.args.get("claim_id", "").strip()
     claim_id = int(claim_id_raw) if claim_id_raw.isdigit() else None
@@ -65,6 +70,8 @@ def export_events_json():
 
 
 @events_admin_bp.route("/export/csv", methods=["GET"])
+@login_required
+@role_required("ADMIN", "FACTURADOR")
 def export_events_csv():
     claim_id_raw = request.args.get("claim_id", "").strip()
     claim_id = int(claim_id_raw) if claim_id_raw.isdigit() else None
