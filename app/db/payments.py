@@ -8,7 +8,7 @@ def create_payment(amount: float, method: str, reference: str | None = None, rec
     if amount is None or float(amount) <= 0:
         raise ValueError("amount debe ser > 0")
     if method not in ALLOWED_METHODS:
-        raise ValueError(f"method inválido. Use uno de: {sorted(ALLOWED_METHODS)}")
+        raise ValueError(f"method invÃ¡lido. Use uno de: {sorted(ALLOWED_METHODS)}")
     if received_date is None:
         raise ValueError("received_date es obligatorio (YYYY-MM-DD)")
 
@@ -87,19 +87,41 @@ def update_payment(payment_id: int, amount: float, method: str, reference: str |
     if amount is None or float(amount) <= 0:
         raise ValueError("amount debe ser > 0")
     if method not in ALLOWED_METHODS:
-        raise ValueError(f"method inválido. Use uno de: {sorted(ALLOWED_METHODS)}")
+        raise ValueError(f"method invÃ¡lido. Use uno de: {sorted(ALLOWED_METHODS)}")
 
+    new_amount = float(amount)
     now = datetime.utcnow().isoformat()
 
     with get_connection() as conn:
         cur = conn.cursor()
+
+        cur.execute("SELECT id FROM payments WHERE id = ?", (int(payment_id),))
+        payment_row = cur.fetchone()
+        if not payment_row:
+            return False
+
+        cur.execute(
+            """
+            SELECT COALESCE(SUM(amount_applied), 0)
+            FROM applications
+            WHERE payment_id = ?
+            """,
+            (int(payment_id),),
+        )
+        total_applied = float(cur.fetchone()[0])
+
+        if new_amount < total_applied:
+            raise ValueError(
+                f"No se puede reducir payment.amount por debajo de lo aplicado ({total_applied:.2f})"
+            )
+
         cur.execute(
             """
             UPDATE payments
             SET amount = ?, method = ?, reference = ?, received_date = ?, updated_at = ?
             WHERE id = ?
             """,
-            (float(amount), method, reference, received_date, now, int(payment_id)),
+            (new_amount, method, reference, received_date, now, int(payment_id)),
         )
         conn.commit()
         return cur.rowcount > 0
@@ -108,7 +130,7 @@ def update_payment(payment_id: int, amount: float, method: str, reference: str |
 def delete_payment(payment_id: int) -> bool:
     """
     No permite borrar un payment si tiene applications asociadas.
-    Protección de integridad financiera.
+    ProtecciÃ³n de integridad financiera.
     """
     with get_connection() as conn:
         cur = conn.cursor()
