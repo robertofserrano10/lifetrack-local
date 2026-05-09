@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 
 from app.db.encounters import get_all_encounters, create_encounter, get_encounter_by_id, get_claims_by_patient, mark_ready_for_billing
 from app.db.services import create_service
+from app.db.charges import create_charge, get_charge_by_service
 from app.db.progress_notes import get_notes_by_encounter
 from app.db.claims import create_claim
 from app.security.auth import login_required, role_required
@@ -164,7 +165,7 @@ def encounter_add_service(encounter_id: int):
             )
 
         try:
-            create_service(
+            service_id = create_service(
                 claim_id=int(claim_id),
                 service_date=service_date,
                 cpt_code=cpt_code,
@@ -173,6 +174,8 @@ def encounter_add_service(encounter_id: int):
                 description="",
                 charge_amount_24f=float(charge_amount),
             )
+            if not get_charge_by_service(service_id):
+                create_charge(service_id=service_id, amount=float(charge_amount))
             return redirect(url_for("encounters_admin.encounter_detail", encounter_id=encounter_id))
         except Exception as e:
             return render_template(
